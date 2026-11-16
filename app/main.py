@@ -81,12 +81,24 @@ async def run() -> None:
     log.info("Bot @%s started", me.username)
     await setup_bot_ui(bot, settings)
 
-    tasks = [dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())]
-    if settings.run_webapp:
-        from app.webapp.api import create_app
+    from app.webapp.api import create_app
 
-        server = uvicorn.Server(uvicorn.Config(create_app(settings, sm), host=settings.webapp_host,
-                                               port=settings.webapp_port, log_level="warning", access_log=False))
+    allowed = dp.resolve_used_update_types()
+    tasks = []
+    if settings.webhook_mode:
+        if not (settings.webapp_url and settings.webhook_secret):
+            raise RuntimeError("WEBHOOK_MODE needs WEBAPP_URL (or RENDER_EXTERNAL_URL) and WEBHOOK_SECRET")
+        await bot.set_webhook(f"{settings.webapp_url}/tg/webhook", secret_token=settings.webhook_token,
+                              allowed_updates=allowed, drop_pending_updates=False)
+        log.info("Webhook mode")
+        app = create_app(settings, sm, bot=bot, dp=dp)
+    else:
+        await bot.delete_webhook(drop_pending_updates=False)
+        tasks.append(dp.start_polling(bot, allowed_updates=allowed))
+        app = create_app(settings, sm)
+    if settings.run_webapp or settings.webhook_mode:
+        server = uvicorn.Server(uvicorn.Config(app, host=settings.webapp_host, port=settings.webapp_port,
+                                               log_level="warning", access_log=False))
         tasks.append(server.serve())
     try:
         await asyncio.gather(*tasks)

@@ -5,7 +5,7 @@ services:
     name: germany-assistant
     runtime: python
     region: frankfurt
-    plan: 0.5c-512mb          # paid instance: free instances sleep and the bot would stop answering
+    plan: free                # sleeps when idle; webhook mode wakes it on each Telegram message
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && python -m app.main
     healthCheckPath: /health
@@ -19,6 +19,10 @@ services:
         sync: false
       - key: ANALYTICS_SALT
         generateValue: true
+      - key: WEBHOOK_MODE
+        value: "true"
+      - key: WEBHOOK_SECRET
+        generateValue: true
       - key: BOT_NAME
         value: Germany Assistant
       - key: DATABASE_URL
@@ -29,4 +33,4 @@ services:
 databases:
   - name: germany-assistant-db
     region: frankfurt
-    plan: 0.1c-256mb
+    plan: free                # free Render Postgres has a time limit; upgrade or move before it expires

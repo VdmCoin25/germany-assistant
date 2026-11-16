@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     bot_token: str
     bot_name: str = "Germany Assistant"
     admin_ids: Annotated[list[int], NoDecode] = []
+    # Webhook mode: Telegram pushes updates to WEBAPP_URL/tg/webhook. Needed on hosts that
+    # sleep when idle (e.g. Render free tier). False = long polling.
+    webhook_mode: bool = False
+    webhook_secret: str | None = None
+
     # Optional HTTP(S) proxy for Telegram API calls, e.g. http://user:pass@host:3128
     telegram_proxy: str | None = None
 
@@ -76,6 +81,16 @@ class Settings(BaseSettings):
         if v and not v.startswith("https://"):
             raise ValueError("WEBAPP_URL must start with https:// (Telegram requirement)")
         return v.rstrip("/") if v else None
+
+
+    @property
+    def webhook_token(self) -> str | None:
+        """Telegram allows only [A-Za-z0-9_-] in secret_token, so use a hex digest of the secret."""
+        if not self.webhook_secret:
+            return None
+        import hashlib
+
+        return hashlib.sha256(self.webhook_secret.encode()).hexdigest()
 
 
 @lru_cache

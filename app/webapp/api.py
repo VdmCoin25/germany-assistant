@@ -4,12 +4,13 @@ Every request must carry Telegram's signed initData in the `X-Telegram-Init-Data
 header. We verify the HMAC signature with the bot token, so a user can only read
 and change their own profile.
 """
+import hmac
 import time
 from pathlib import Path
 from typing import Annotated, Literal
 
 from aiogram.utils.web_app import WebAppInitData, safe_parse_webapp_init_data
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -61,8 +62,17 @@ class ProfileUpdate(BaseModel):
         return " ".join(v.split()) or None
 
 
-def create_app(settings: Settings, sessionmaker: async_sessionmaker) -> FastAPI:
+def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, dp=None) -> FastAPI:
     app = FastAPI(title=f"{settings.bot_name} Mini App", docs_url=None, redoc_url=None, openapi_url=None)
+
+    if bot is not None and dp is not None:
+        @app.post("/tg/webhook")
+        async def telegram_webhook(request: Request):
+            secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+            if not hmac.compare_digest(secret, settings.webhook_token or ""):
+                raise HTTPException(403, "forbidden")
+            await dp.feed_webhook_update(bot, await request.json())
+            return {"ok": True}
 
     def auth(x_telegram_init_data: Annotated[str, Header()]) -> WebAppInitData:
         return verify_init_data(x_telegram_init_data, settings.bot_token, settings.webapp_init_data_ttl)

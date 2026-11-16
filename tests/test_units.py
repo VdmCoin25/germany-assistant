@@ -108,3 +108,27 @@ def test_hosting_env_defaults(monkeypatch):
     assert s.webapp_url == "https://x.onrender.com"
     assert s.webapp_port == 10000
     assert s.database_url == "postgresql+asyncpg://u:p@h:5432/db"
+
+
+async def test_webhook_endpoint_checks_secret(settings, sm):
+    from aiogram import Bot
+    from app.main import build_dispatcher
+    from tests.conftest import FakeSession
+
+    settings.webhook_secret = "s3cret+/="
+    fake = FakeSession()
+    bot = Bot(TOKEN, session=fake)
+    from app.admin.handlers import router as admin_router
+    from app.bot.handlers import common, menu, settings as settings_h, start
+    for r in (admin_router, start.router, common.router, menu.router, settings_h.router, common.fallback_router):
+        r._parent_router = None
+    app = create_app(settings, sm, bot=bot, dp=build_dispatcher(settings, sm))
+    update = {"update_id": 1, "message": {"message_id": 1, "date": 0, "chat": {"id": 5, "type": "private"},
+                                          "from": {"id": 5, "is_bot": False, "first_name": "T"}, "text": "/start"}}
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        bad = await c.post("/tg/webhook", json=update, headers={"X-Telegram-Bot-Api-Secret-Token": "nope"})
+        assert bad.status_code == 403
+        assert all(ch.isalnum() for ch in settings.webhook_token)
+        ok = await c.post("/tg/webhook", json=update, headers={"X-Telegram-Bot-Api-Secret-Token": settings.webhook_token})
+        assert ok.status_code == 200
+    assert fake.texts()  # bot replied to /start
