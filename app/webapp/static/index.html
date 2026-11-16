@@ -81,7 +81,7 @@
                  box-shadow: 0 0 0 2px #091327, 0 2px 8px rgba(0,0,0,.35); }
 
   /* ---- Page ---- */
-  main { max-width: 640px; margin: 0 auto; min-height: calc(100vh - 151px);
+  main { max-width: 640px; margin: 0 auto; min-height: calc(var(--app-h, 100vh) - 151px);
          background: radial-gradient(ellipse 60% 220px at 88% 0, var(--lamp-reflection), transparent 70%),
                      linear-gradient(180deg, rgba(255,255,255,.025), transparent 260px); }
   .page { display: none; }
@@ -93,7 +93,7 @@
   .hint { font-size: 13px; color: var(--pencil); margin: 6px 0 0; max-width: 60ch; }
 
   /* ---- Departure board (home) ---- */
-  .board-wrap { min-height: calc(100vh - 170px); padding: 16px 0 6px; }
+  .board-wrap { min-height: calc(var(--app-h, 100vh) - 170px); padding: 16px 0 6px; }
   .board { list-style: none; margin: 0; padding: 0 0 6px; color: var(--on-board); }
   .board > li { border-bottom: 1px solid var(--board-line); }
   .board-label { margin: 18px 16px 2px; color: var(--pencil); font-size: 14px; }
@@ -258,6 +258,15 @@
   .vac-body { padding: 0 16px 16px; }
   .vac-body .text, .card .text { white-space: pre-line; margin: 0 0 10px; }
 
+  /* ---- Loading and failure ---- */
+  .skel { padding: 16px 16px 0; }
+  .skel span { display: block; height: 18px; margin: 0 0 14px; border-radius: 4px; background: var(--tag-bg); }
+  .skel .tall { height: 112px; border-radius: 8px; margin-bottom: 22px; }
+  .skel .short { width: 55%; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .failed { margin: 16px; padding: 16px; border-radius: 8px; background: var(--sheet); box-shadow: inset 0 0 0 1.5px var(--danger); }
+  .failed p { margin: 0; max-width: 60ch; }
+
   /* ---- Bottom bar: platform edge with the white safety line ---- */
   nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--nav-bg);
         padding-bottom: env(safe-area-inset-bottom); }
@@ -285,7 +294,7 @@
 </header>
 
 <main>
-  <section class="page on" id="page-home"></section>
+  <section class="page on" id="page-home"><div class="skel" aria-busy="true"><p class="sr">Завантаження…</p><span class="tall"></span><span></span><span class="short"></span><span></span><span class="short"></span></div></section>
   <section class="page" id="page-jobs"></section>
   <section class="page" id="page-housing"></section>
   <section class="page" id="page-profile"></section>
@@ -450,7 +459,9 @@ const I18N = {
     del: "Видалити всі мої дані", delConfirm: "Видалити анкету і всі пов'язані записи назавжди?", deleted: "Дані видалено",
     openInTg: "Відкрийте цю сторінку через бота в Telegram, щоб заповнити анкету.",
     error: "Не вдалося зберегти. Перевірте інтернет і спробуйте ще раз.",
-    loadError: "Не вдалося завантажити дані. Закрийте і відкрийте застосунок ще раз.",
+    loadError: "Не вдалося завантажити дані. Перевірте інтернет і спробуйте ще раз.",
+    retry: "Спробувати ще раз",
+    loading: "Завантаження…",
     required: "Заповніть це поле",
   },
   ru: {
@@ -485,7 +496,9 @@ const I18N = {
     del: "Удалить все мои данные", delConfirm: "Удалить анкету и все связанные записи навсегда?", deleted: "Данные удалены",
     openInTg: "Откройте эту страницу через бота в Telegram, чтобы заполнить анкету.",
     error: "Не удалось сохранить. Проверьте интернет и попробуйте ещё раз.",
-    loadError: "Не удалось загрузить данные. Закройте и откройте приложение ещё раз.",
+    loadError: "Не удалось загрузить данные. Проверьте интернет и попробуйте ещё раз.",
+    retry: "Попробовать ещё раз",
+    loading: "Загрузка…",
     required: "Заполните это поле",
   },
 };
@@ -505,6 +518,12 @@ async function api(path, opts = {}) {
 }
 
 let toastTimer;
+const skeleton = () => `<div class="skel" aria-busy="true"><p class="sr">${esc(L().loading)}</p><span class="tall"></span><span></span><span class="short"></span><span></span></div>`;
+function failed(el, retry) {
+  el.innerHTML = `<div class="failed" role="alert"><p>${esc(L().loadError)}</p><button class="btn" type="button">${esc(L().retry)}</button></div>`;
+  el.querySelector("button").onclick = () => { el.innerHTML = skeleton(); retry(); };
+}
+
 // Inline validation: the message sits under the field it belongs to, not in a toast.
 function validate(form) {
   form.querySelectorAll(".field .err").forEach(n => n.remove());
@@ -707,7 +726,7 @@ const J = {
     land: "Федеральна земля", city: "Місто", level: "Ваш рівень німецької", employment: "Яка зайнятість підходить",
     shiftsOk: "Можу працювати змінами", experience: "Ваш досвід", experiencePh: "Наприклад: 5 років працювала кухарем у ресторані в Києві",
     about: "Кілька слів про себе (можна пропустити)", submit: "Надіслати на перевірку",
-    inboxTitle: "Запрошення", inboxExplain: "Якщо погодитесь, бот надішле вам контакти роботодавця, а йому — ваш Telegram.",
+    inboxTitle: "Запрошення", inboxEmpty: "Запрошень поки немає. Коли роботодавець запросить вас, запрошення з’явиться тут, а бот надішле повідомлення.", inboxExplain: "Якщо погодитесь, бот надішле вам контакти роботодавця, а йому — ваш Telegram.",
     agree: "Погодитись", refuse: "Відмовитися", from: (c) => `${c}`, onVac: (v) => `Вакансія: ${v}`,
     myApps: "Мої відгуки", noScam: "Ніколи не платіть за працевлаштування і не надсилайте документи до підписання договору.",
     errors: { duplicate: "Ви вже надіслали це повідомлення. Воно чекає відповіді.",
@@ -757,7 +776,7 @@ const J = {
     land: "Федеральная земля", city: "Город", level: "Ваш уровень немецкого", employment: "Какая занятость подходит",
     shiftsOk: "Могу работать сменами", experience: "Ваш опыт", experiencePh: "Например: 5 лет работала поваром в ресторане в Киеве",
     about: "Пару слов о себе (можно пропустить)", submit: "Отправить на проверку",
-    inboxTitle: "Приглашения", inboxExplain: "Если согласитесь, бот отправит вам контакты работодателя, а ему — ваш Telegram.",
+    inboxTitle: "Приглашения", inboxEmpty: "Приглашений пока нет. Когда работодатель пригласит вас, приглашение появится здесь, а бот пришлёт сообщение.", inboxExplain: "Если согласитесь, бот отправит вам контакты работодателя, а ему — ваш Telegram.",
     agree: "Согласиться", refuse: "Отказаться", from: (c) => `${c}`, onVac: (v) => `Вакансия: ${v}`,
     myApps: "Мои отклики", noScam: "Никогда не платите за трудоустройство и не отправляйте документы до подписания договора.",
     errors: { duplicate: "Вы уже отправили это сообщение. Оно ждёт ответа.",
@@ -816,7 +835,8 @@ async function loadJobs() {
     [JOBS.me, JOBS.vacancies] = await Promise.all([japi("/api/jobs/me"), japi("/api/jobs/vacancies" + q)]);
     JOBS.seekers = JOBS.me.employer?.has_access ? await japi("/api/jobs/seekers" + q) : [];
     if (JOBS.me.employer && !JOBS.me.seeker && JOBS.view === "seeker" && !JOBS.sub) JOBS.view = "employer";
-  } catch (e) { jerr(e); }
+    JOBS.failed = false;
+  } catch (e) { if (JOBS.me) jerr(e); else JOBS.failed = true; }
   renderJobs();
   if (!$("page-home").querySelector(".board > li.open")) renderHome();
 }
@@ -831,7 +851,11 @@ function renderJobs() {
   const root = $("page-jobs"); if (!root) return;
   const T = JL();
   if (!tg?.initData) { root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2><p>${esc(L().openInTg)}</p></div>`; return; }
-  if (!JOBS.me) { root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2></div>`; return; }
+  if (!JOBS.me) {
+    root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2></div><div id="jstate"></div>`;
+    if (JOBS.failed) failed($("jstate"), loadJobs); else $("jstate").innerHTML = skeleton();
+    return;
+  }
   const sub = JOBS.sub;
   const backBar = (sub || JOBS.view === "employer") ? `<button class="backlink" id="jback">${esc(T.back)}</button>` : "";
   root.innerHTML = `<div class="jobs">${backBar}<div id="jbody"></div></div>`;
@@ -939,7 +963,8 @@ function jInbox(body) {
       ${answer && c.status === "sent" ? `<div class="row-btns"><button class="btn big" data-ans="${c.id}:1">${esc(T.agree)}</button>
         <button class="btn big line" data-ans="${c.id}:0">${esc(T.refuse)}</button></div>` : ""}
     </article>`;
-  body.innerHTML = `${invites.length ? `<div class="head"><h2>${esc(T.inboxTitle)}</h2><p>${esc(T.inboxExplain)}</p></div>${invites.map(c => item(c, true)).join("")}` : ""}
+  body.innerHTML = `${invites.length ? `<div class="head"><h2>${esc(T.inboxTitle)}</h2><p>${esc(T.inboxExplain)}</p></div>${invites.map(c => item(c, true)).join("")}`
+      : `<div class="head"><h2>${esc(T.inboxTitle)}</h2></div><div class="empty">${esc(T.inboxEmpty)}</div>`}
     ${apps.length ? `<h2 class="sec">${esc(T.myApps)}</h2>${apps.map(c => item(c, false)).join("")}` : ""}
     <p class="hint" style="margin:14px 16px">${esc(T.noScam)}</p>`;
   body.querySelectorAll("[data-ans]").forEach(b => b.onclick = async () => {
@@ -1084,7 +1109,7 @@ const HL = () => H[lang] || H.uk;
 let HOUSING = { data: null, tab: "terms" };
 
 async function loadHousing() {
-  try { HOUSING.data = await api("/api/housing"); } catch {}
+  try { HOUSING.data = await api("/api/housing"); HOUSING.failed = false; } catch { HOUSING.failed = true; }
   renderHousing();
 }
 
@@ -1095,7 +1120,7 @@ function renderHousing() {
     <div class="seg">${Object.entries(T.tabs).map(([k, v]) => `<button data-t="${k}" aria-pressed="${HOUSING.tab === k}">${esc(v)}</button>`).join("")}</div>
     <div class="jpanel" id="hpanel"></div>`;
   root.querySelectorAll(".seg button").forEach(b => b.onclick = () => { HOUSING.tab = b.dataset.t; renderHousing(); });
-  if (!HOUSING.data) return;
+  if (!HOUSING.data) { if (HOUSING.failed) failed($("hpanel"), loadHousing); else $("hpanel").innerHTML = skeleton(); return; }
   ({ terms: hTerms, docs: hDocs, calc: hCalc, letter: hLetter })[HOUSING.tab]($("hpanel"));
 }
 
@@ -1224,17 +1249,26 @@ function renderAll(page = "home") {
   show(page);
 }
 
-(async () => {
+// Telegram's stable viewport height, so layout does not jump while the sheet is dragged.
+function syncHeight() {
+  const h = tg?.viewportStableHeight;
+  if (h) document.documentElement.style.setProperty("--app-h", h + "px");
+}
+syncHeight();
+tg?.onEvent?.("viewportChanged", (e) => { if (!e || e.isStateStable) syncHeight(); });
+
+async function init() {
+  lang = tg?.initDataUnsafe?.user?.language_code === "ru" ? "ru" : "uk";
   try {
     [META, SOURCES] = await Promise.all([api("/api/meta"), api("/api/sources")]);
-    lang = tg?.initDataUnsafe?.user?.language_code === "ru" ? "ru" : "uk";
     if (tg?.initData) { ME = await api("/api/me"); if (ME.language) lang = ME.language; }
     renderAll(location.hash === "#housing" ? "housing" : location.hash === "#jobs" ? "jobs" : "home");
     loadJobs(); loadHousing();
   } catch {
-    document.querySelector("main").innerHTML = `<div class="head"><p>${esc(L().loadError)}</p></div>`;
+    failed($("page-home"), init);
   }
-})();
+}
+init();
 </script>
 </body>
 </html>
