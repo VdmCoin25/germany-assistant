@@ -160,3 +160,27 @@ async def test_delete_my_data_removes_job_records(h, sm):
     async with sm() as s:
         for m in (Employer, Vacancy, ContactRequest):
             assert await s.scalar(select(func.count(m.id))) == 0
+
+
+async def test_profile_submission_limit_two_per_hour(settings, sm):
+    from datetime import timedelta
+
+    from app.database.models import SubmissionLog
+    from app.database.repositories.jobs import now
+
+    app = create_app(settings, sm)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        for _ in range(2):
+            assert (await c.put("/api/jobs/seeker", headers=hdr(SEEKER), json=SEEKER_BODY)).status_code == 200
+        r = await c.put("/api/jobs/seeker", headers=hdr(SEEKER), json=SEEKER_BODY)
+        assert r.status_code == 429 and r.json()["detail"].startswith("submit_limit:")
+        # employer form shares the same limit
+        assert (await c.put("/api/jobs/employer", headers=hdr(SEEKER), json=EMPLOYER_BODY)).status_code == 429
+        # another user is not affected
+        assert (await c.put("/api/jobs/seeker", headers=hdr(SEEKER + 1), json=SEEKER_BODY)).status_code == 200
+        # after an hour it works again
+        async with sm() as s:
+            for row in await s.scalars(select(SubmissionLog).where(SubmissionLog.owner_tg == SEEKER)):
+                row.created_at = now() - timedelta(minutes=61)
+            await s.commit()
+        assert (await c.put("/api/jobs/seeker", headers=hdr(SEEKER), json=SEEKER_BODY)).status_code == 200

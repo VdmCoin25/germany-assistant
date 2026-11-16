@@ -176,7 +176,13 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
     async def put_seeker(body: SeekerIn, uid: WUid):
         async with sm() as s:
             await blocked(s, uid)
-            p = await JobsRepository(s).upsert_seeker(uid, **body.model_dump())
+            jobs = JobsRepository(s)
+            try:
+                await jobs.check_submission_limit(uid, settings.submission_limit_per_hour)
+            except JobsError as e:
+                fail(e)
+            await jobs.log_submission(uid, "seeker")
+            p = await jobs.upsert_seeker(uid, **body.model_dump())
             await s.commit()
             await notifier.to_admins(s, "seeker", p)
             return seeker_own(p)
@@ -195,7 +201,13 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
     async def put_employer(body: EmployerIn, uid: WUid):
         async with sm() as s:
             await blocked(s, uid)
-            e = await JobsRepository(s).upsert_employer(uid, **body.model_dump())
+            jobs = JobsRepository(s)
+            try:
+                await jobs.check_submission_limit(uid, settings.submission_limit_per_hour)
+            except JobsError as ex:
+                fail(ex)
+            await jobs.log_submission(uid, "employer")
+            e = await jobs.upsert_employer(uid, **body.model_dump())
             await s.commit()
             await notifier.to_admins(s, "employer", e)
             return {"status": e.status}

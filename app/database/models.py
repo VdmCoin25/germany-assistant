@@ -135,3 +135,14 @@ class ContactRequest(Base):
     status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SubmissionLog(Base):
+    """One row per form submission, used for per-user hourly limits (survives restarts)."""
+
+    __tablename__ = "submission_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_tg: Mapped[int] = mapped_column(BigInteger, index=True)
+    kind: Mapped[str] = mapped_column(String(16))  # seeker | employer
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

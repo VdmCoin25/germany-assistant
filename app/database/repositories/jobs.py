@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import ContactRequest, Employer, SeekerProfile, Vacancy
+from app.database.models import ContactRequest, Employer, SeekerProfile, SubmissionLog, Vacancy
 
 EMPLOYMENT = ("full", "part", "mini", "any")
 KINDS = ("seeker", "employer", "vacancy", "contact")
@@ -34,6 +34,20 @@ class JobsError(Exception):
 class JobsRepository:
     def __init__(self, session: AsyncSession):
         self.s = session
+
+    # ---------- submission limit ----------
+    async def check_submission_limit(self, tg: int, limit: int) -> None:
+        """Raise if the user already sent `limit` profile forms within the last hour; otherwise record this one."""
+        since = now() - timedelta(hours=1)
+        rows = list(await self.s.scalars(select(SubmissionLog.created_at).where(
+            SubmissionLog.owner_tg == tg, SubmissionLog.created_at >= since).order_by(SubmissionLog.created_at)))
+        if len(rows) >= limit:
+            wait = int(((aware(rows[0]) + timedelta(hours=1)) - now()).total_seconds() // 60) + 1
+            raise JobsError(f"submit_limit:{max(wait, 1)}", 429)
+
+    async def log_submission(self, tg: int, kind: str) -> None:
+        self.s.add(SubmissionLog(owner_tg=tg, kind=kind))
+        await self.s.flush()
 
     # ---------- seekers ----------
     async def seeker(self, tg: int) -> SeekerProfile | None:
@@ -258,6 +272,7 @@ class JobsRepository:
 
     # ---------- GDPR ----------
     async def delete_user(self, tg: int) -> None:
+        await self.s.execute(delete(SubmissionLog).where(SubmissionLog.owner_tg == tg))
         p, e = await self.seeker(tg), await self.employer(tg)
         if p:
             await self.s.execute(delete(ContactRequest).where(ContactRequest.seeker_id == p.id))

@@ -112,6 +112,7 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
             "employment": ["full", "part", "mini", "any"],
             "employer_price_eur": settings.employer_price_eur,
             "employer_pilot_days": settings.employer_pilot_days,
+            "submission_limit_per_hour": settings.submission_limit_per_hour,
         }
 
     @app.get("/api/me")

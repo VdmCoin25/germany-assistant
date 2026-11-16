@@ -489,7 +489,8 @@ const J = {
     offer: "Запропонувати роботу", offerMsg: "Повідомлення кандидату", forVac: "Вакансія", noVacOpt: "Без вакансії",
     expShort: "Досвід", errors: { duplicate: "Ви вже надіслали це повідомлення, воно чекає відповіді.",
       employer_no_access: "Немає доступу роботодавця.", seeker_not_approved: "Анкета ще не перевірена.",
-      rate_limited: "Забагато дій. Спробуйте за хвилину.", invalid: "Перевірте поля: щось заповнено не так або занадто коротко.",
+      rate_limited: "Забагато дій. Спробуйте за хвилину.",
+      submit_limit: (m) => `Анкету можна надсилати не частіше ${META.submission_limit_per_hour} разів на годину. Спробуйте через ${m} хв.`, invalid: "Перевірте поля: щось заповнено не так або занадто коротко.",
       other: "Не вдалося. Перевірте інтернет і спробуйте ще раз." },
   },
   ru: {
@@ -524,7 +525,8 @@ const J = {
     offer: "Предложить работу", offerMsg: "Сообщение кандидату", forVac: "Вакансия", noVacOpt: "Без вакансии",
     expShort: "Опыт", errors: { duplicate: "Вы уже отправили это сообщение, оно ждёт ответа.",
       employer_no_access: "Нет доступа работодателя.", seeker_not_approved: "Анкета ещё не проверена.",
-      rate_limited: "Слишком много действий. Попробуйте через минуту.", invalid: "Проверьте поля: что-то заполнено не так или слишком коротко.",
+      rate_limited: "Слишком много действий. Попробуйте через минуту.",
+      submit_limit: (m) => `Анкету можно отправлять не чаще ${META.submission_limit_per_hour} раз в час. Попробуйте через ${m} мин.`, invalid: "Проверьте поля: что-то заполнено не так или слишком коротко.",
       other: "Не получилось. Проверьте интернет и попробуйте ещё раз." },
   },
 };
@@ -538,7 +540,10 @@ async function japi(path, opts = {}) {
   if (!res.ok) { const e = new Error(res.status); e.code = res.status === 422 ? "invalid" : (data && data.detail); throw e; }
   return data;
 }
-const jerr = (e) => toast(JL().errors[e.code] || JL().errors.other);
+const jerr = (e) => {
+  const m = /^submit_limit:(\d+)$/.exec(e.code || "");
+  toast(m ? JL().errors.submit_limit(m[1]) : (JL().errors[e.code] || JL().errors.other));
+};
 const badge = (st) => `<span class="badge ${["approved", "accepted", "sent"].includes(st) ? "ok" : ["rejected", "declined", "closed"].includes(st) ? "no" : ""}">${esc(JL().status[st] || st)}</span>`;
 const landName = (c) => c ? (META.lands[c] || c) : "";
 const where = (o) => [o.city, landName(o.land)].filter((x, i, arr) => x && arr.indexOf(x) === i).join(", ");

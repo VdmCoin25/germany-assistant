@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     employer_pilot_days: int = 30
     employer_price_eur: int = 100
     vacancy_days: int = 30
+    # Max profile submissions (seeker or employer form) per user per hour
+    submission_limit_per_hour: int = 2
 
     # Analytics: salt for pseudonymous user hash (keep secret, change before production)
     analytics_salt: str = "change-me"
