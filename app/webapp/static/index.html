@@ -26,80 +26,84 @@
     src: url(/static/fonts/ibm-plex-sans-latin-ext-600-normal.woff2) format("woff2");
     unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+20A0-20AB,U+20AD-20C0; }
 
-  /* Idea: the app is a paper binder (Ordner) with a spine label and numbered register tabs —
-     the thing people actually carry to the Jobcenter and the Ausländerbehörde. */
+  /* Idea: a station departure board. Each section is a departure with a platform number and a status;
+     the header is the platform sign, with light rain on it. */
   :root {
-    --paper: #F3F5F2;
+    --platform: #EEF1F5;
     --sheet: #FFFFFF;
-    --form: #E4ECE3;
-    --ink: #1B2638;
-    --pencil: #5D6775;
-    --rule: #D5DAD3;
-    --cover: #23417A;
+    --ink: #13203A;
+    --pencil: #5B6678;
+    --rule: #D6DCE5;
+    --board: #133A7C;
+    --board-deep: #0E2D63;
+    --board-line: rgba(255,255,255,.14);
+    --on-board: #FFFFFF;
+    --on-board-dim: rgba(255,255,255,.72);
+    --signal: #FFD23F;
     --danger: #B42318;
-    --t1: #F2C230; --t2: #8CC5E8; --t3: #9FCD92; --t4: #F2AFA6; --t5: #C9B9E8; --t6: #EBD39B;
-    --tab-ink: #1B2638;
   }
   [data-theme="dark"] {
-    --paper: #161B22; --sheet: #1E242D; --form: #232C27; --ink: #E9EDF2; --pencil: #9AA4B2;
-    --rule: #2E3640; --cover: #2B4C8C; --danger: #F07167;
+    --platform: #12171F; --sheet: #1B222C; --ink: #E8EDF3; --pencil: #9AA5B4; --rule: #2A3340; --danger: #F07167;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { background: var(--paper); }
-  body { margin: 0; font: 16px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--paper);
-         padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  html { background: var(--platform); }
+  body { margin: 0; font: 16px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--platform);
+         padding-bottom: calc(64px + env(safe-area-inset-bottom)); font-variant-numeric: tabular-nums; }
   button, input, select { font: inherit; color: inherit; }
-  :focus-visible { outline: 2px solid var(--cover); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
   a { color: inherit; }
 
-  /* Binder spine label */
-  .spine { background: var(--cover); padding: 18px 16px 20px; display: flex; align-items: center; gap: 16px; }
-  .label { flex: 1; background: #FFFFFF; color: #1B2638; border-radius: 3px; padding: 12px 14px 13px; }
-  .label .owner { margin: 0; font-size: 13px; color: #5D6775; }
-  .label h1 { margin: 2px 0 0; font-size: 22px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
-  .hole { width: 46px; height: 46px; border-radius: 50%; background: var(--paper); flex: none;
-          box-shadow: inset 0 3px 6px rgba(0,0,0,.35); }
+  /* Platform sign with rain */
+  .sign { position: relative; overflow: hidden; background: var(--board); color: var(--on-board);
+          padding: 18px 16px 16px; border-bottom: 3px solid var(--on-board); }
+  .sign canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .sign .top { position: relative; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sign .owner { margin: 0; font-size: 13px; color: var(--on-board-dim); }
+  .sign .clock { font-size: 28px; font-weight: 600; letter-spacing: .02em; line-height: 1; }
+  .sign h1 { position: relative; margin: 8px 0 0; font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.01em; }
 
   main { max-width: 640px; margin: 0 auto; }
   .page { display: none; }
   .page.on { display: block; }
 
-  /* Register: one sheet per section, numbered tab sticks out on the right */
-  .register { list-style: none; margin: 18px 0 0; padding: 0 0 0 16px; }
-  .register > li { margin-bottom: 6px; }
-  .row { position: relative; }
-  .sheet { display: block; width: calc(100% - 44px); text-align: left; background: var(--sheet); border: 0;
-           border-radius: 4px 0 0 4px; padding: 14px 16px; cursor: pointer; box-shadow: 0 1px 0 var(--rule); }
-  .sheet .t { display: block; font-weight: 600; font-size: 17px; }
-  .sheet .s { display: block; font-size: 14px; color: var(--pencil); margin-top: 1px; }
-  .tab { position: absolute; right: 0; top: 0; width: 44px; height: 100%; display: grid; place-items: start center;
-         padding-top: 16px; background: var(--tab); color: var(--tab-ink); font-weight: 600; font-size: 15px;
-         border-radius: 0 6px 6px 0; pointer-events: none; }
-  .register > li.open .sheet { border-radius: 4px 0 0 0; }
-  .body { display: none; width: calc(100% - 44px); background: var(--sheet); padding: 2px 16px 16px;
-          border-top: 1px dashed var(--rule); border-radius: 0 0 0 4px; }
-  .register > li.open .body { display: block; }
-  .body p { margin: 10px 0 0; font-size: 15px; max-width: 60ch; }
+  /* Departure board */
+  .board { list-style: none; margin: 0; padding: 0 0 6px; background: var(--board-deep); color: var(--on-board);
+           min-height: calc(100vh - 170px); }
+  .board > li { border-bottom: 1px solid var(--board-line); }
+  .dep { display: grid; grid-template-columns: 44px 1fr auto; gap: 0 14px; align-items: start; width: 100%;
+         text-align: left; background: none; border: 0; padding: 14px 16px; cursor: pointer; }
+  .gleis { grid-row: span 2; width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid var(--on-board);
+           font-weight: 600; font-size: 17px; }
+  .dest { font-weight: 600; font-size: 18px; line-height: 1.3; }
+  .via { grid-column: 2 / 4; font-size: 14px; color: var(--on-board-dim); }
+  .state { font-size: 14px; font-weight: 600; white-space: nowrap; padding-top: 3px; color: var(--on-board); }
+  .state.wait { color: var(--signal); }
+  .announce { display: none; margin: 0 16px 14px 74px; padding: 2px 0 2px 12px; border-left: 3px solid var(--signal); }
+  .board > li.open .announce { display: block; }
+  .announce p { margin: 0; font-size: 15px; max-width: 58ch; }
+  .announce .links { margin-top: 0; }
+  .announce .links li { border-color: var(--board-line); }
+  .announce .links .name { text-decoration-color: var(--on-board-dim); }
+  .announce .links .meta { color: var(--on-board-dim); }
 
   .links { list-style: none; margin: 4px 0 0; padding: 0; }
   .links li { border-bottom: 1px solid var(--rule); }
   .links li:last-child { border-bottom: 0; }
-  .links a { display: block; padding: 11px 0; text-decoration: none; }
+  .links a { display: block; padding: 10px 0; text-decoration: none; }
   .links .name { display: block; font-weight: 600; text-decoration: underline; text-decoration-color: var(--rule);
                  text-underline-offset: 3px; }
   .links .meta { display: block; font-size: 13px; color: var(--pencil); }
 
-  .btn { display: inline-block; margin-top: 14px; padding: 11px 18px; border: 0; border-radius: 4px;
-         background: var(--ink); color: var(--paper); font-weight: 600; cursor: pointer; }
-  .btn.wide { width: 100%; margin-top: 20px; }
+  .btn { display: inline-block; margin-top: 12px; padding: 10px 16px; border: 0; border-radius: 2px;
+         background: var(--signal); color: #13203A; font-weight: 600; cursor: pointer; }
+  .btn.wide { width: 100%; margin-top: 22px; background: var(--board); color: #FFFFFF; }
   .btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 1.5px var(--danger); }
 
   .head { padding: 22px 16px 4px; }
   .head h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
   .head p { margin: 4px 0 0; color: var(--pencil); font-size: 15px; max-width: 60ch; }
 
-  /* Profile looks like a German paper form */
-  .form { margin: 14px 16px 0; background: var(--form); border-radius: 4px; padding: 6px 14px 16px; }
+  .form { margin: 14px 16px 0; background: var(--sheet); padding: 4px 14px 16px; border-top: 3px solid var(--board); }
   .field { padding: 14px 0 0; }
   .field label { display: block; font-size: 13px; color: var(--pencil); }
   .field input, .field select { width: 100%; border: 0; border-bottom: 1.5px solid var(--ink); background-color: transparent;
@@ -109,10 +113,9 @@
                   background-position: calc(100% - 10px) 55%, calc(100% - 5px) 55%;
                   background-size: 5px 5px; background-repeat: no-repeat; padding-right: 22px; }
   .check { display: flex; gap: 10px; align-items: flex-start; padding-top: 18px; font-size: 15px; }
-  .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ink); flex: none; }
+  .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--board); flex: none; }
 
-  /* Reference catalogue */
-  .topics { margin: 12px 16px 0; background: var(--sheet); border-radius: 4px; }
+  .topics { margin: 12px 16px 0; background: var(--sheet); border-top: 3px solid var(--board); }
   .topics details { border-bottom: 1px solid var(--rule); }
   .topics details:last-child { border-bottom: 0; }
   .topics summary { list-style: none; padding: 14px; font-weight: 600; cursor: pointer; display: flex;
@@ -122,29 +125,31 @@
   .topics details[open] summary::after { content: "−"; }
   .topics .links { padding: 0 14px 6px; }
 
-  .plain { margin: 12px 16px 0; background: var(--sheet); border-radius: 4px; padding: 4px 14px 16px; }
+  .plain { margin: 12px 16px 0; background: var(--sheet); padding: 4px 14px 16px; border-top: 3px solid var(--board); }
   .plain p { max-width: 60ch; }
   .plain .quiet { color: var(--pencil); }
 
-  nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--paper);
+  nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--platform);
         border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
   nav button { flex: 1; border: 0; background: none; padding: 16px 4px 15px; font-size: 14px; color: var(--pencil);
                cursor: pointer; position: relative; }
   nav button[aria-current="page"] { color: var(--ink); font-weight: 600; }
   nav button[aria-current="page"]::before { content: ""; position: absolute; left: 22%; right: 22%; top: -1px;
-               height: 3px; background: var(--ink); }
+               height: 3px; background: var(--board); }
+  [data-theme="dark"] nav button[aria-current="page"]::before { background: var(--signal); }
 
   .toast { position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
-           background: var(--ink); color: var(--paper); padding: 12px 14px; border-radius: 4px; font-size: 15px;
+           background: var(--board); color: #FFFFFF; padding: 12px 14px; font-size: 15px;
            transform: translateY(8px); opacity: 0; transition: .18s ease-out; pointer-events: none; }
   .toast.show { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 </style>
 </head>
 <body>
-<header class="spine">
-  <div class="label"><p class="owner" id="owner">Germany Assistant</p><h1 id="title"></h1></div>
-  <div class="hole" aria-hidden="true"></div>
+<header class="sign">
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <div class="top"><p class="owner" id="owner">Germany Assistant</p><span class="clock" id="clock" aria-hidden="true"></span></div>
+  <h1 id="title"></h1>
 </header>
 
 <main>
@@ -161,26 +166,60 @@
 const tg = window.Telegram?.WebApp;
 tg?.ready(); tg?.expand();
 if (tg?.colorScheme === "dark") document.documentElement.dataset.theme = "dark";
-try { tg?.setHeaderColor?.(getComputedStyle(document.documentElement).getPropertyValue("--cover").trim()); } catch {}
+try { tg?.setHeaderColor?.("#133A7C"); } catch {}
+
+// Station clock (Berlin time)
+function tick() {
+  const t = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }).format(new Date());
+  document.getElementById("clock").textContent = t;
+}
+tick(); setInterval(tick, 15000);
+
+// Light rain on the platform sign. Off when the user asks for reduced motion or the page is hidden.
+(function rain() {
+  const c = document.getElementById("rain");
+  if (!c || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ctx = c.getContext("2d"), dpr = Math.min(devicePixelRatio || 1, 2);
+  let w, h, drops = [];
+  function size() {
+    w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drops = Array.from({ length: Math.round(w / 9) }, () => ({ x: Math.random() * w, y: Math.random() * h,
+      l: 8 + Math.random() * 12, v: 4 + Math.random() * 4, a: .12 + Math.random() * .22 }));
+  }
+  size(); addEventListener("resize", size);
+  let last = 0;
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    if (document.hidden || ts - last < 33) return; last = ts;
+    ctx.clearRect(0, 0, w, h); ctx.lineWidth = 1; ctx.lineCap = "round";
+    for (const d of drops) {
+      ctx.strokeStyle = `rgba(255,255,255,${d.a})`;
+      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * .18, d.y + d.l); ctx.stroke();
+      d.y += d.v; d.x -= d.v * .18;
+      if (d.y > h) { d.y = -d.l; d.x = Math.random() * (w + 20); }
+    }
+  }
+  requestAnimationFrame(frame);
+})();
 
 const I18N = {
   uk: {
-    title: "Папка для життя в Німеччині",
-    nav: { home: "Папка", profile: "Анкета", info: "Довідник", privacy: "Мої дані" },
+    title: "Куди вам сьогодні?",
+    nav: { home: "Табло", profile: "Анкета", info: "Довідник", privacy: "Мої дані" },
     sections: [
-      ["documents", "Документи", "Розбір німецьких листів. Готується"],
-      ["jobs", "Робота", "Офіційні сайти з вакансіями"],
-      ["housing", "Житло", "Офіційна інформація"],
-      ["translator", "Перекладач", "Готується"],
-      ["ai", "AI-помічник", "Готується"],
-      ["info", "Довідник", "Anmeldung, Jobcenter, страхування та інше"],
+      ["documents", "Документи", "Розбір німецьких листів", 0],
+      ["jobs", "Робота", "Офіційні сайти з вакансіями", 1],
+      ["housing", "Житло", "Офіційна інформація", 1],
+      ["translator", "Перекладач", "Німецька, українська, російська", 0],
+      ["ai", "AI-помічник", "Питання про життя в Німеччині", 0],
+      ["info", "Довідник", "Anmeldung, Jobcenter, страхування та інше", 1],
     ],
     soon: {
       documents: "Ви зможете надіслати фото чи PDF листа в чат і отримати переклад, пояснення простими словами, строки й наступні кроки. Поки розділ готується, бот не дає вигаданих відповідей.",
       translator: "Переклад з німецької на українську і назад: з тексту, фото й голосових. Розділ готується.",
       ai: "Відповіді на питання про життя в Німеччині з посиланнями на офіційні джерела. Розділ готується, поки дивіться довідник.",
     },
-    toChat: "Повернутися в чат",
+    toChat: "Повернутися в чат", open: "Відкрито", soonState: "Готується",
     profileHead: "Анкета", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
     language: "Мова", land: "Федеральна земля", city: "Місто", level: "Рівень німецької", goal: "З чим потрібна допомога",
     status: "Статус перебування", broadcast: "Надсилати мені оголошення бота",
@@ -199,22 +238,22 @@ const I18N = {
     loadError: "Не вдалося завантажити дані. Закрийте і відкрийте застосунок ще раз.",
   },
   ru: {
-    title: "Папка для жизни в Германии",
-    nav: { home: "Папка", profile: "Анкета", info: "Справочник", privacy: "Мои данные" },
+    title: "Куда вам сегодня?",
+    nav: { home: "Табло", profile: "Анкета", info: "Справочник", privacy: "Мои данные" },
     sections: [
-      ["documents", "Документы", "Разбор немецких писем. Готовится"],
-      ["jobs", "Работа", "Официальные сайты с вакансиями"],
-      ["housing", "Жильё", "Официальная информация"],
-      ["translator", "Переводчик", "Готовится"],
-      ["ai", "AI-помощник", "Готовится"],
-      ["info", "Справочник", "Anmeldung, Jobcenter, страховка и другое"],
+      ["documents", "Документы", "Разбор немецких писем", 0],
+      ["jobs", "Работа", "Официальные сайты с вакансиями", 1],
+      ["housing", "Жильё", "Официальная информация", 1],
+      ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
+      ["ai", "AI-помощник", "Вопросы о жизни в Германии", 0],
+      ["info", "Справочник", "Anmeldung, Jobcenter, страховка и другое", 1],
     ],
     soon: {
       documents: "Вы сможете отправить фото или PDF письма в чат и получить перевод, объяснение простыми словами, сроки и следующие шаги. Пока раздел готовится, бот не даёт выдуманных ответов.",
       translator: "Перевод с немецкого на украинский и русский и обратно: из текста, фото и голосовых. Раздел готовится.",
       ai: "Ответы на вопросы о жизни в Германии со ссылками на официальные источники. Раздел готовится, пока смотрите справочник.",
     },
-    toChat: "Вернуться в чат",
+    toChat: "Вернуться в чат", open: "Открыто", soonState: "Готовится",
     profileHead: "Анкета", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
     language: "Язык", land: "Федеральная земля", city: "Город", level: "Уровень немецкого", goal: "С чем нужна помощь",
     status: "Статус пребывания", broadcast: "Присылать мне объявления бота",
@@ -282,19 +321,23 @@ function sheetBody(k) {
 }
 
 function renderHome() {
-  $("page-home").innerHTML = `<ol class="register">${L().sections.map(([k, name, sub], i) => `
-    <li data-k="${k}" style="--tab: var(--t${i + 1})">
-      <div class="row"><button class="sheet" aria-expanded="false"><span class="t">${esc(name)}</span><span class="s">${esc(sub)}</span></button>
-      <span class="tab" aria-hidden="true">${i + 1}</span></div>
-      <div class="body">${sheetBody(k)}</div>
+  $("page-home").innerHTML = `<ol class="board">${L().sections.map(([k, name, via, ready], i) => `
+    <li data-k="${k}">
+      <button class="dep" aria-expanded="false">
+        <span class="gleis" aria-hidden="true">${i + 1}</span>
+        <span class="dest">${esc(name)}</span>
+        <span class="state ${ready ? "" : "wait"}">${esc(ready ? L().open : L().soonState)}</span>
+        <span class="via">${esc(via)}</span>
+      </button>
+      <div class="announce">${sheetBody(k)}</div>
     </li>`).join("")}</ol>`;
-  $("page-home").querySelectorAll(".register > li").forEach(li => {
-    const btn = li.querySelector(".sheet");
+  $("page-home").querySelectorAll(".board > li").forEach(li => {
+    const btn = li.querySelector(".dep");
     btn.onclick = () => {
       if (li.dataset.k === "info") return show("info");
       const open = !li.classList.contains("open");
-      $("page-home").querySelectorAll(".register > li.open").forEach(o => {
-        o.classList.remove("open"); o.querySelector(".sheet").setAttribute("aria-expanded", "false"); });
+      $("page-home").querySelectorAll(".board > li.open").forEach(o => {
+        o.classList.remove("open"); o.querySelector(".dep").setAttribute("aria-expanded", "false"); });
       li.classList.toggle("open", open); btn.setAttribute("aria-expanded", String(open));
       tg?.HapticFeedback?.selectionChanged();
     };
