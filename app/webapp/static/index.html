@@ -28,22 +28,24 @@
 
   /* Idea: a station departure board. Each section is a departure with a platform number and a status;
      the header is the platform sign, with light rain on it. */
+  /* The whole app is the platform below the lamp: wet asphalt, enamel station plates,
+     warm lamp light for the main actions. Same look in Telegram's light and dark themes. */
   :root {
-    --platform: #EEF1F5;
-    --sheet: #FFFFFF;
-    --ink: #13203A;
-    --pencil: #5B6678;
-    --rule: #D6DCE5;
-    --board: #133A7C;
-    --board-deep: #0E2D63;
-    --board-line: rgba(255,255,255,.14);
+    --platform: #0E1729;      /* wet asphalt */
+    --sheet: #17305C;         /* enamel plate */
+    --ink: #F3F6FB;
+    --pencil: #AEBBD0;
+    --rule: rgba(255,255,255,.14);
+    --board: #1F4285;
+    --board-deep: #0E1729;
+    --board-line: rgba(255,255,255,.12);
     --on-board: #FFFFFF;
-    --on-board-dim: rgba(255,255,255,.72);
-    --signal: #FFD23F;
-    --danger: #B42318;
-  }
-  [data-theme="dark"] {
-    --platform: #12171F; --sheet: #1B222C; --ink: #E8EDF3; --pencil: #9AA5B4; --rule: #2A3340; --danger: #F07167;
+    --on-board-dim: rgba(255,255,255,.74);
+    --signal: #FFC566;        /* lamp light */
+    --danger: #FF8E80;
+    --ok: #7BD39A;
+    --rim: rgba(255,255,255,.55);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { background: var(--platform); }
@@ -251,6 +253,83 @@
   .backlink { padding: 11px 0 9px; }
   .check { min-height: 44px; align-items: center; }
   .check input { width: 22px; height: 22px; }
+
+  /* ---- Night platform theme (everything below the header) ---- */
+  html, body { background: var(--platform); }
+  main { background:
+           radial-gradient(ellipse 60% 220px at 88% 0, rgba(255,197,102,.13), transparent 70%),
+           linear-gradient(180deg, rgba(255,255,255,.025), transparent 260px); min-height: calc(100vh - 151px); }
+  .board-wrap { background: transparent; }
+  .board { background: transparent; }
+  .board > li { border-bottom-color: var(--board-line); }
+  .gleis { border-radius: 4px; }
+  .board-label { color: var(--pencil); }
+
+  /* Main line: lit poster under the lamp */
+  .mainline { background: var(--signal); border-radius: 8px;
+              box-shadow: 0 0 0 1px rgba(255,197,102,.35), 0 10px 40px rgba(255,197,102,.18); }
+  .mainline .gleis { border-radius: 6px; }
+  .m-cta { border-radius: 6px; }
+
+  /* Enamel plates: blue, white rim, slightly rounded */
+  .card, .form, .vac, .items, .topics, .plain, .empty, .price {
+    background: var(--sheet); border: 0; border-top: 0; border-radius: 8px;
+    box-shadow: inset 0 0 0 1.5px var(--rim), 0 6px 18px rgba(0,0,0,.25); }
+  .vac { border-left: 0; }
+  .vac.open { box-shadow: inset 0 0 0 2px var(--signal), 0 6px 18px rgba(0,0,0,.25); }
+  .card.profile.pending { box-shadow: inset 0 0 0 2px var(--signal), 0 6px 18px rgba(0,0,0,.25); }
+  .card.profile.approved { box-shadow: inset 0 0 0 2px var(--ok), 0 6px 18px rgba(0,0,0,.25); }
+  .card.profile.rejected { box-shadow: inset 0 0 0 2px var(--danger), 0 6px 18px rgba(0,0,0,.25); }
+  .price { background: var(--board); }
+  .items .item, .topics details { border-color: var(--rule); }
+  .head h2, .sec { color: var(--ink); }
+  .head p, .hint, .co, .meta { color: var(--pencil); }
+  a { color: var(--ink); }
+  .links .name { text-decoration-color: var(--signal); }
+
+  /* Buttons: lamp-lit primary, outlined secondary */
+  .btn { background: var(--signal); color: #13203A; border-radius: 6px; }
+  .btn.wide { background: var(--signal); color: #13203A; }
+  .btn.line, .btn.big.line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--rim); }
+  .btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
+  .invite-banner { border-radius: 8px; box-shadow: 0 10px 40px rgba(255,197,102,.18); }
+  .invite-banner span { border-radius: 6px; }
+  .backlink, [data-theme="dark"] .backlink { color: var(--signal); border-color: var(--signal); }
+  .emp-link { color: var(--pencil); }
+
+  /* Badges and tags as small enamel tabs */
+  .badge { border-radius: 4px; background: var(--signal); color: #13203A; }
+  .badge.ok { background: var(--ok); color: #0E1729; }
+  .badge.no { background: var(--danger); color: #0E1729; }
+  .done { color: var(--ok); }
+  .tags span { background: rgba(255,255,255,.08); color: var(--ink); border-radius: 4px; }
+  .tags .pay { background: var(--signal); color: #13203A; }
+
+  /* Fields: chalk underline on enamel */
+  .field input, .field select, .filter select { color: var(--ink); border-bottom-color: rgba(255,255,255,.7); }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(174,187,208,.75); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--signal); }
+  .field textarea { border-color: rgba(255,255,255,.55); border-radius: 6px; background: rgba(0,0,0,.15); color: var(--ink); }
+  .field select option, .filter select option { background: #17305C; color: #F3F6FB; }
+  .check input { accent-color: var(--signal); }
+  .pick button { border-color: var(--rim); border-radius: 6px; color: var(--ink); }
+  .pick button[aria-checked="true"] { background: var(--signal); border-color: var(--signal); color: #13203A; }
+
+  /* Segmented tabs (housing) */
+  .seg, [data-theme="dark"] .seg { border: 0; gap: 6px; }
+  .seg button { background: transparent; color: var(--pencil); border-radius: 6px; box-shadow: inset 0 0 0 1.5px var(--rule); }
+  .seg button + button, [data-theme="dark"] .seg button + button { border-left: 0; }
+  .seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: inset 0 0 0 2px var(--signal); }
+
+  /* Bottom bar: platform edge with the white safety line */
+  nav { background: #0A1220; border-top: 0; }
+  nav::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+                background: repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 14px, transparent 14px 20px); }
+  nav button { color: var(--pencil); }
+  nav button[aria-current="page"] { color: var(--signal); }
+  nav button[aria-current="page"]::before, [data-theme="dark"] nav button[aria-current="page"]::before {
+    background: var(--signal); top: 3px; }
+  .toast { background: var(--signal); color: #13203A; border-radius: 6px; }
 </style>
 </head>
 <body>
@@ -277,7 +356,7 @@
 const tg = window.Telegram?.WebApp;
 tg?.ready(); tg?.expand();
 if (tg?.colorScheme === "dark") document.documentElement.dataset.theme = "dark";
-try { tg?.setHeaderColor?.("#0A1B3D"); } catch {}
+try { tg?.setHeaderColor?.("#0A1B3D"); tg?.setBackgroundColor?.("#0E1729"); tg?.setBottomBarColor?.("#0A1220"); } catch {}
 
 // Station clock (Berlin time)
 function tick() {
