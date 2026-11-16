@@ -6,9 +6,11 @@ from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data.jobs_radar_keywords import KEYWORDS
-from app.database.models import JobChat, JobChatDaily, JobKeyword, JobRadarAction, JobSignal, utcnow
+from app.database.models import (
+    JobAgency, JobChat, JobChatDaily, JobKeyword, JobRadarAction, JobSignal, utcnow,
+)
 from app.jobs_radar.discovery import FoundLink
-from app.jobs_radar.scoring import score_chat
+from app.jobs_radar.scoring import ACTIVE_MIN_POSTS_PER_DAY, score_chat
 from app.jobs_radar.tglinks import ChatLink, parse_chat_link
 
 STATUSES = ("candidate", "approved", "joined", "rejected")
@@ -294,6 +296,43 @@ class JobsRadarRepository:
             )
         await self.s.flush()
         return len(chats)
+
+    # --- export / stats (J4) ---
+
+    async def top_sources(self, limit: int = 50) -> list[JobChat]:
+        res = await self.s.scalars(
+            select(JobChat)
+            .where(JobChat.status != "rejected", JobChat.entity_type != "user")
+            .order_by(JobChat.score.desc(), JobChat.posts_per_day_7d.desc(), JobChat.id)
+            .limit(limit)
+        )
+        return list(res)
+
+    async def top_agencies(self, limit: int = 30) -> list[JobAgency]:
+        res = await self.s.scalars(
+            select(JobAgency).order_by(JobAgency.signals_count.desc(), JobAgency.last_seen_at.desc(), JobAgency.id)
+            .limit(limit)
+        )
+        return list(res)
+
+    async def radar_stats(self, now: datetime) -> dict:
+        since = now - timedelta(days=7)
+        by_status = dict((await self.s.execute(
+            select(JobChat.status, func.count(JobChat.id)).group_by(JobChat.status)
+        )).all())
+        active = await self.s.scalar(select(func.count(JobChat.id)).where(
+            JobChat.status == "joined", JobChat.posts_per_day_7d >= ACTIVE_MIN_POSTS_PER_DAY)) or 0
+        signals = dict((await self.s.execute(
+            select(JobSignal.kind, func.count(JobSignal.id)).where(JobSignal.created_at >= since)
+            .group_by(JobSignal.kind)
+        )).all())
+        agencies_total = await self.s.scalar(select(func.count(JobAgency.id))) or 0
+        agencies_new = await self.s.scalar(
+            select(func.count(JobAgency.id)).where(JobAgency.first_seen_at >= since)) or 0
+        return {
+            "chats_by_status": by_status, "active_chats": active, "signals_7d": signals,
+            "agencies_total": agencies_total, "agencies_new_7d": agencies_new,
+        }
 
     async def purge_daily(self, older_than_days: int = 30) -> int:
         cutoff = (utcnow() - timedelta(days=older_than_days)).date()
