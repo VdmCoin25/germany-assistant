@@ -1,0 +1,103 @@
+"""Entry point: runs the Telegram bot (long polling) and the Mini App backend together."""
+import asyncio
+import logging
+
+import uvicorn
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.enums import ParseMode
+from aiogram.fsm.storage.base import BaseStorage
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from app.admin.handlers import router as admin_router
+from app.bot.handlers import common, menu, settings as settings_h, start
+from app.bot.middlewares.db import DbMiddleware
+from app.bot.middlewares.throttling import RateLimiter, ThrottlingMiddleware
+from app.config import Settings, get_settings
+from app.database.repositories.sources import SourceRepository
+from app.database.session import make_engine, make_sessionmaker
+from app.i18n import t
+
+log = logging.getLogger("app")
+
+COMMANDS = {
+    "uk": [("start", "Почати"), ("menu", "Головне меню"), ("help", "Допомога"),
+           ("settings", "Налаштування"), ("privacy", "Конфіденційність"), ("delete_my_data", "Видалити мої дані")],
+    "ru": [("start", "Начать"), ("menu", "Главное меню"), ("help", "Помощь"),
+           ("settings", "Настройки"), ("privacy", "Конфиденциальность"), ("delete_my_data", "Удалить мои данные")],
+}
+
+
+def make_storage(settings: Settings) -> BaseStorage:
+    if settings.redis_url:
+        from aiogram.fsm.storage.redis import RedisStorage
+
+        return RedisStorage.from_url(settings.redis_url)
+    return MemoryStorage()
+
+
+def build_dispatcher(settings: Settings, sessionmaker: async_sessionmaker, storage: BaseStorage | None = None) -> Dispatcher:
+    dp = Dispatcher(storage=storage or MemoryStorage(), settings=settings)
+    dp.update.outer_middleware(DbMiddleware(sessionmaker, settings))
+    throttle = ThrottlingMiddleware(RateLimiter(settings.rate_limit_per_minute), exempt=set(settings.admin_ids))
+    dp.message.middleware(throttle)
+    dp.callback_query.middleware(throttle)
+    # Order matters: admin and specific routers first, fallback last.
+    dp.include_routers(admin_router, start.router, common.router, menu.router, settings_h.router, common.fallback_router)
+    dp.errors.register(common.on_error)
+    return dp
+
+
+async def setup_bot_ui(bot: Bot, settings: Settings) -> None:
+    for lang, cmds in COMMANDS.items():
+        await bot.set_my_commands([BotCommand(command=c, description=d) for c, d in cmds], language_code=lang)
+    await bot.set_my_commands([BotCommand(command=c, description=d) for c, d in COMMANDS["uk"]])
+    if settings.webapp_url:
+        await bot.set_chat_menu_button(menu_button=MenuButtonWebApp(
+            text=t("uk", "open_app").split(" ", 1)[-1], web_app=WebAppInfo(url=settings.webapp_url)))
+
+
+async def run() -> None:
+    settings = get_settings()
+    logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # aiogram logs update contents at DEBUG; keep it quiet to avoid leaking personal data.
+    logging.getLogger("aiogram.event").setLevel(logging.WARNING)
+
+    engine = make_engine(settings.database_url)
+    sm = make_sessionmaker(engine)
+    async with sm() as s:
+        added = await SourceRepository(s).seed_if_empty()
+        await s.commit()
+        if added:
+            log.info("Seeded %s info sources", added)
+
+    session = AiohttpSession(proxy=settings.telegram_proxy) if settings.telegram_proxy else None
+    bot = Bot(settings.bot_token, session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp = build_dispatcher(settings, sm, make_storage(settings))
+    me = await bot.get_me()
+    log.info("Bot @%s started", me.username)
+    await setup_bot_ui(bot, settings)
+
+    tasks = [dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())]
+    if settings.run_webapp:
+        from app.webapp.api import create_app
+
+        server = uvicorn.Server(uvicorn.Config(create_app(settings, sm), host=settings.webapp_host,
+                                               port=settings.webapp_port, log_level="warning", access_log=False))
+        tasks.append(server.serve())
+    try:
+        await asyncio.gather(*tasks)
+    finally:
+        await bot.session.close()
+        await engine.dispose()
+
+
+def main() -> None:
+    asyncio.run(run())
+
+
+if __name__ == "__main__":
+    main()

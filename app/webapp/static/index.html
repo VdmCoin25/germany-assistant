@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Germany Assistant</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f5);
+    --text: var(--tg-theme-text-color, #111);
+    --hint: var(--tg-theme-hint-color, #8a8f98);
+    --accent: var(--tg-theme-button-color, #2f80ed);
+    --accent-text: var(--tg-theme-button-text-color, #fff);
+    --danger: var(--tg-theme-destructive-text-color, #e5484d);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg2); color: var(--text); padding-bottom: 76px; }
+  header { padding: 18px 16px 6px; }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; color: var(--hint); font-size: 13px; }
+  main { padding: 8px 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--bg); border-radius: var(--radius); padding: 14px; }
+  .tile { min-height: 96px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; border: 0;
+          text-align: left; color: var(--text); font: inherit; }
+  .tile .ico { font-size: 24px; }
+  .tile .name { font-weight: 600; }
+  .tile .tag { font-size: 11px; color: var(--hint); }
+  .list .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0;
+               border-bottom: 1px solid var(--bg2); gap: 10px; }
+  .list .row:last-child { border-bottom: 0; }
+  a { color: var(--accent); text-decoration: none; }
+  label { display: block; font-size: 13px; color: var(--hint); margin: 12px 0 4px; }
+  select, input { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--bg2);
+                  background: var(--bg2); color: var(--text); font: inherit; }
+  .btn { width: 100%; padding: 13px; border: 0; border-radius: 12px; font: inherit; font-weight: 600;
+         background: var(--accent); color: var(--accent-text); margin-top: 16px; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--danger); }
+  .muted { color: var(--hint); font-size: 13px; }
+  h2 { font-size: 17px; margin: 18px 4px 8px; }
+  .topic { margin-bottom: 10px; }
+  .topic h3 { margin: 0 0 6px; font-size: 15px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--bg);
+        border-top: 1px solid var(--bg2); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  nav button { flex: 1; border: 0; background: none; color: var(--hint); font: 11px/1.2 inherit;
+               display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; cursor: pointer; }
+  nav button.active { color: var(--accent); }
+  nav button span { font-size: 20px; }
+  .hidden { display: none; }
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--text);
+           color: var(--bg); padding: 9px 14px; border-radius: 20px; font-size: 13px; opacity: 0; transition: .2s; }
+  .toast.show { opacity: .92; }
+</style>
+</head>
+<body>
+<header><h1 id="title">Germany Assistant</h1><p id="subtitle"></p></header>
+
+<main>
+  <section id="tab-home"></section>
+  <section id="tab-profile" class="hidden"></section>
+  <section id="tab-info" class="hidden"></section>
+  <section id="tab-privacy" class="hidden"></section>
+</main>
+
+<nav id="nav"></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready(); tg?.expand();
+
+const I18N = {
+  uk: {
+    subtitle: "Помічник для українців у Німеччині",
+    tabs: { home: "Головна", profile: "Профіль", info: "Довідник", privacy: "Дані" },
+    sections: {
+      documents: ["📄", "Документи", "У розробці"], translator: ["🗣", "Перекладач", "У розробці"],
+      ai: ["🤖", "AI-помічник", "У розробці"], jobs: ["💼", "Робота", "Офіційні сайти"],
+      housing: ["🏠", "Житло", "Офіційні сайти"], info: ["ℹ️", "Довідник", "Перевірені джерела"],
+    },
+    chatOnly: "Цю функцію буде доступно в чаті з ботом. Поки вона в розробці: AI ще не підключено, і бот не вигадуватиме відповідей.",
+    toChat: "Повернутися в чат",
+    language: "Мова", land: "Федеральна земля", city: "Місто", level: "Рівень німецької", goal: "Мета",
+    status: "Статус перебування (необов'язково)", broadcast: "Отримувати оголошення від бота",
+    save: "Зберегти", saved: "Збережено ✓", notSet: "—", c1: "C1 і вище",
+    goals: { documents: "Документи", jobs: "Робота", housing: "Житло", translation: "Переклад", other: "Інше" },
+    statuses: { p24: "§24 (тимчасовий захист)", other: "Інший дозвіл" },
+    checked: "перевірено", disclaimer: "Посилання лише на офіційні сайти. Правила можуть відрізнятися в різних землях.",
+    privacyText: "Ми зберігаємо лише профіль: мову, землю, місто, рівень німецької, мету та (за бажанням) статус. Тексти листів і документів після обробки не зберігаються. Ніколи не надсилайте паролі, PIN-коди та дані карток.",
+    notLawyer: "Бот не є юристом чи державним органом і не гарантує результату.",
+    del: "Видалити всі мої дані", delConfirm: "Видалити всі ваші дані назавжди?", deleted: "Дані видалено",
+    openInTg: "Відкрийте цю сторінку через бота в Telegram.", error: "Помилка. Спробуйте пізніше.",
+  },
+  ru: {
+    subtitle: "Помощник для украинцев в Германии",
+    tabs: { home: "Главная", profile: "Профиль", info: "Справочник", privacy: "Данные" },
+    sections: {
+      documents: ["📄", "Документы", "В разработке"], translator: ["🗣", "Переводчик", "В разработке"],
+      ai: ["🤖", "AI-помощник", "В разработке"], jobs: ["💼", "Работа", "Официальные сайты"],
+      housing: ["🏠", "Жильё", "Официальные сайты"], info: ["ℹ️", "Справочник", "Проверенные источники"],
+    },
+    chatOnly: "Эта функция будет доступна в чате с ботом. Пока она в разработке: AI ещё не подключён, и бот не будет выдумывать ответы.",
+    toChat: "Вернуться в чат",
+    language: "Язык", land: "Федеральная земля", city: "Город", level: "Уровень немецкого", goal: "Цель",
+    status: "Статус пребывания (необязательно)", broadcast: "Получать объявления от бота",
+    save: "Сохранить", saved: "Сохранено ✓", notSet: "—", c1: "C1 и выше",
+    goals: { documents: "Документы", jobs: "Работа", housing: "Жильё", translation: "Перевод", other: "Другое" },
+    statuses: { p24: "§24 (временная защита)", other: "Другое разрешение" },
+    checked: "проверено", disclaimer: "Ссылки только на официальные сайты. Правила могут отличаться в разных землях.",
+    privacyText: "Мы храним только профиль: язык, землю, город, уровень немецкого, цель и (по желанию) статус. Тексты писем и документов после обработки не сохраняются. Никогда не отправляйте пароли, PIN-коды и данные карт.",
+    notLawyer: "Бот не является юристом или государственным органом и не гарантирует результат.",
+    del: "Удалить все мои данные", delConfirm: "Удалить все ваши данные навсегда?", deleted: "Данные удалены",
+    openInTg: "Откройте эту страницу через бота в Telegram.", error: "Ошибка. Попробуйте позже.",
+  },
+};
+
+let META = null, ME = null, SOURCES = [], lang = "uk";
+const L = () => I18N[lang] || I18N.uk;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { ...opts, headers: { "Content-Type": "application/json",
+    "X-Telegram-Init-Data": tg?.initData || "", ...(opts.headers || {}) } });
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
+}
+
+function toast(text) {
+  const el = $("toast"); el.textContent = text; el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+function showTab(name) {
+  for (const t of ["home", "profile", "info", "privacy"]) $("tab-" + t).classList.toggle("hidden", t !== name);
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  tg?.HapticFeedback?.selectionChanged();
+}
+
+function renderNav() {
+  const icons = { home: "🏠", profile: "👤", info: "📚", privacy: "🔒" };
+  $("nav").innerHTML = Object.entries(L().tabs).map(([k, v]) =>
+    `<button data-tab="${k}"><span>${icons[k]}</span>${esc(v)}</button>`).join("");
+  $("nav").querySelectorAll("button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+}
+
+function renderHome() {
+  const s = L().sections;
+  $("tab-home").innerHTML = `<div class="grid">${Object.entries(s).map(([k, [ico, name, tag]]) =>
+    `<button class="card tile" data-k="${k}"><span class="ico">${ico}</span><span class="name">${esc(name)}</span>
+     <span class="tag">${esc(tag)}</span></button>`).join("")}</div><div id="home-detail"></div>`;
+  $("tab-home").querySelectorAll(".tile").forEach(b => b.onclick = () => openSection(b.dataset.k));
+}
+
+function linksFor(topic) {
+  return SOURCES.filter(x => x.topic === topic).map(x =>
+    `<div class="row"><a href="${esc(x.url)}" data-ext>${esc(lang === "ru" ? x.title_ru : x.title_uk)}</a>
+     <span class="muted">${x.checked_at ? esc(L().checked + " " + x.checked_at.split("-").reverse().join(".")) : ""}</span></div>`
+  ).join("");
+}
+
+function openSection(k) {
+  const d = $("home-detail");
+  if (k === "info") return showTab("info");
+  if (k === "jobs" || k === "housing") {
+    d.innerHTML = `<h2>${esc(L().sections[k][1])}</h2><div class="card list">${linksFor(k)}</div>
+                   <p class="muted">${esc(L().disclaimer)}</p>`;
+  } else {
+    d.innerHTML = `<h2>${esc(L().sections[k][1])}</h2><div class="card"><p>${esc(L().chatOnly)}</p>
+                   <button class="btn" id="to-chat">${esc(L().toChat)}</button></div>`;
+    $("to-chat").onclick = () => tg?.close();
+  }
+  bindExternalLinks(d);
+  d.scrollIntoView({ behavior: "smooth" });
+}
+
+function bindExternalLinks(root) {
+  root.querySelectorAll("a[data-ext]").forEach(a => a.onclick = (e) => {
+    if (tg?.openLink) { e.preventDefault(); tg.openLink(a.href); }
+  });
+}
+
+function options(list, current, labelFn, allowEmpty) {
+  return (allowEmpty ? `<option value="">${esc(L().notSet)}</option>` : "") +
+    list.map(v => `<option value="${esc(v)}" ${v === current ? "selected" : ""}>${esc(labelFn(v))}</option>`).join("");
+}
+
+function renderProfile() {
+  const m = META, me = ME || {};
+  $("tab-profile").innerHTML = `<div class="card">
+    <label>${esc(L().language)}</label>
+    <select id="f-language">${options(m.languages, me.language || lang, v => ({uk: "Українська", ru: "Русский", de: "Deutsch"}[v] || v))}</select>
+    <label>${esc(L().land)}</label>
+    <select id="f-land">${options(Object.keys(m.lands), me.land, v => m.lands[v], true)}</select>
+    <label>${esc(L().city)}</label>
+    <input id="f-city" maxlength="80" value="${esc(me.city || "")}">
+    <label>${esc(L().level)}</label>
+    <select id="f-level">${options(m.levels, me.german_level, v => v === "C1" ? L().c1 : v, true)}</select>
+    <label>${esc(L().goal)}</label>
+    <select id="f-goal">${options(m.goals, me.goal, v => L().goals[v], true)}</select>
+    <label>${esc(L().status)}</label>
+    <select id="f-status">${options(m.statuses, me.residence_status, v => L().statuses[v], true)}</select>
+    <label style="display:flex;gap:8px;align-items:center;color:var(--text)">
+      <input type="checkbox" id="f-broadcast" style="width:auto" ${me.broadcast_consent ? "checked" : ""}> ${esc(L().broadcast)}
+    </label>
+    <button class="btn" id="save">${esc(L().save)}</button></div>`;
+  $("save").onclick = saveProfile;
+}
+
+async function saveProfile() {
+  const v = (id) => $(id).value || null;
+  const body = { language: v("f-language"), land: v("f-land"), city: v("f-city"), german_level: v("f-level"),
+                 goal: v("f-goal"), residence_status: v("f-status"), broadcast_consent: $("f-broadcast").checked };
+  try {
+    await api("/api/me", { method: "PATCH", body: JSON.stringify(body) });
+    ME = { ...ME, ...body };
+    tg?.HapticFeedback?.notificationOccurred("success");
+    const changedLang = body.language && body.language !== lang;
+    lang = body.language || lang;
+    if (changedLang) renderAll();
+    toast(L().saved);
+  } catch { toast(L().error); }
+}
+
+function renderInfo() {
+  const topics = META.topics;
+  $("tab-info").innerHTML = Object.entries(topics).map(([k, t]) =>
+    `<div class="card topic"><h3>${esc(t[lang] || t.uk)}</h3><div class="list">${linksFor(k)}</div></div>`
+  ).join("") + `<p class="muted">${esc(L().disclaimer)}</p>`;
+  bindExternalLinks($("tab-info"));
+}
+
+function renderPrivacy() {
+  $("tab-privacy").innerHTML = `<div class="card"><p>${esc(L().privacyText)}</p>
+    <p class="muted">${esc(L().notLawyer)}</p>
+    <button class="btn ghost" id="del">${esc(L().del)}</button></div>`;
+  $("del").onclick = () => {
+    const go = async (ok) => {
+      if (!ok) return;
+      try { await api("/api/me", { method: "DELETE" }); toast(L().deleted); setTimeout(() => tg?.close(), 1200); }
+      catch { toast(L().error); }
+    };
+    tg?.showConfirm ? tg.showConfirm(L().delConfirm, go) : go(confirm(L().delConfirm));
+  };
+}
+
+function renderAll() {
+  document.documentElement.lang = lang;
+  $("title").textContent = META.bot_name;
+  $("subtitle").textContent = L().subtitle;
+  renderNav(); renderHome(); renderProfile(); renderInfo(); renderPrivacy();
+  showTab("home");
+}
+
+(async () => {
+  try {
+    [META, SOURCES] = await Promise.all([api("/api/meta"), api("/api/sources")]);
+    lang = tg?.initDataUnsafe?.user?.language_code === "ru" ? "ru" : "uk";
+    if (tg?.initData) {
+      ME = await api("/api/me");
+      if (ME.language) lang = ME.language;
+    }
+    renderAll();
+    if (!tg?.initData) $("tab-profile").innerHTML = `<div class="card"><p>${esc(L().openInTg)}</p></div>`;
+  } catch {
+    document.querySelector("main").innerHTML = `<div class="card">${esc(L().error)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
