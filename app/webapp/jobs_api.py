@@ -160,7 +160,7 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
                 vac = await s.get(Vacancy, c.vacancy_id) if c.vacancy_id else None
                 return {"id": c.id, "kind": c.kind, "status": c.status, "message": c.message,
                         "created": _d(c.created_at), "company": emp_.company if emp_ else None,
-                        "vacancy": vac.title if vac else None,
+                        "vacancy": vac.title if vac else None, "vacancy_id": c.vacancy_id,
                         "seeker": seeker_public(sk) if sk else None}
 
             return {"seeker": seeker_own(p) if p else None, "employer": emp,
