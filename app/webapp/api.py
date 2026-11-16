@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 from aiogram.utils.web_app import WebAppInitData, safe_parse_webapp_init_data
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -78,6 +79,8 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
         return verify_init_data(x_telegram_init_data, settings.bot_token, settings.webapp_init_data_ttl)
 
     Auth = Annotated[WebAppInitData, Depends(auth)]
+
+    app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
     @app.get("/health")
     async def health():
