@@ -330,6 +330,11 @@
   nav button[aria-current="page"]::before, [data-theme="dark"] nav button[aria-current="page"]::before {
     background: var(--signal); top: 3px; }
   .toast { background: var(--signal); color: #13203A; border-radius: 6px; }
+
+  /* Desktop Telegram: native select popups ignore transparent backgrounds. Give selects and options explicit colours. */
+  select { color-scheme: dark; background-color: var(--sheet) !important; color: var(--ink) !important; }
+  .filter select { background-color: var(--platform) !important; }
+  select option, select optgroup { background-color: #17305C !important; color: #F3F6FB !important; }
 </style>
 </head>
 <body>
@@ -374,6 +379,7 @@ tick(); setInterval(tick, 15000);
   const ctx = c.getContext("2d"), dpr = Math.min(devicePixelRatio || 1, 2);
   const LIGHT = "255,198,112";
   let w, h, drops = [], fog = [], lamp;
+  const train = { x: 0, on: false, next: performance.now() + 4000 };
   function size() {
     w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const px = w - 50;                                   // post
@@ -414,6 +420,35 @@ tick(); setInterval(tick, 15000);
     ctx.restore();
     ctx.fillStyle = "#091327"; ctx.fillRect(hx - 7, hy + 11, 14, 2);
   }
+  // Distant regional train crossing the horizon now and then (generic, no operator branding).
+  function drawTrain(ts) {
+    if (still) return;
+    if (!train.on && ts > train.next) { train.on = true; train.x = -260; }
+    if (!train.on) return;
+    const y = h - 34, len = 250, carH = 7;
+    ctx.save(); ctx.globalAlpha = .55;
+    ctx.fillStyle = "#DCE3EE"; ctx.fillRect(train.x, y, len, carH);
+    ctx.beginPath(); ctx.moveTo(train.x + len, y); ctx.quadraticCurveTo(train.x + len + 14, y + 1, train.x + len + 16, y + carH);
+    ctx.lineTo(train.x + len, y + carH); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#B8243A"; ctx.fillRect(train.x, y + carH - 2, len + 14, 1.5);
+    ctx.fillStyle = "rgba(255,214,150,.95)";
+    for (let i = 4; i < len - 4; i += 7) { if (i % 50 > 44) continue; ctx.fillRect(train.x + i, y + 1.5, 4, 2.5); }
+    ctx.fillStyle = "#0A1B3D"; for (let i = 50; i < len; i += 50) ctx.fillRect(train.x + i - 1, y, 2, carH);
+    ctx.restore();
+    ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.fillRect(0, y + carH + 1, w, 1);   // rails, barely visible
+    train.x += 3.6;
+    if (train.x > w + 20) { train.on = false; train.next = ts + 20000 + Math.random() * 25000; }
+  }
+  function drawBench() {
+    const { px } = lamp, x0 = px - 64, x1 = px - 16, seat = h - 14;
+    ctx.fillStyle = "#091327";
+    ctx.fillRect(x0, seat, x1 - x0, 3);                 // seat
+    ctx.fillRect(x0 + 1, seat - 10, x1 - x0 - 2, 2);     // backrest boards
+    ctx.fillRect(x0 + 1, seat - 6, x1 - x0 - 2, 2);
+    ctx.fillRect(x0 + 3, seat - 11, 2, 11); ctx.fillRect(x1 - 5, seat - 11, 2, 11);   // back posts
+    ctx.fillRect(x0 + 3, seat + 3, 2, 11); ctx.fillRect(x1 - 5, seat + 3, 2, 11);     // legs
+    ctx.fillStyle = "rgba(255,198,112,.35)"; ctx.fillRect(x0, seat, x1 - x0, 1);        // lamp light on the seat edge
+  }
   function drawFog() {
     for (const f of fog) {
       ctx.save(); ctx.translate(f.x, f.y); ctx.scale(1, f.ry / f.rx);
@@ -432,13 +467,13 @@ tick(); setInterval(tick, 15000);
       if (!still) { d.y += d.v; d.x -= d.v * .18; if (d.y > h) { d.y = -d.l; d.x = Math.random() * (w + 20); } }
     }
   }
-  function draw() { ctx.clearRect(0, 0, w, h); drawLamp(); drawRain(); drawFog(); }
+  function draw(ts = 0) { ctx.clearRect(0, 0, w, h); drawTrain(ts); drawLamp(); drawBench(); drawRain(); drawFog(); }
   size(); addEventListener("resize", () => { size(); draw(); });
   if (still) { draw(); return; }
   let last = 0;
   (function frame(ts) {
     requestAnimationFrame(frame);
-    if (document.hidden || ts - last < 33) return; last = ts; draw();
+    if (document.hidden || ts - last < 33) return; last = ts; draw(ts);
   })(0);
 })();
 
