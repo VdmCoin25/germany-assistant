@@ -95,10 +95,6 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
     async def index():
         return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
-    @app.get("/binder")
-    async def binder():
-        return FileResponse(STATIC / "binder.html", headers={"Cache-Control": "no-cache"})
-
     @app.get("/api/meta")
     async def meta():
         return {

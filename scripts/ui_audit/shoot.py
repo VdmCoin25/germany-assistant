@@ -18,9 +18,13 @@ from tests.test_units import make_init_data  # noqa: E402
 
 TEST_TOKEN = "42:TEST-TOKEN"
 FILLED, EMPTY = "http://127.0.0.1:8101/", "http://127.0.0.1:8102/"
+import os
+
 SIZES = {"390": (390, 844), "360": (360, 740)}
 THEMES = ("light", "dark")
 LANGS = ("uk", "ru")
+if os.environ.get("UI_AUDIT_QUICK"):          # one size/theme/language for fast checks
+    SIZES, THEMES, LANGS = {"390": (390, 844)}, ("light",), ("uk",)
 
 # screen id -> (server, telegram user id, js to run after load)
 SCREENS = {
@@ -31,6 +35,7 @@ SCREENS = {
     "jobs-empty": (EMPTY, 5001, "renderJobs();show('jobs')"),
     "jobs-form-filled": (FILLED, 2001, "JOBS.sub='form';renderJobs();show('jobs')"),
     "jobs-form-empty": (EMPTY, 5001, "JOBS.sub='form';renderJobs();show('jobs')"),
+    "jobs-form-invalid": (EMPTY, 5001, "JOBS.sub='form';renderJobs();show('jobs');document.querySelector('#sf').requestSubmit()"),
     "jobs-inbox-filled": (FILLED, 2001, "JOBS.sub='inbox';renderJobs();show('jobs')"),
     "jobs-inbox-empty": (EMPTY, 5001, "JOBS.sub='inbox';renderJobs();show('jobs')"),
     "employer-filled": (FILLED, 3001, "JOBS.view='employer';renderJobs();show('jobs')"),
