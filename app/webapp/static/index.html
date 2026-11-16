@@ -54,8 +54,6 @@
     --tag-bg: rgba(255,255,255,.08);
     --field-bg: rgba(0,0,0,.15);
     /* effects */
-    --shadow-panel: 0 6px 18px rgba(0,0,0,.25);
-    --glow: 0 10px 40px rgba(255,197,102,.18);
     --lamp-reflection: rgba(255,197,102,.13);
     color-scheme: dark;
   }
@@ -82,8 +80,7 @@
 
   /* ---- Page ---- */
   main { max-width: 640px; margin: 0 auto; min-height: calc(var(--app-h, 100vh) - 151px);
-         background: radial-gradient(ellipse 60% 220px at 88% 0, var(--lamp-reflection), transparent 70%),
-                     linear-gradient(180deg, rgba(255,255,255,.025), transparent 260px); }
+         background: radial-gradient(ellipse 60% 220px at 88% 0, var(--lamp-reflection), transparent 70%); }
   .page { display: none; }
   .page.on { display: block; }
   .head { padding: 22px 16px 4px; }
@@ -116,7 +113,7 @@
   /* Main line: the lit poster under the lamp */
   .mainline { display: grid; grid-template-columns: 48px 1fr; gap: 2px 14px; width: calc(100% - 32px); margin: 0 16px 4px;
               padding: 18px 16px 16px; border: 0; border-radius: 8px; text-align: left; cursor: pointer;
-              background: var(--signal); color: var(--on-signal); box-shadow: 0 0 0 1px rgba(255,197,102,.35), var(--glow); }
+              background: var(--signal); color: var(--on-signal); }
   .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; border-color: var(--on-signal); border-radius: 6px; font-size: 20px; }
   .mainline:focus-visible { outline: 3px solid var(--on-board); outline-offset: 2px; }
   .m-dest { font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
@@ -149,14 +146,14 @@
 
   /* ---- Enamel plates (panels) ---- */
   .card, .form, .vac, .items, .topics, .plain, .empty, .price {
-    background: var(--sheet); border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--rim), var(--shadow-panel); }
+    background: var(--sheet); border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--rim); }
   .card { margin: 12px 16px 0; padding: 16px; }
   .card h2 { margin: 0; font-size: 21px; }
   .card h3 { margin: 0; font-size: 18px; line-height: 1.3; }
   .card p { margin: 8px 0 0; max-width: 60ch; }
-  .card.profile.pending { box-shadow: inset 0 0 0 2px var(--signal), var(--shadow-panel); }
-  .card.profile.approved { box-shadow: inset 0 0 0 2px var(--success), var(--shadow-panel); }
-  .card.profile.rejected { box-shadow: inset 0 0 0 2px var(--danger), var(--shadow-panel); }
+  .card.profile.pending { box-shadow: inset 0 0 0 2px var(--signal); }
+  .card.profile.approved { box-shadow: inset 0 0 0 2px var(--success); }
+  .card.profile.rejected { box-shadow: inset 0 0 0 2px var(--danger); }
   .form { margin: 14px 16px 0; padding: 4px 14px 16px; }
   .plain { margin: 12px 16px 0; padding: 4px 14px 16px; }
   .plain p { max-width: 60ch; }
@@ -246,11 +243,11 @@
   .jobs .check input { width: 24px; height: 24px; }
   .invite-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: calc(100% - 32px);
                    margin: 16px 16px 0; padding: 16px; border: 0; border-radius: 8px; background: var(--signal); color: var(--on-signal);
-                   font-size: 17px; text-align: left; cursor: pointer; box-shadow: var(--glow); }
+                   font-size: 17px; text-align: left; cursor: pointer; }
   .invite-banner span { padding: 8px 12px; border-radius: 6px; background: var(--on-signal); color: var(--on-board);
                         font-weight: 600; font-size: 15px; white-space: nowrap; }
   .vac { margin: 10px 16px 0; }
-  .vac.open { box-shadow: inset 0 0 0 2px var(--signal), var(--shadow-panel); }
+  .vac.open { box-shadow: inset 0 0 0 2px var(--signal); }
   .vac-head { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 14px 16px; cursor: pointer; }
   .vac-head:focus-visible { outline: 2px solid var(--signal); }
   .vac-head h3 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 600; }
