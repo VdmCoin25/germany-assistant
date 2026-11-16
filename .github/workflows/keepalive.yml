@@ -1,0 +1,13 @@
+# Render free instances sleep after ~15 min without traffic; the first message then waits ~1 min.
+# This pings the health endpoint so the bot and Mini App stay awake. GitHub may delay scheduled runs.
+name: keep-alive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS -m 120 https://germany-assistant-sqy4.onrender.com/health
