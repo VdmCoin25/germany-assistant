@@ -59,7 +59,7 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { background: var(--platform); }
-  body { margin: 0; font: 16px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--platform);
+  body { margin: 0; font: 17px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--platform);
          padding-bottom: calc(64px + env(safe-area-inset-bottom)); font-variant-numeric: tabular-nums; }
   button, input, select { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
@@ -83,26 +83,26 @@
          background: radial-gradient(ellipse 60% 220px at 88% 0, var(--lamp-reflection), transparent 70%); }
   .page { display: none; }
   .page.on { display: block; }
-  .head { padding: 22px 16px 4px; }
-  .head h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+  .head { padding: 24px 16px 4px; }
+  .head h2 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
   .head p { margin: 4px 0 0; color: var(--pencil); font-size: 15px; max-width: 60ch; }
-  .sec { margin: 26px 16px 0; font-size: 21px; font-weight: 600; color: var(--ink); }
-  .hint { font-size: 13px; color: var(--pencil); margin: 6px 0 0; max-width: 60ch; }
+  .sec { margin: 24px 16px 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+  .hint { font-size: 13px; color: var(--pencil); margin: 8px 0 0; max-width: 60ch; }
 
   /* ---- Departure board (home) ---- */
-  .board-wrap { min-height: calc(var(--app-h, 100vh) - 170px); padding: 16px 0 6px; }
-  .board { list-style: none; margin: 0; padding: 0 0 6px; color: var(--on-board); }
+  .board-wrap { min-height: calc(var(--app-h, 100vh) - 170px); padding: 16px 0 8px; }
+  .board { list-style: none; margin: 0; padding: 0 0 8px; color: var(--on-board); }
   .board > li { border-bottom: 1px solid var(--board-line); }
-  .board-label { margin: 18px 16px 2px; color: var(--pencil); font-size: 14px; }
-  .dep { display: grid; grid-template-columns: 44px 1fr auto; gap: 0 14px; align-items: start; width: 100%;
-         text-align: left; background: none; border: 0; padding: 14px 16px; cursor: pointer; }
+  .board-label { margin: 16px 16px 2px; color: var(--pencil); font-size: 15px; }
+  .dep { display: grid; grid-template-columns: 44px 1fr auto; gap: 0 16px; align-items: start; width: 100%;
+         text-align: left; background: none; border: 0; padding: 16px 16px; cursor: pointer; }
   .gleis { grid-row: span 2; width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid var(--on-board);
            border-radius: 4px; font-weight: 600; font-size: 17px; }
-  .dest { font-weight: 600; font-size: 18px; line-height: 1.3; }
-  .via { grid-column: 2 / 4; font-size: 14px; color: var(--on-board-dim); }
-  .state { font-size: 14px; font-weight: 600; white-space: nowrap; padding-top: 3px; color: var(--on-board); }
-  .state.wait { color: var(--signal); }
-  .announce { display: none; margin: 0 16px 14px 74px; padding: 2px 0 2px 12px; border-left: 3px solid var(--signal); }
+  .dest { font-weight: 600; font-size: 17px; line-height: 1.3; }
+  .via { grid-column: 2 / 4; font-size: 15px; color: var(--on-board-dim); }
+  .state { font-size: 15px; font-weight: 600; white-space: nowrap; padding-top: 3px; color: var(--on-board); }
+  .state.wait { color: var(--on-board-dim); font-weight: 400; }
+  .announce { display: none; margin: 0 16px 16px 76px; padding: 2px 0 2px 12px; border-left: 3px solid var(--signal); }
   .board > li.open .announce { display: block; }
   .announce p { margin: 0; font-size: 15px; max-width: 58ch; }
   .announce .links { margin-top: 0; }
@@ -111,62 +111,62 @@
   .announce .links .meta { color: var(--on-board-dim); }
 
   /* Main line: the lit poster under the lamp */
-  .mainline { display: grid; grid-template-columns: 48px 1fr; gap: 2px 14px; width: calc(100% - 32px); margin: 0 16px 4px;
-              padding: 18px 16px 16px; border: 0; border-radius: 8px; text-align: left; cursor: pointer;
+  .mainline { display: grid; grid-template-columns: 48px 1fr; gap: 2px 16px; width: calc(100% - 32px); margin: 0 16px 4px;
+              padding: 16px 16px 16px; border: 0; border-radius: 8px; text-align: left; cursor: pointer;
               background: var(--signal); color: var(--on-signal); }
   .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; border-color: var(--on-signal); border-radius: 6px; font-size: 20px; }
   .mainline:focus-visible { outline: 3px solid var(--on-board); outline-offset: 2px; }
   .m-dest { font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
   .m-via { font-size: 15px; }
-  .m-count { font-size: 14px; font-weight: 600; }
-  .m-cta { margin-top: 10px; justify-self: start; padding: 9px 14px; border-radius: 6px;
+  .m-count { font-size: 15px; font-weight: 600; }
+  .m-cta { margin-top: 12px; justify-self: start; padding: 8px 16px; border-radius: 6px;
            background: var(--on-signal); color: var(--on-board); font-weight: 600; font-size: 15px; }
 
   /* ---- Links ---- */
   .links { list-style: none; margin: 4px 0 0; padding: 0; }
   .links li { border-bottom: 1px solid var(--rule); }
   .links li:last-child { border-bottom: 0; }
-  .links a { display: block; padding: 10px 0; text-decoration: none; }
-  .links .name { display: block; font-weight: 600; text-decoration: underline; text-decoration-color: var(--signal);
+  .links a { display: block; padding: 12px 0; text-decoration: none; }
+  .links .name { display: block; font-weight: 600; text-decoration: underline; text-decoration-color: var(--rim);
                  text-underline-offset: 3px; }
   .links .meta { display: block; font-size: 13px; color: var(--pencil); }
 
   /* ---- Buttons ---- */
-  .btn { display: inline-block; margin-top: 12px; padding: 10px 16px; border: 0; border-radius: 6px;
+  .btn { display: inline-block; margin-top: 12px; padding: 12px 16px; border: 0; border-radius: 6px;
          background: var(--signal); color: var(--on-signal); font-weight: 600; cursor: pointer; }
-  .btn.wide { width: 100%; margin-top: 22px; }
-  .btn.big { min-height: 48px; padding: 12px 20px; font-size: 17px; margin-top: 14px; }
+  .btn.wide { width: 100%; margin-top: 24px; }
+  .btn.big { min-height: 48px; padding: 12px 24px; font-size: 17px; margin-top: 16px; }
   .btn.line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--rim); }
   .btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 2px var(--danger); }
   .row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  .backlink { all: unset; cursor: pointer; display: inline-block; margin: 16px 16px 0; padding: 11px 0 9px; font-weight: 600;
-              color: var(--signal); border-bottom: 2px solid var(--signal); }
-  .emp-link { all: unset; cursor: pointer; display: block; margin: 28px 16px 8px; padding: 14px 0; color: var(--pencil);
+  .backlink { all: unset; cursor: pointer; display: inline-block; margin: 16px 16px 0; padding: 12px 0 8px; font-weight: 600;
+              color: var(--ink); border-bottom: 2px solid var(--rim); }
+  .emp-link { all: unset; cursor: pointer; display: block; margin: 32px 16px 8px; padding: 16px 0; color: var(--pencil);
               text-decoration: underline; text-underline-offset: 4px; font-size: 15px; }
 
   /* ---- Enamel plates (panels) ---- */
   .card, .form, .vac, .items, .topics, .plain, .empty, .price {
     background: var(--sheet); border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--rim); }
   .card { margin: 12px 16px 0; padding: 16px; }
-  .card h2 { margin: 0; font-size: 21px; }
-  .card h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+  .card h2 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+  .card h3 { margin: 0; font-size: 17px; line-height: 1.3; }
   .card p { margin: 8px 0 0; max-width: 60ch; }
-  .card.profile.pending { box-shadow: inset 0 0 0 2px var(--signal); }
+  .card.profile.pending { box-shadow: inset 0 0 0 2px var(--rim); }
   .card.profile.approved { box-shadow: inset 0 0 0 2px var(--success); }
   .card.profile.rejected { box-shadow: inset 0 0 0 2px var(--danger); }
-  .form { margin: 14px 16px 0; padding: 4px 14px 16px; }
-  .plain { margin: 12px 16px 0; padding: 4px 14px 16px; }
+  .form { margin: 16px 16px 0; padding: 4px 16px 16px; }
+  .plain { margin: 12px 16px 0; padding: 4px 16px 16px; }
   .plain p { max-width: 60ch; }
   .plain .quiet { color: var(--pencil); }
-  .empty { margin: 12px 16px 0; padding: 16px 14px; color: var(--pencil); font-size: 15px; }
-  .price { margin: 12px 16px 0; padding: 14px; background: var(--board); color: var(--on-board); }
+  .empty { margin: 12px 16px 0; padding: 16px 16px; color: var(--pencil); font-size: 15px; }
+  .price { margin: 12px 16px 0; padding: 16px; background: var(--board); color: var(--on-board); }
   .price strong { font-size: 20px; display: block; }
-  .price span { color: rgba(255,255,255,.8); font-size: 14px; }
+  .price span { color: rgba(255,255,255,.8); font-size: 15px; }
   .items { margin: 12px 16px 0; }
-  .item { border-bottom: 1px solid var(--rule); padding: 13px 14px; }
+  .item { border-bottom: 1px solid var(--rule); padding: 12px 16px; }
   .item:last-child { border-bottom: 0; }
   .item h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; }
-  .item .meta { margin: 2px 0 0; font-size: 14px; color: var(--pencil); }
+  .item .meta { margin: 2px 0 0; font-size: 15px; color: var(--pencil); }
   .item .text { margin: 8px 0 0; font-size: 15px; white-space: pre-line; max-width: 60ch; }
   .item .more { display: none; }
   .item.open .more { display: block; }
@@ -175,61 +175,61 @@
   .topics { margin: 12px 16px 0; }
   .topics details { border-bottom: 1px solid var(--rule); }
   .topics details:last-child { border-bottom: 0; }
-  .topics summary { list-style: none; padding: 14px; font-weight: 600; cursor: pointer; display: flex;
+  .topics summary { list-style: none; padding: 16px; font-weight: 600; cursor: pointer; display: flex;
                     justify-content: space-between; gap: 12px; }
   .topics summary::-webkit-details-marker { display: none; }
   .topics summary::after { content: "+"; color: var(--pencil); font-weight: 400; }
   .topics details[open] summary::after { content: "−"; }
-  .topics .links { padding: 0 14px 6px; }
+  .topics .links { padding: 0 16px 8px; }
 
   /* ---- Badges and tags ---- */
-  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 7px; margin-top: 6px; border-radius: 4px;
-           background: var(--signal); color: var(--on-signal); }
+  .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 8px; margin-top: 8px; border-radius: 4px;
+           background: var(--board); color: var(--on-board); }
   .badge.ok { background: var(--success); color: var(--on-status); }
   .badge.no { background: var(--danger); color: var(--on-status); }
-  .card .badge, .vac .badge { margin-top: 10px; }
-  .done { font-weight: 600; color: var(--success); margin: 6px 0 0; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
-  .tags span { font-size: 14px; padding: 4px 9px; border-radius: 4px; background: var(--tag-bg); color: var(--ink); }
-  .tags .pay { background: var(--signal); color: var(--on-signal); font-weight: 600; }
+  .card .badge, .vac .badge { margin-top: 12px; }
+  .done { font-weight: 600; color: var(--success); margin: 8px 0 0; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+  .tags span { font-size: 15px; padding: 4px 8px; border-radius: 4px; background: var(--tag-bg); color: var(--ink); }
+  .tags .pay { background: var(--board); color: var(--on-board); font-weight: 600; }
 
   /* ---- Forms ---- */
-  .field { padding: 14px 0 0; }
+  .field { padding: 16px 0 0; }
   .field label { display: block; font-size: 13px; color: var(--pencil); }
   .field input, .field select { width: 100%; min-height: 44px; border: 0; border-bottom: 1.5px solid var(--field-line);
-           padding: 6px 0 5px; border-radius: 0; appearance: none; -webkit-appearance: none; font-size: 17px; color: var(--ink);
+           padding: 8px 0 4px; border-radius: 0; appearance: none; -webkit-appearance: none; font-size: 17px; color: var(--ink);
            background-color: transparent; }
   .field input::placeholder, .field textarea::placeholder { color: var(--pencil); opacity: 1; }
   .field input:focus, .field select:focus { outline: none; border-color: var(--signal); box-shadow: 0 1px 0 var(--signal); }
   .field textarea:focus { outline: none; border-color: var(--signal); box-shadow: inset 0 0 0 1px var(--signal); }
   .field [aria-invalid="true"] { border-color: var(--danger); }
-  .field .err { margin: 6px 0 0; font-size: 14px; color: var(--danger); }
+  .field .err { margin: 8px 0 0; font-size: 15px; color: var(--danger); }
   .field textarea { width: 100%; border: 1.5px solid var(--rim); border-radius: 6px; background: var(--field-bg); padding: 8px;
-                    font: inherit; font-size: 16px; color: var(--ink); min-height: 96px; resize: vertical; }
+                    font: inherit; font-size: 17px; color: var(--ink); min-height: 96px; resize: vertical; }
   .field select, .filter select {
     background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
     background-position: calc(100% - 10px) 55%, calc(100% - 5px) 55%; background-size: 5px 5px; background-repeat: no-repeat;
-    padding-right: 22px; }
+    padding-right: 24px; }
   /* Desktop Telegram draws native select popups: give selects and options explicit colours. */
   select { color-scheme: dark; background-color: var(--sheet) !important; color: var(--ink) !important; }
   select option, select optgroup { background-color: var(--sheet) !important; color: var(--ink) !important; }
   .filter { margin: 12px 16px 0; }
   .filter select { width: 100%; min-height: 44px; border: 0; border-bottom: 1.5px solid var(--field-line); border-radius: 0;
-                   padding: 6px 22px 5px 0; appearance: none; -webkit-appearance: none; font-size: 16px;
+                   padding: 8px 24px 4px 0; appearance: none; -webkit-appearance: none; font-size: 17px;
                    background-color: var(--platform) !important; }
-  .check { display: flex; gap: 10px; align-items: center; min-height: 44px; padding-top: 18px; font-size: 15px; }
+  .check { display: flex; gap: 12px; align-items: center; min-height: 44px; padding-top: 16px; font-size: 15px; }
   .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--signal); flex: none; }
   .pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .pick button { min-height: 44px; padding: 8px 14px; border: 2px solid var(--rim); border-radius: 6px; background: transparent;
-                 color: var(--ink); font-size: 16px; cursor: pointer; }
+  .pick button { min-height: 44px; padding: 8px 16px; border: 2px solid var(--rim); border-radius: 6px; background: transparent;
+                 color: var(--ink); font-size: 15px; cursor: pointer; }
   .pick button[aria-checked="true"] { background: var(--signal); border-color: var(--signal); color: var(--on-signal); font-weight: 600; }
   .form.big { font-size: 17px; }
-  .form.big .field input, .form.big .field select { font-size: 18px; padding: 8px 0 7px; }
+  .form.big .field input, .form.big .field select { font-size: 17px; padding: 8px 0 8px; }
   .form.big .field label, .form.big .lbl { font-size: 15px; color: var(--pencil); display: block; }
 
   /* ---- Tabs (housing) ---- */
-  .seg { display: flex; gap: 6px; margin: 14px 16px 0; }
-  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 6px; background: transparent; padding: 9px 4px;
+  .seg { display: flex; gap: 8px; margin: 16px 16px 0; }
+  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 6px; background: transparent; padding: 8px 4px;
                 font-size: 13px; font-weight: 600; line-height: 1.25; color: var(--pencil); cursor: pointer;
                 box-shadow: inset 0 0 0 1.5px var(--rim); }
   .seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: inset 0 0 0 2px var(--signal); }
@@ -238,7 +238,7 @@
   /* ---- Jobs window ---- */
   .jobs { font-size: 17px; padding-bottom: 8px; }
   .jobs .head h2 { font-size: 24px; }
-  .jobs .filter select { font-size: 18px; padding: 8px 22px 7px 0; }
+  .jobs .filter select { font-size: 17px; padding: 8px 24px 8px 0; }
   .jobs .check { font-size: 17px; }
   .jobs .check input { width: 24px; height: 24px; }
   .invite-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: calc(100% - 32px);
@@ -246,37 +246,44 @@
                    font-size: 17px; text-align: left; cursor: pointer; }
   .invite-banner span { padding: 8px 12px; border-radius: 6px; background: var(--on-signal); color: var(--on-board);
                         font-weight: 600; font-size: 15px; white-space: nowrap; }
-  .vac { margin: 10px 16px 0; }
+  .vac { margin: 12px 16px 0; }
   .vac.open { box-shadow: inset 0 0 0 2px var(--signal); }
-  .vac-head { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 14px 16px; cursor: pointer; }
+  .vac-head { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 16px 16px; cursor: pointer; }
   .vac-head:focus-visible { outline: 2px solid var(--signal); }
-  .vac-head h3 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 600; }
+  .vac-head h3 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600; }
   .co { margin: 3px 0 0; color: var(--pencil); font-size: 15px; }
   .vac-body { padding: 0 16px 16px; }
-  .vac-body .text, .card .text { white-space: pre-line; margin: 0 0 10px; }
+  .vac-body .text, .card .text { white-space: pre-line; margin: 0 0 12px; }
 
   /* ---- Loading and failure ---- */
   .skel { padding: 16px 16px 0; }
-  .skel span { display: block; height: 18px; margin: 0 0 14px; border-radius: 4px; background: var(--tag-bg); }
-  .skel .tall { height: 112px; border-radius: 8px; margin-bottom: 22px; }
+  .skel span { display: block; height: 18px; margin: 0 0 16px; border-radius: 4px; background: var(--tag-bg); }
+  .skel .tall { height: 112px; border-radius: 8px; margin-bottom: 24px; }
   .skel .short { width: 55%; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .failed { margin: 16px; padding: 16px; border-radius: 8px; background: var(--sheet); box-shadow: inset 0 0 0 1.5px var(--danger); }
   .failed p { margin: 0; max-width: 60ch; }
+
+  @media (hover: hover) {
+    .btn:hover, .mainline:hover, .invite-banner:hover, .dep:hover, .vac-head:hover, .pick button:hover, .seg button:hover,
+    .topics summary:hover, nav button:hover, .backlink:hover, .emp-link:hover {
+      background-image: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)); }
+  }
 
   /* ---- Bottom bar: platform edge with the white safety line ---- */
   nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--nav-bg);
         padding-bottom: env(safe-area-inset-bottom); }
   nav::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
                 background: repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 14px, transparent 14px 20px); }
-  nav button { flex: 1; border: 0; background: none; padding: 16px 4px 15px; font-size: 14px; color: var(--pencil);
+  nav button { flex: 1; border: 0; background: none; padding: 16px 4px 16px; font-size: 15px; color: var(--pencil);
                cursor: pointer; position: relative; }
-  nav button[aria-current="page"] { color: var(--signal); font-weight: 600; }
+  nav button[aria-current="page"] { color: var(--ink); font-weight: 600; }
   nav button[aria-current="page"]::before { content: ""; position: absolute; left: 22%; right: 22%; top: 3px; height: 3px;
                                             background: var(--signal); }
 
   .toast { position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
-           padding: 12px 14px; border-radius: 6px; background: var(--signal); color: var(--on-signal); font-size: 15px;
+           padding: 12px 16px; border-radius: 6px; background: var(--sheet); color: var(--ink); font-size: 15px;
+           box-shadow: inset 0 0 0 1.5px var(--rim);
            transform: translateY(8px); opacity: 0; transition: .18s ease-out; pointer-events: none; }
   .toast.show { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
