@@ -202,8 +202,11 @@
   .field input, .field select { width: 100%; min-height: 44px; border: 0; border-bottom: 1.5px solid var(--field-line);
            padding: 6px 0 5px; border-radius: 0; appearance: none; -webkit-appearance: none; font-size: 17px; color: var(--ink);
            background-color: transparent; }
-  .field input::placeholder, .field textarea::placeholder { color: rgba(174,187,208,.75); }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--signal); }
+  .field input::placeholder, .field textarea::placeholder { color: var(--pencil); opacity: 1; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--signal); box-shadow: 0 1px 0 var(--signal); }
+  .field textarea:focus { outline: none; border-color: var(--signal); box-shadow: inset 0 0 0 1px var(--signal); }
+  .field [aria-invalid="true"] { border-color: var(--danger); }
+  .field .err { margin: 6px 0 0; font-size: 14px; color: var(--danger); }
   .field textarea { width: 100%; border: 1.5px solid var(--rim); border-radius: 6px; background: var(--field-bg); padding: 8px;
                     font: inherit; font-size: 16px; color: var(--ink); min-height: 96px; resize: vertical; }
   .field select, .filter select {
@@ -231,7 +234,7 @@
   .seg { display: flex; gap: 6px; margin: 14px 16px 0; }
   .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 6px; background: transparent; padding: 9px 4px;
                 font-size: 13px; font-weight: 600; line-height: 1.25; color: var(--pencil); cursor: pointer;
-                box-shadow: inset 0 0 0 1.5px var(--rule); }
+                box-shadow: inset 0 0 0 1.5px var(--rim); }
   .seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: inset 0 0 0 2px var(--signal); }
   .jpanel { padding-bottom: 12px; }
 
@@ -448,6 +451,7 @@ const I18N = {
     openInTg: "Відкрийте цю сторінку через бота в Telegram, щоб заповнити анкету.",
     error: "Не вдалося зберегти. Перевірте інтернет і спробуйте ще раз.",
     loadError: "Не вдалося завантажити дані. Закрийте і відкрийте застосунок ще раз.",
+    required: "Заповніть це поле",
   },
   ru: {
     title: "Куда вам сегодня?",
@@ -482,6 +486,7 @@ const I18N = {
     openInTg: "Откройте эту страницу через бота в Telegram, чтобы заполнить анкету.",
     error: "Не удалось сохранить. Проверьте интернет и попробуйте ещё раз.",
     loadError: "Не удалось загрузить данные. Закройте и откройте приложение ещё раз.",
+    required: "Заполните это поле",
   },
 };
 
@@ -500,6 +505,31 @@ async function api(path, opts = {}) {
 }
 
 let toastTimer;
+// Inline validation: the message sits under the field it belongs to, not in a toast.
+function validate(form) {
+  form.querySelectorAll(".field .err").forEach(n => n.remove());
+  let first = null;
+  form.querySelectorAll("[required]").forEach(el => {
+    const bad = !el.value.trim();
+    el.setAttribute("aria-invalid", bad ? "true" : "false");
+    if (!bad) { el.removeAttribute("aria-describedby"); return; }
+    const msg = document.createElement("p");
+    msg.className = "err"; msg.id = el.id + "-err"; msg.textContent = L().required;
+    el.closest(".field").appendChild(msg);
+    el.setAttribute("aria-describedby", msg.id);
+    first = first || el;
+  });
+  if (first) { first.focus(); first.scrollIntoView({ block: "center" }); return false; }
+  return true;
+}
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if (el.getAttribute?.("aria-invalid") === "true" && el.value.trim()) {
+    el.setAttribute("aria-invalid", "false"); el.removeAttribute("aria-describedby");
+    el.closest(".field")?.querySelector(".err")?.remove();
+  }
+});
+
 function toast(text) {
   const el = $("toast"); el.textContent = text; el.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
@@ -875,7 +905,7 @@ function jSeekerForm(body) {
   const T = JL(), p = JOBS.me.seeker || { land: ME?.land, city: ME?.city, german_level: ME?.german_level, employment: "any" };
   const levels = META.levels;
   body.innerHTML = `<div class="head"><h2>${esc(T.formTitle)}</h2><p>${esc(T.formHint)}</p></div>
-    <form class="form big" id="sf">
+    <form class="form big" id="sf" novalidate>
       ${field("s-position", T.position, `<input id="s-position" maxlength="120" required placeholder="${esc(T.positionPh)}" value="${esc(p.position || "")}">`)}
       <div class="field"><span class="lbl">${esc(T.employment)}</span>${chips("employment", META.employment, p.employment || "any", v => T.emp[v])}</div>
       <label class="check"><input type="checkbox" id="s-shifts" ${p.shifts_ok ? "checked" : ""}> ${esc(T.shiftsOk)}</label>
@@ -889,6 +919,7 @@ function jSeekerForm(body) {
   bindPicks(body);
   body.querySelector("#sf").onsubmit = async (e) => {
     e.preventDefault();
+    if (!validate(e.target)) return;
     const v = (id) => $(id).value.trim() || null;
     const data = { position: v("s-position"), land: v("s-land"), city: v("s-city"), german_level: pickVal(body, "level"),
       employment: pickVal(body, "employment") || "any", shifts_ok: $("s-shifts").checked, experience: v("s-exp"), about: v("s-about") };
@@ -922,7 +953,7 @@ function jEmployer(body) {
   const T = JL(), e = JOBS.me.employer;
   const [p1, p2] = T.priceLine(META.employer_price_eur, META.employer_pilot_days);
   const head = `<div class="head"><h2>${esc(T.empTitle)}</h2></div>`;
-  const regForm = (x = {}) => `<form class="form big" id="ef">
+  const regForm = (x = {}) => `<form class="form big" id="ef" novalidate>
       ${field("e-company", T.company, `<input id="e-company" maxlength="160" required value="${esc(x.company || "")}">`)}
       ${field("e-address", T.address, `<input id="e-address" maxlength="240" required value="${esc(x.address || "")}">`)}
       ${field("e-reg", T.register, `<input id="e-reg" maxlength="80" required value="${esc(x.register_no || "")}">`)}
@@ -962,7 +993,7 @@ function jEmployer(body) {
       ${cands || `<div class="card"><p>${esc(T.noCand)}</p></div>`}
       ${vacs ? `<h2 class="sec">${esc(T.myVacs)}</h2>${vacs}` : ""}
       <h2 class="sec">${esc(T.newVac)}</h2>
-      <form class="form big" id="vf">
+      <form class="form big" id="vf" novalidate>
         ${field("v-title", T.vTitle, `<input id="v-title" maxlength="120" required>`)}
         ${field("v-land", T.land, `<select id="v-land">${opts(Object.keys(META.lands), JOBS.land || null, v => META.lands[v], true)}</select>`)}
         ${field("v-city", T.city, `<input id="v-city" maxlength="80" required>`)}
@@ -989,6 +1020,7 @@ function jEmployer(body) {
     });
     body.querySelector("#vf").onsubmit = async (ev) => {
       ev.preventDefault();
+      if (!validate(ev.target)) return;
       const v = (id) => $(id).value.trim() || null;
       const data = { title: v("v-title"), land: v("v-land"), city: v("v-city"), german_level: pickVal(body, "vlevel"),
         employment: pickVal(body, "vemp") || "full", salary: v("v-salary"), description: v("v-desc") };
@@ -1000,6 +1032,7 @@ function jEmployer(body) {
   const ef = body.querySelector("#ef");
   if (ef) ef.onsubmit = async (ev) => {
     ev.preventDefault();
+    if (!validate(ev.target)) return;
     const v = (id) => $(id).value.trim() || null;
     const data = { company: v("e-company"), address: v("e-address"), register_no: v("e-reg"),
       contact_person: v("e-person"), contact: v("e-contact"), website: v("e-web") };
@@ -1027,7 +1060,6 @@ const H = {
     jobTitle: "Ким працюєте (німецькою, наприклад Koch)", level: "Рівень німецької", moveIn: "Можу заїхати з (дата)",
     contact: "Телефон або e-mail для відповіді", make: "Скласти лист", copy: "Копіювати німецький текст", copied: "Скопійовано",
     yourLetter: "Лист німецькою", meaning: "Що в ньому написано",
-    needName: "Вкажіть ім'я і квартиру.",
   },
   ru: {
     title: "Жильё", tabs: { terms: "Термины", docs: "Документы", calc: "Калькулятор", letter: "Письмо" },
@@ -1046,7 +1078,6 @@ const H = {
     jobTitle: "Кем работаете (по-немецки, например Koch)", level: "Уровень немецкого", moveIn: "Могу въехать с (дата)",
     contact: "Телефон или e-mail для ответа", make: "Составить письмо", copy: "Копировать немецкий текст", copied: "Скопировано",
     yourLetter: "Письмо на немецком", meaning: "Что в нём написано",
-    needName: "Укажите имя и квартиру.",
   },
 };
 const HL = () => H[lang] || H.uk;
@@ -1152,9 +1183,9 @@ function hLetter(panel) {
   const field = (id, label, control) => `<div class="field"><label for="${id}">${esc(label)}</label>${control}</div>`;
   const inp = (id, max, extra = "") => `<input id="${id}" maxlength="${max}" ${extra}>`;
   panel.innerHTML = `<div class="head"><p>${esc(T.letterIntro)}</p></div>
-    <form class="form" id="hl">
-      ${field("l-name", T.name, inp("l-name", 80, 'autocomplete="name"'))}
-      ${field("l-object", T.object, inp("l-object", 120))}
+    <form class="form" id="hl" novalidate>
+      ${field("l-name", T.name, inp("l-name", 80, 'autocomplete="name" required'))}
+      ${field("l-object", T.object, inp("l-object", 120, "required"))}
       ${field("l-city", T.city, inp("l-city", 80, `value="${esc(ME?.city || "")}"`))}
       ${field("l-since", T.since, inp("l-since", 20))}
       ${field("l-adults", T.adults, `<select id="l-adults">${[1, 2, 3, 4, 5].map(n => `<option>${n}</option>`).join("")}</select>`)}
@@ -1168,10 +1199,10 @@ function hLetter(panel) {
     </form><div id="l-out"></div>`;
   panel.querySelector("#hl").onsubmit = (e) => {
     e.preventDefault();
+    if (!validate(e.target)) return;
     const v = (id) => $(id).value.trim();
     const f = { name: v("l-name"), object: v("l-object"), city: v("l-city"), since: v("l-since"), adults: +v("l-adults"),
       kids: +v("l-kids"), income: v("l-income"), job: v("l-job"), level: v("l-level"), moveIn: v("l-move"), contact: v("l-contact") };
-    if (!f.name || !f.object) return toast(T.needName);
     const out = buildLetter(f);
     $("l-out").innerHTML = `<div class="head"><p><strong>${esc(T.yourLetter)}</strong></p></div>
       <div class="items"><div class="item"><p class="text" id="l-de" style="margin:0">${esc(out.de)}</p>

@@ -35,6 +35,7 @@ SCREENS = {
     "jobs-empty": (EMPTY, 5001, "renderJobs();show('jobs')"),
     "jobs-form-filled": (FILLED, 2001, "JOBS.sub='form';renderJobs();show('jobs')"),
     "jobs-form-empty": (EMPTY, 5001, "JOBS.sub='form';renderJobs();show('jobs')"),
+    "jobs-form-invalid": (EMPTY, 5001, "JOBS.sub='form';renderJobs();show('jobs');document.querySelector('#sf').requestSubmit()"),
     "jobs-inbox-filled": (FILLED, 2001, "JOBS.sub='inbox';renderJobs();show('jobs')"),
     "jobs-inbox-empty": (EMPTY, 5001, "JOBS.sub='inbox';renderJobs();show('jobs')"),
     "employer-filled": (FILLED, 3001, "JOBS.view='employer';renderJobs();show('jobs')"),
