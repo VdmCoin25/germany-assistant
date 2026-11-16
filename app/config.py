@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     # sleep when idle (e.g. Render free tier). False = long polling.
     webhook_mode: bool = False
     webhook_secret: str | None = None
+    # Self-ping of the public URL so free hosting (Render) does not put the service to sleep. 0 = off.
+    keepalive_interval_sec: int = 600
 
     # Optional HTTP(S) proxy for Telegram API calls, e.g. http://user:pass@host:3128
     telegram_proxy: str | None = None

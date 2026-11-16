@@ -61,6 +61,22 @@ async def setup_bot_ui(bot: Bot, settings: Settings) -> None:
             text=t("uk", "open_app").split(" ", 1)[-1], web_app=WebAppInfo(url=settings.webapp_url)))
 
 
+async def keepalive(url: str, interval: int) -> None:
+    """Ping our own public URL. Requests go through the host's router, which counts as traffic."""
+    import aiohttp
+
+    await asyncio.sleep(60)
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as http:
+        while True:
+            try:
+                async with http.get(f"{url}/health") as r:
+                    if r.status != 200:
+                        log.warning("keepalive: HTTP %s", r.status)
+            except Exception as e:  # noqa: BLE001
+                log.warning("keepalive failed: %s", type(e).__name__)
+            await asyncio.sleep(interval)
+
+
 async def run() -> None:
     settings = get_settings()
     logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -101,6 +117,8 @@ async def run() -> None:
         server = uvicorn.Server(uvicorn.Config(app, host=settings.webapp_host, port=settings.webapp_port,
                                                log_level="warning", access_log=False))
         tasks.append(server.serve())
+    if settings.webapp_url and settings.keepalive_interval_sec > 0:
+        tasks.append(keepalive(settings.webapp_url, settings.keepalive_interval_sec))
     try:
         await asyncio.gather(*tasks)
     finally:

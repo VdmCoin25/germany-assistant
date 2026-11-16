@@ -142,3 +142,31 @@ async def test_housing_api(settings, sm):
     assert {x["de"] for x in d["terms"]} >= {"Kaltmiete", "Warmmiete", "Kaution", "SCHUFA"}
     assert all(s["url"].startswith("https://") for s in d["sources"])
     assert set(d["checklist"]) == {"uk", "ru"} and set(d["safety"]) == {"uk", "ru"}
+
+
+async def test_keepalive_pings_health(monkeypatch):
+    import asyncio
+
+    from aiohttp import web
+
+    from app import main
+
+    hits = []
+
+    async def health(request):
+        hits.append(1)
+        return web.json_response({"ok": True})
+
+    app = web.Application()
+    app.router.add_get("/health", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "127.0.0.1", 8765)
+    await site.start()
+    real_sleep = asyncio.sleep
+    monkeypatch.setattr(main.asyncio, "sleep", lambda s: real_sleep(0.01))
+    task = asyncio.create_task(main.keepalive("http://127.0.0.1:8765", 1))
+    await real_sleep(0.3)
+    task.cancel()
+    await runner.cleanup()
+    assert len(hits) >= 2
