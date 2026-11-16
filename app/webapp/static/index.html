@@ -194,6 +194,52 @@
   .m-cta { margin-top: 10px; justify-self: start; background: #13203A; color: #FFFFFF; font-weight: 600; font-size: 15px; padding: 9px 14px; }
   .mainline:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
   .board-label { margin: 18px 16px 2px; color: var(--on-board-dim); font-size: 14px; }
+
+  /* Jobs: large type, one action per card */
+  .jobs { font-size: 17px; padding-bottom: 8px; }
+  .jobs .head h2 { font-size: 24px; }
+  .backlink { all: unset; cursor: pointer; display: inline-block; margin: 16px 16px 0; padding: 6px 0; font-weight: 600;
+              color: var(--board); border-bottom: 2px solid var(--board); }
+  [data-theme="dark"] .backlink { color: var(--signal); border-color: var(--signal); }
+  .invite-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: calc(100% - 32px);
+                   margin: 16px 16px 0; padding: 16px; border: 0; background: var(--signal); color: #13203A; font-size: 17px;
+                   text-align: left; cursor: pointer; }
+  .invite-banner span { background: #13203A; color: #FFFFFF; padding: 8px 12px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .card { margin: 12px 16px 0; padding: 16px; background: var(--sheet); border-top: 3px solid var(--board); }
+  .card h2 { margin: 0; font-size: 21px; }
+  .card h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+  .card p { margin: 8px 0 0; max-width: 60ch; }
+  .card.profile.pending { border-top-color: var(--signal); }
+  .card.profile.approved { border-top-color: #2E7D4F; }
+  .card.profile.rejected { border-top-color: var(--danger); }
+  .sec { margin: 26px 16px 0; font-size: 21px; font-weight: 600; }
+  .vac { margin: 10px 16px 0; background: var(--sheet); border-left: 4px solid var(--board); }
+  .vac.open { border-left-color: var(--signal); }
+  .vac-head { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 14px 16px; cursor: pointer; }
+  .vac-head:focus-visible { outline: 2px solid var(--signal); }
+  .vac-head h3 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 600; }
+  .co { margin: 3px 0 0; color: var(--pencil); font-size: 15px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+  .tags span { font-size: 14px; padding: 4px 9px; background: var(--platform); color: var(--ink); }
+  .tags .pay { background: var(--board); color: #FFFFFF; font-weight: 600; }
+  .vac-body { padding: 0 16px 16px; }
+  .vac-body .text, .card .text { white-space: pre-line; margin: 0 0 10px; }
+  .done { font-weight: 600; color: #2E7D4F; margin: 6px 0 0; }
+  .btn.big { min-height: 48px; padding: 12px 20px; font-size: 17px; margin-top: 14px; }
+  .btn.big.line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+  .card .badge, .vac .badge { margin-top: 10px; }
+  .emp-link { all: unset; cursor: pointer; display: block; margin: 28px 16px 8px; padding: 14px 0; color: var(--pencil);
+              text-decoration: underline; text-underline-offset: 4px; font-size: 15px; }
+  .form.big { font-size: 17px; }
+  .form.big .field input, .form.big .field select { font-size: 18px; padding: 8px 0 7px; }
+  .form.big .field label, .form.big .lbl { font-size: 15px; color: var(--pencil); display: block; }
+  .pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pick button { min-height: 44px; padding: 8px 14px; border: 2px solid var(--ink); background: transparent; color: var(--ink);
+                 font-size: 16px; cursor: pointer; }
+  .pick button[aria-checked="true"] { background: var(--board); border-color: var(--board); color: #FFFFFF; font-weight: 600; }
+  .jobs .filter select { font-size: 18px; padding: 8px 22px 7px 0; }
+  .jobs .check { font-size: 17px; }
+  .jobs .check input { width: 24px; height: 24px; }
 </style>
 </head>
 <body>
@@ -260,7 +306,7 @@ const I18N = {
     title: "Куди вам сьогодні?",
     nav: { home: "Табло", jobs: "Робота", profile: "Профіль", info: "Довідник", privacy: "Дані" },
     sections: [
-      ["jobs", "Робота", "Вакансії, ваша анкета, пропозиції від роботодавців", 1],
+      ["jobs", "Робота", "Вакансії в Німеччині і ваша анкета", 1],
       ["documents", "Документи", "Розбір німецьких листів", 0],
       ["housing", "Житло", "Терміни, документи, калькулятор, лист", 1],
       ["translator", "Перекладач", "Німецька, українська, російська", 0],
@@ -294,7 +340,7 @@ const I18N = {
     title: "Куда вам сегодня?",
     nav: { home: "Табло", jobs: "Работа", profile: "Профиль", info: "Справочник", privacy: "Данные" },
     sections: [
-      ["jobs", "Работа", "Вакансии, ваша анкета, предложения от работодателей", 1],
+      ["jobs", "Работа", "Вакансии в Германии и ваша анкета", 1],
       ["documents", "Документы", "Разбор немецких писем", 0],
       ["housing", "Жильё", "Термины, документы, калькулятор, письмо", 1],
       ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
@@ -352,13 +398,18 @@ function show(page) {
     b.dataset.page === page ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   window.scrollTo(0, 0);
   tg?.HapticFeedback?.selectionChanged();
+  CURRENT = page;
   if (tg?.BackButton) page === "home" ? tg.BackButton.hide() : tg.BackButton.show();
 }
-tg?.BackButton?.onClick?.(() => show("home"));
+let CURRENT = "home";
+tg?.BackButton?.onClick?.(() => { if (CURRENT === "jobs" && jobsBack()) return; show("home"); });
 
 function renderNav() {
   $("nav").innerHTML = Object.entries(L().nav).map(([k, v]) => `<button data-page="${k}">${esc(v)}</button>`).join("");
-  $("nav").querySelectorAll("button").forEach(b => b.onclick = () => show(b.dataset.page));
+  $("nav").querySelectorAll("button").forEach(b => b.onclick = () => {
+    if (b.dataset.page === "jobs") { JOBS.sub = null; renderJobs(); }
+    show(b.dataset.page);
+  });
 }
 
 function linkList(topic) {
@@ -402,7 +453,6 @@ function renderHome() {
     const btn = li.querySelector(".dep");
     btn.onclick = () => {
       if (li.dataset.k === "info") return show("info");
-      if (li.dataset.k === "jobs") return show("jobs");
       if (li.dataset.k === "housing") return show("housing");
       const open = !li.classList.contains("open");
       $("page-home").querySelectorAll(".board > li.open").forEach(o => {
@@ -485,82 +535,110 @@ function renderPrivacy() {
 }
 
 // ---------------- Job exchange window ----------------
+// Plain-language flow: one main action per screen, big buttons, no jargon.
 const J = {
   uk: {
-    tabs: { vac: "Вакансії", me: "Шукаю роботу", inbox: "Пропозиції", emp: "Роботодавцям" },
-    status: { pending: "На перевірці", approved: "Опубліковано", rejected: "Відхилено", closed: "Закрито",
-              sent: "Чекає відповіді", accepted: "Прийнято", declined: "Відхилено" },
-    emp: { full: "Повна зайнятість", part: "Часткова", mini: "Minijob", any: "Будь-яка" },
-    allLands: "Уся Німеччина", germanFrom: (l) => `німецька від ${l}`, shifts: "готовий до змін",
-    noVac: "Поки що немає перевірених вакансій у цьому регіоні. Нижче офіційні сайти з вакансіями.",
-    official: "Офіційні сайти з вакансіями",
-    apply: "Відгукнутися", applyMsg: "Коротко напишіть, чому вам підходить ця робота", send: "Надіслати",
-    applyNeedProfile: "Щоб відгукнутися, заповніть анкету в розділі «Шукаю роботу» і дочекайтеся перевірки.",
+    title: "Робота",
+    status: { pending: "Перевіряємо", approved: "Опубліковано", rejected: "Не пройшло перевірку", closed: "Закрито",
+              sent: "Чекає відповіді", accepted: "Контакти надіслано", declined: "Відмова" },
+    emp: { full: "Повна зайнятість", part: "Неповна зайнятість", mini: "Minijob", any: "Будь-яка" },
+    allLands: "Уся Німеччина", germanFrom: (l) => `Німецька від ${l}`, noGerman: "Німецька не потрібна", shifts: "Готовий(а) до змін",
+    back: "Назад",
+    invites: (n) => n === 1 ? "Роботодавець запрошує вас" : `Роботодавці запрошують вас: ${n}`, look: "Подивитися",
+    profTitle: "Ваша анкета",
+    profNone: "Заповніть анкету — і роботодавці зможуть самі запросити вас на роботу.", profFill: "Заповнити анкету",
+    profPending: "Анкету перевіряє адміністратор. Коли її опублікують, ми напишемо вам у чат.",
+    profApproved: "Анкету опубліковано. Роботодавці бачать її без вашого імені й телефону.",
+    profRejected: "Анкета не пройшла перевірку. Виправте її і надішліть знову.",
+    edit: "Змінити анкету", fix: "Виправити анкету", visible: "Показувати анкету роботодавцям",
+    hidden: "Анкету приховано", shown: "Анкету знову видно",
+    vacTitle: "Вакансії", noVac: "Поки що немає перевірених вакансій у цьому регіоні. Ось офіційні сайти з вакансіями:",
+    more: "Детальніше", less: "Згорнути", apply: "Відгукнутися", sendApply: "Надіслати відгук",
+    applyText: "Добрий день! Мене цікавить ця вакансія. Буду рада/радий розповісти про свій досвід.",
+    applyLabel: "Ваше повідомлення роботодавцю (можна залишити як є)",
+    applied: "Ви вже відгукнулися", needProfile: "Щоб відгукнутися, спочатку заповніть анкету.",
     sentForReview: "Надіслано. Адміністратор перевірить і передасть.",
-    meIntro: "Анкету перевіряє адміністратор. Роботодавці бачать її без вашого імені та контактів. Не пишіть телефон, e-mail чи адресу: контакти бот передасть сам, коли ви приймете пропозицію.",
-    position: "Яку роботу шукаєте", employment: "Зайнятість", shiftsOk: "Готовий(а) працювати змінами",
-    experience: "Досвід роботи", about: "Про себе (необов'язково)", saveSeeker: "Надіслати анкету на перевірку",
-    active: "Показувати анкету роботодавцям", hidden: "Анкету приховано", shown: "Анкету показано",
-    inboxEmpty: "Пропозицій поки немає. Коли роботодавець надішле пропозицію, вона з'явиться тут і в чаті бота.",
-    incoming: "Вам надіслали", outgoing: "Ви надіслали", accept: "Прийняти", decline: "Відхилити",
-    from: (c) => `від ${c}`, onVac: (v) => `вакансія: ${v}`, noScam: "Ніколи не платіть за працевлаштування і не надсилайте документи до підписання договору.",
-    empIntro: "Публікуйте вакансії та пропонуйте роботу кандидатам, які шукають роботу в Німеччині. Кожного роботодавця ми перевіряємо вручну.",
-    priceLine: (p, d) => [`${p} € на місяць`, `Перші ${d} днів безкоштовно — пілот`],
+    employerLink: "Ви роботодавець? Розмістіть вакансію",
+    formTitle: "Анкета", formHint: "Не пишіть телефон чи адресу. Бот сам передасть контакти, коли ви погодитесь на запрошення.",
+    position: "Яку роботу шукаєте", positionPh: "Наприклад: кухар, водій, прибиральниця",
+    land: "Федеральна земля", city: "Місто", level: "Ваш рівень німецької", employment: "Яка зайнятість підходить",
+    shiftsOk: "Можу працювати змінами", experience: "Ваш досвід", experiencePh: "Наприклад: 5 років працювала кухарем у ресторані в Києві",
+    about: "Кілька слів про себе (можна пропустити)", submit: "Надіслати на перевірку",
+    inboxTitle: "Запрошення", inboxExplain: "Якщо погодитесь, бот надішле вам контакти роботодавця, а йому — ваш Telegram.",
+    agree: "Погодитись", refuse: "Відмовитися", from: (c) => `${c}`, onVac: (v) => `Вакансія: ${v}`,
+    myApps: "Мої відгуки", noScam: "Ніколи не платіть за працевлаштування і не надсилайте документи до підписання договору.",
+    errors: { duplicate: "Ви вже надіслали це повідомлення. Воно чекає відповіді.",
+      employer_no_access: "Немає доступу роботодавця.", seeker_not_approved: "Спочатку дочекайтеся перевірки анкети.",
+      rate_limited: "Забагато дій. Спробуйте за хвилину.", invalid: "Перевірте поля: щось не заповнено або заповнено надто коротко.",
+      submit_limit: (m) => `Анкету можна надсилати не частіше ${META.submission_limit_per_hour} разів на годину. Спробуйте через ${m} хв.`,
+      other: "Не вийшло. Перевірте інтернет і спробуйте ще раз." },
+    // employer
+    empTitle: "Для роботодавців",
+    empIntro: "Публікуйте вакансії й запрошуйте кандидатів, які шукають роботу в Німеччині. Кожну фірму ми перевіряємо вручну.",
+    priceLine: (p, d) => [`${p} € на місяць`, `Перші ${d} днів безкоштовно`],
     company: "Назва фірми", address: "Адреса фірми", register: "Handelsregister, Gewerbe або USt-IdNr.",
-    person: "Контактна особа", contact: "Телефон або e-mail для кандидатів", website: "Сайт (необов'язково)",
-    saveEmp: "Надіслати на перевірку", empPending: "Профіль фірми на перевірці. Ми напишемо в чат, коли його підтвердимо.",
-    empRejected: "Профіль не підтверджено. Виправте дані й надішліть ще раз.",
-    empExpired: (d) => `Пілотний доступ закінчився ${d}. Щоб продовжити, напишіть адміністратору.`,
-    accessUntil: (d) => `Доступ до ${d}`,
-    newVac: "Нова вакансія", vacTitle: "Посада", vacCity: "Місто", salary: "Оплата (необов'язково)",
-    vacDesc: "Опис: обов'язки, графік, умови", postVac: "Надіслати вакансію на перевірку",
-    myVacs: "Мої вакансії", close: "Закрити вакансію", candidates: "Кандидати", noCand: "Перевірених кандидатів у цьому регіоні поки немає.",
-    offer: "Запропонувати роботу", offerMsg: "Повідомлення кандидату", forVac: "Вакансія", noVacOpt: "Без вакансії",
-    expShort: "Досвід", errors: { duplicate: "Ви вже надіслали це повідомлення, воно чекає відповіді.",
-      employer_no_access: "Немає доступу роботодавця.", seeker_not_approved: "Анкета ще не перевірена.",
-      rate_limited: "Забагато дій. Спробуйте за хвилину.",
-      submit_limit: (m) => `Анкету можна надсилати не частіше ${META.submission_limit_per_hour} разів на годину. Спробуйте через ${m} хв.`, invalid: "Перевірте поля: щось заповнено не так або занадто коротко.",
-      other: "Не вдалося. Перевірте інтернет і спробуйте ще раз." },
+    person: "Контактна особа", contact: "Телефон або e-mail для кандидатів", website: "Сайт (можна пропустити)",
+    saveEmp: "Надіслати на перевірку", empPending: "Дані фірми на перевірці. Ми напишемо в чат, коли все буде готово.",
+    empRejected: "Дані фірми не пройшли перевірку. Виправте й надішліть знову.",
+    empExpired: (d) => `Безкоштовний період закінчився ${d}. Щоб продовжити, напишіть адміністратору.`,
+    accessUntil: (d) => `Доступ до ${d}`, candidates: "Кандидати", noCand: "Перевірених кандидатів у цьому регіоні поки немає.",
+    invite: "Запросити на роботу", inviteMsg: "Повідомлення кандидату", forVac: "На яку вакансію", noVacOpt: "Без конкретної вакансії",
+    myVacs: "Мої вакансії", close: "Закрити вакансію", newVac: "Нова вакансія", vTitle: "Посада", salary: "Оплата (можна пропустити)",
+    vDesc: "Опис: обов'язки, графік, умови", postVac: "Надіслати вакансію на перевірку", expShort: "Досвід",
+    empResponses: "Відгуки кандидатів",
   },
   ru: {
-    tabs: { vac: "Вакансии", me: "Ищу работу", inbox: "Предложения", emp: "Работодателям" },
-    status: { pending: "На проверке", approved: "Опубликовано", rejected: "Отклонено", closed: "Закрыто",
-              sent: "Ждёт ответа", accepted: "Принято", declined: "Отклонено" },
-    emp: { full: "Полная занятость", part: "Частичная", mini: "Minijob", any: "Любая" },
-    allLands: "Вся Германия", germanFrom: (l) => `немецкий от ${l}`, shifts: "готов к сменам",
-    noVac: "Пока нет проверенных вакансий в этом регионе. Ниже официальные сайты с вакансиями.",
-    official: "Официальные сайты с вакансиями",
-    apply: "Откликнуться", applyMsg: "Коротко напишите, почему вам подходит эта работа", send: "Отправить",
-    applyNeedProfile: "Чтобы откликнуться, заполните анкету в разделе «Ищу работу» и дождитесь проверки.",
+    title: "Работа",
+    status: { pending: "Проверяем", approved: "Опубликовано", rejected: "Не прошло проверку", closed: "Закрыто",
+              sent: "Ждёт ответа", accepted: "Контакты отправлены", declined: "Отказ" },
+    emp: { full: "Полная занятость", part: "Неполная занятость", mini: "Minijob", any: "Любая" },
+    allLands: "Вся Германия", germanFrom: (l) => `Немецкий от ${l}`, noGerman: "Немецкий не нужен", shifts: "Готов(а) к сменам",
+    back: "Назад",
+    invites: (n) => n === 1 ? "Работодатель приглашает вас" : `Работодатели приглашают вас: ${n}`, look: "Посмотреть",
+    profTitle: "Ваша анкета",
+    profNone: "Заполните анкету — и работодатели смогут сами пригласить вас на работу.", profFill: "Заполнить анкету",
+    profPending: "Анкету проверяет администратор. Когда её опубликуют, мы напишем вам в чат.",
+    profApproved: "Анкета опубликована. Работодатели видят её без вашего имени и телефона.",
+    profRejected: "Анкета не прошла проверку. Исправьте её и отправьте снова.",
+    edit: "Изменить анкету", fix: "Исправить анкету", visible: "Показывать анкету работодателям",
+    hidden: "Анкета скрыта", shown: "Анкету снова видно",
+    vacTitle: "Вакансии", noVac: "Пока нет проверенных вакансий в этом регионе. Вот официальные сайты с вакансиями:",
+    more: "Подробнее", less: "Свернуть", apply: "Откликнуться", sendApply: "Отправить отклик",
+    applyText: "Добрый день! Меня интересует эта вакансия. С радостью расскажу о своём опыте.",
+    applyLabel: "Ваше сообщение работодателю (можно оставить как есть)",
+    applied: "Вы уже откликнулись", needProfile: "Чтобы откликнуться, сначала заполните анкету.",
     sentForReview: "Отправлено. Администратор проверит и передаст.",
-    meIntro: "Анкету проверяет администратор. Работодатели видят её без вашего имени и контактов. Не пишите телефон, e-mail и адрес: контакты бот передаст сам, когда вы примете предложение.",
-    position: "Какую работу ищете", employment: "Занятость", shiftsOk: "Готов(а) работать сменами",
-    experience: "Опыт работы", about: "О себе (необязательно)", saveSeeker: "Отправить анкету на проверку",
-    active: "Показывать анкету работодателям", hidden: "Анкета скрыта", shown: "Анкета показана",
-    inboxEmpty: "Предложений пока нет. Когда работодатель отправит предложение, оно появится здесь и в чате бота.",
-    incoming: "Вам отправили", outgoing: "Вы отправили", accept: "Принять", decline: "Отклонить",
-    from: (c) => `от ${c}`, onVac: (v) => `вакансия: ${v}`, noScam: "Никогда не платите за трудоустройство и не отправляйте документы до подписания договора.",
-    empIntro: "Публикуйте вакансии и предлагайте работу кандидатам, которые ищут работу в Германии. Каждого работодателя мы проверяем вручную.",
-    priceLine: (p, d) => [`${p} € в месяц`, `Первые ${d} дней бесплатно — пилот`],
-    company: "Название фирмы", address: "Адрес фирмы", register: "Handelsregister, Gewerbe или USt-IdNr.",
-    person: "Контактное лицо", contact: "Телефон или e-mail для кандидатов", website: "Сайт (необязательно)",
-    saveEmp: "Отправить на проверку", empPending: "Профиль фирмы на проверке. Мы напишем в чат, когда подтвердим его.",
-    empRejected: "Профиль не подтверждён. Исправьте данные и отправьте ещё раз.",
-    empExpired: (d) => `Пилотный доступ закончился ${d}. Чтобы продлить, напишите администратору.`,
-    accessUntil: (d) => `Доступ до ${d}`,
-    newVac: "Новая вакансия", vacTitle: "Должность", vacCity: "Город", salary: "Оплата (необязательно)",
-    vacDesc: "Описание: обязанности, график, условия", postVac: "Отправить вакансию на проверку",
-    myVacs: "Мои вакансии", close: "Закрыть вакансию", candidates: "Кандидаты", noCand: "Проверенных кандидатов в этом регионе пока нет.",
-    offer: "Предложить работу", offerMsg: "Сообщение кандидату", forVac: "Вакансия", noVacOpt: "Без вакансии",
-    expShort: "Опыт", errors: { duplicate: "Вы уже отправили это сообщение, оно ждёт ответа.",
-      employer_no_access: "Нет доступа работодателя.", seeker_not_approved: "Анкета ещё не проверена.",
-      rate_limited: "Слишком много действий. Попробуйте через минуту.",
-      submit_limit: (m) => `Анкету можно отправлять не чаще ${META.submission_limit_per_hour} раз в час. Попробуйте через ${m} мин.`, invalid: "Проверьте поля: что-то заполнено не так или слишком коротко.",
+    employerLink: "Вы работодатель? Разместите вакансию",
+    formTitle: "Анкета", formHint: "Не пишите телефон и адрес. Бот сам передаст контакты, когда вы согласитесь на приглашение.",
+    position: "Какую работу ищете", positionPh: "Например: повар, водитель, уборщица",
+    land: "Федеральная земля", city: "Город", level: "Ваш уровень немецкого", employment: "Какая занятость подходит",
+    shiftsOk: "Могу работать сменами", experience: "Ваш опыт", experiencePh: "Например: 5 лет работала поваром в ресторане в Киеве",
+    about: "Пару слов о себе (можно пропустить)", submit: "Отправить на проверку",
+    inboxTitle: "Приглашения", inboxExplain: "Если согласитесь, бот отправит вам контакты работодателя, а ему — ваш Telegram.",
+    agree: "Согласиться", refuse: "Отказаться", from: (c) => `${c}`, onVac: (v) => `Вакансия: ${v}`,
+    myApps: "Мои отклики", noScam: "Никогда не платите за трудоустройство и не отправляйте документы до подписания договора.",
+    errors: { duplicate: "Вы уже отправили это сообщение. Оно ждёт ответа.",
+      employer_no_access: "Нет доступа работодателя.", seeker_not_approved: "Сначала дождитесь проверки анкеты.",
+      rate_limited: "Слишком много действий. Попробуйте через минуту.", invalid: "Проверьте поля: что-то не заполнено или заполнено слишком коротко.",
+      submit_limit: (m) => `Анкету можно отправлять не чаще ${META.submission_limit_per_hour} раз в час. Попробуйте через ${m} мин.`,
       other: "Не получилось. Проверьте интернет и попробуйте ещё раз." },
+    empTitle: "Для работодателей",
+    empIntro: "Публикуйте вакансии и приглашайте кандидатов, которые ищут работу в Германии. Каждую фирму мы проверяем вручную.",
+    priceLine: (p, d) => [`${p} € в месяц`, `Первые ${d} дней бесплатно`],
+    company: "Название фирмы", address: "Адрес фирмы", register: "Handelsregister, Gewerbe или USt-IdNr.",
+    person: "Контактное лицо", contact: "Телефон или e-mail для кандидатов", website: "Сайт (можно пропустить)",
+    saveEmp: "Отправить на проверку", empPending: "Данные фирмы на проверке. Мы напишем в чат, когда всё будет готово.",
+    empRejected: "Данные фирмы не прошли проверку. Исправьте и отправьте снова.",
+    empExpired: (d) => `Бесплатный период закончился ${d}. Чтобы продлить, напишите администратору.`,
+    accessUntil: (d) => `Доступ до ${d}`, candidates: "Кандидаты", noCand: "Проверенных кандидатов в этом регионе пока нет.",
+    invite: "Пригласить на работу", inviteMsg: "Сообщение кандидату", forVac: "На какую вакансию", noVacOpt: "Без конкретной вакансии",
+    myVacs: "Мои вакансии", close: "Закрыть вакансию", newVac: "Новая вакансия", vTitle: "Должность", salary: "Оплата (можно пропустить)",
+    vDesc: "Описание: обязанности, график, условия", postVac: "Отправить вакансию на проверку", expShort: "Опыт",
+    empResponses: "Отклики кандидатов",
   },
 };
 const JL = () => J[lang] || J.uk;
-let JOBS = { me: null, tab: "vac", land: null, vacancies: [], seekers: [] };
+let JOBS = { me: null, view: "seeker", sub: null, land: null, vacancies: [], seekers: [], openVac: null, applyFor: null };
 
 async function japi(path, opts = {}) {
   const res = await fetch(path, { ...opts, headers: { "Content-Type": "application/json",
@@ -576,6 +654,16 @@ const jerr = (e) => {
 const badge = (st) => `<span class="badge ${["approved", "accepted", "sent"].includes(st) ? "ok" : ["rejected", "declined", "closed"].includes(st) ? "no" : ""}">${esc(JL().status[st] || st)}</span>`;
 const landName = (c) => c ? (META.lands[c] || c) : "";
 const where = (o) => [o.city, landName(o.land)].filter((x, i, arr) => x && arr.indexOf(x) === i).join(", ");
+const field = (id, label, control, hint = "") => `<div class="field"><label for="${id}">${esc(label)}</label>${control}${hint ? `<p class="hint">${esc(hint)}</p>` : ""}</div>`;
+const chips = (name, list, current, labelFn) => `<div class="pick" role="radiogroup" data-name="${name}">${list.map(v =>
+  `<button type="button" role="radio" aria-checked="${v === current}" data-v="${esc(v)}">${esc(labelFn(v))}</button>`).join("")}</div>`;
+const pickVal = (root, name) => root.querySelector(`.pick[data-name="${name}"] [aria-checked="true"]`)?.dataset.v || null;
+function bindPicks(root) {
+  root.querySelectorAll(".pick").forEach(g => g.querySelectorAll("button").forEach(b => b.onclick = () => {
+    g.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    tg?.HapticFeedback?.selectionChanged();
+  }));
+}
 
 async function loadJobs() {
   if (!tg?.initData) return;
@@ -584,186 +672,225 @@ async function loadJobs() {
     const q = JOBS.land ? `?land=${encodeURIComponent(JOBS.land)}` : "";
     [JOBS.me, JOBS.vacancies] = await Promise.all([japi("/api/jobs/me"), japi("/api/jobs/vacancies" + q)]);
     JOBS.seekers = JOBS.me.employer?.has_access ? await japi("/api/jobs/seekers" + q) : [];
+    if (JOBS.me.employer && !JOBS.me.seeker && JOBS.view === "seeker" && !JOBS.sub) JOBS.view = "employer";
   } catch (e) { jerr(e); }
   renderJobs();
   if (!$("page-home").querySelector(".board > li.open")) renderHome();
 }
 
+function jobsBack() {
+  if (JOBS.sub) { JOBS.sub = null; renderJobs(); window.scrollTo(0, 0); return true; }
+  if (JOBS.view === "employer" && JOBS.me?.seeker) { JOBS.view = "seeker"; renderJobs(); return true; }
+  return false;
+}
+
 function renderJobs() {
   const root = $("page-jobs"); if (!root) return;
   const T = JL();
-  if (!tg?.initData) { root.innerHTML = `<div class="head"><h2>${esc(L().nav.jobs)}</h2><p>${esc(L().openInTg)}</p></div>`; return; }
-  root.innerHTML = `<div class="head"><h2>${esc(L().nav.jobs)}</h2></div>
-    <div class="seg" role="tablist">${Object.entries(T.tabs).map(([k, v]) =>
-      `<button data-t="${k}" aria-pressed="${JOBS.tab === k}">${esc(v)}</button>`).join("")}</div>
-    <div class="jpanel" id="jpanel"></div>`;
-  root.querySelectorAll(".seg button").forEach(b => b.onclick = () => { JOBS.tab = b.dataset.t; renderJobs(); });
-  if (!JOBS.me) { $("jpanel").innerHTML = ""; return; }
-  ({ vac: jVacancies, me: jSeeker, inbox: jInbox, emp: jEmployer })[JOBS.tab]($("jpanel"));
+  if (!tg?.initData) { root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2><p>${esc(L().openInTg)}</p></div>`; return; }
+  if (!JOBS.me) { root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2></div>`; return; }
+  const sub = JOBS.sub;
+  const backBar = (sub || JOBS.view === "employer") ? `<button class="backlink" id="jback">${esc(T.back)}</button>` : "";
+  root.innerHTML = `<div class="jobs">${backBar}<div id="jbody"></div></div>`;
+  const back = $("jback"); if (back) back.onclick = () => { if (!jobsBack()) show("home"); };
+  const body = $("jbody");
+  if (sub === "form") return jSeekerForm(body);
+  if (sub === "inbox") return jInbox(body);
+  if (JOBS.view === "employer") return jEmployer(body);
+  jSeekerHome(body);
 }
 
-function landFilter() {
-  return `<div class="filter"><select id="jland" aria-label="${esc(L().land)}">
-    <option value="">${esc(JL().allLands)}</option>${Object.keys(META.lands).map(c =>
-    `<option value="${c}" ${c === JOBS.land ? "selected" : ""}>${esc(META.lands[c])}</option>`).join("")}</select></div>`;
-}
-function bindLandFilter(panel) {
-  panel.querySelector("#jland").onchange = (e) => { JOBS.land = e.target.value; loadJobs(); };
-}
-
-function toggles(panel) {
-  panel.querySelectorAll(".item > button.toggle").forEach(b => b.onclick = () => {
-    const it = b.parentElement; const open = !it.classList.contains("open");
-    it.classList.toggle("open", open); b.setAttribute("aria-expanded", String(open));
+function jSeekerHome(body) {
+  const T = JL(), me = JOBS.me, p = me.seeker;
+  const waiting = me.inbox.filter(c => c.kind === "offer" && c.status === "sent");
+  const myApps = me.outbox.filter(c => c.kind === "apply");
+  const appliedTo = new Set(myApps.filter(c => ["pending", "sent", "accepted"].includes(c.status)).map(c => c.vacancy_id));
+  const profState = !p ? ["", T.profNone, T.profFill] : p.status === "pending" ? ["pending", T.profPending, T.edit]
+    : p.status === "approved" ? ["approved", T.profApproved, T.edit] : ["rejected", T.profRejected, T.fix];
+  const vacs = JOBS.vacancies.map(v => {
+    const open = JOBS.openVac === v.id, applying = JOBS.applyFor === v.id;
+    return `<article class="vac${open ? " open" : ""}">
+      <button class="vac-head" data-vac="${v.id}" aria-expanded="${open}">
+        <h3>${esc(v.title)}</h3><p class="co">${esc(v.company)}, ${esc(where(v))}</p>
+        <p class="tags"><span>${esc(T.emp[v.employment])}</span><span>${esc(v.german_level ? T.germanFrom(v.german_level) : T.noGerman)}</span>${v.salary ? `<span class="pay">${esc(v.salary)}</span>` : ""}</p>
+      </button>
+      ${open ? `<div class="vac-body"><p class="text">${esc(v.description)}</p>
+        ${appliedTo.has(v.id) ? `<p class="done">${esc(T.applied)}</p>`
+          : p?.status !== "approved" ? `<p class="hint">${esc(T.needProfile)}</p><button class="btn big" data-go="form">${esc(T.profFill)}</button>`
+          : applying ? `${field("am-" + v.id, T.applyLabel, `<textarea id="am-${v.id}" maxlength="600">${esc(T.applyText)}</textarea>`)}
+              <button class="btn big" data-send="${v.id}">${esc(T.sendApply)}</button>`
+          : `<button class="btn big" data-apply="${v.id}">${esc(T.apply)}</button>`}
+      </div>` : ""}
+    </article>`;
+  }).join("");
+  body.innerHTML = `
+    ${waiting.length ? `<button class="invite-banner" data-go="inbox"><strong>${esc(T.invites(waiting.length))}</strong><span>${esc(T.look)}</span></button>` : ""}
+    <section class="card profile ${profState[0]}">
+      <h2>${esc(T.profTitle)}</h2>${p ? badge(p.status) : ""}
+      <p>${esc(profState[1])}</p>
+      ${p?.status === "approved" ? `<label class="check"><input type="checkbox" id="s-active" ${p.is_active ? "checked" : ""}> ${esc(T.visible)}</label>` : ""}
+      <div class="row-btns"><button class="btn big ${p ? "line" : ""}" data-go="form">${esc(profState[2])}</button>
+      ${(myApps.length || me.inbox.length) && !waiting.length ? `<button class="btn big line" data-go="inbox">${esc(T.inboxTitle)}</button>` : ""}</div>
+    </section>
+    <h2 class="sec">${esc(T.vacTitle)}</h2>
+    <div class="filter"><select id="jland" aria-label="${esc(T.land)}"><option value="">${esc(T.allLands)}</option>${Object.keys(META.lands).map(c =>
+      `<option value="${c}" ${c === JOBS.land ? "selected" : ""}>${esc(META.lands[c])}</option>`).join("")}</select></div>
+    ${vacs || `<div class="card"><p>${esc(T.noVac)}</p>${linkList("jobs")}</div>`}
+    <button class="emp-link" id="to-emp">${esc(T.employerLink)}</button>`;
+  body.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { JOBS.sub = b.dataset.go; renderJobs(); window.scrollTo(0, 0); });
+  body.querySelector("#jland").onchange = (e) => { JOBS.land = e.target.value; loadJobs(); };
+  body.querySelector("#to-emp").onclick = () => { JOBS.view = "employer"; renderJobs(); window.scrollTo(0, 0); };
+  body.querySelectorAll("[data-vac]").forEach(b => b.onclick = () => {
+    const id = +b.dataset.vac; JOBS.openVac = JOBS.openVac === id ? null : id; JOBS.applyFor = null; renderJobs();
   });
-}
-
-function jVacancies(panel) {
-  const T = JL(), seekerOk = JOBS.me.seeker?.status === "approved";
-  const list = JOBS.vacancies.map(v => `<div class="item">
-      <button class="toggle" aria-expanded="false"><h3>${esc(v.title)}</h3>
-      <p class="meta">${esc(v.company)}, ${esc(where(v))}</p>
-      <p class="meta">${esc(T.emp[v.employment])}${v.german_level ? ", " + esc(T.germanFrom(v.german_level)) : ""}${v.salary ? ", " + esc(v.salary) : ""}</p></button>
-      <div class="more"><p class="text">${esc(v.description)}</p>
-        ${seekerOk ? `<div class="field"><label for="am-${v.id}">${esc(T.applyMsg)}</label><textarea id="am-${v.id}" maxlength="600"></textarea></div>
-          <button class="btn" data-apply="${v.id}">${esc(T.apply)}</button>` : `<p class="hint">${esc(T.applyNeedProfile)}</p>`}
-      </div></div>`).join("");
-  panel.innerHTML = landFilter() + (list ? `<div class="items">${list}</div>` : `<div class="empty">${esc(T.noVac)}</div>`) +
-    `<div class="items"><div class="item"><h3>${esc(T.official)}</h3>${linkList("jobs")}</div></div>`;
-  bindLandFilter(panel); toggles(panel); bindLinks(panel);
-  panel.querySelectorAll("[data-apply]").forEach(b => b.onclick = async () => {
-    const id = +b.dataset.apply;
+  body.querySelectorAll("[data-apply]").forEach(b => b.onclick = () => { JOBS.applyFor = +b.dataset.apply; renderJobs(); });
+  body.querySelectorAll("[data-send]").forEach(b => b.onclick = async () => {
+    const id = +b.dataset.send; b.disabled = true;
     try { await japi("/api/jobs/applications", { method: "POST", body: JSON.stringify({ vacancy_id: id, message: $("am-" + id).value }) });
-      toast(T.sentForReview); loadJobs(); } catch (e) { jerr(e); }
+      toast(T.sentForReview); JOBS.applyFor = null; tg?.HapticFeedback?.notificationOccurred("success"); loadJobs(); }
+    catch (e) { jerr(e); b.disabled = false; }
   });
-}
-
-function jSeeker(panel) {
-  const T = JL(), p = JOBS.me.seeker || { land: ME?.land, city: ME?.city, german_level: ME?.german_level, employment: "any" };
-  const field = (id, label, control) => `<div class="field"><label for="${id}">${esc(label)}</label>${control}</div>`;
-  panel.innerHTML = `${JOBS.me.seeker ? `<div class="items"><div class="item"><h3>${esc(p.position)}</h3>${badge(p.status)}
-      ${p.status === "approved" ? `<label class="check"><input type="checkbox" id="s-active" ${p.is_active ? "checked" : ""}> ${esc(T.active)}</label>` : ""}</div></div>` : ""}
-    <form class="form" id="sf"><p class="hint">${esc(T.meIntro)}</p>
-      ${field("s-position", T.position, `<input id="s-position" maxlength="120" required value="${esc(p.position || "")}">`)}
-      ${field("s-land", L().land, `<select id="s-land">${opts(Object.keys(META.lands), p.land, v => META.lands[v], true)}</select>`)}
-      ${field("s-city", L().city, `<input id="s-city" maxlength="80" value="${esc(p.city || "")}">`)}
-      ${field("s-level", L().level, `<select id="s-level">${opts(META.levels, p.german_level, v => v === "C1" ? L().c1 : v, true)}</select>`)}
-      ${field("s-emp", T.employment, `<select id="s-emp">${opts(META.employment, p.employment, v => T.emp[v])}</select>`)}
-      <label class="check"><input type="checkbox" id="s-shifts" ${p.shifts_ok ? "checked" : ""}> ${esc(T.shiftsOk)}</label>
-      ${field("s-exp", T.experience, `<textarea id="s-exp" maxlength="800" required>${esc(p.experience || "")}</textarea>`)}
-      ${field("s-about", T.about, `<textarea id="s-about" maxlength="500">${esc(p.about || "")}</textarea>`)}
-      <button class="btn wide" type="submit">${esc(T.saveSeeker)}</button></form>`;
-  const act = panel.querySelector("#s-active");
+  const act = body.querySelector("#s-active");
   if (act) act.onchange = async () => {
     try { await japi("/api/jobs/seeker/active", { method: "POST", body: JSON.stringify({ active: act.checked }) });
       toast(act.checked ? T.shown : T.hidden); } catch (e) { jerr(e); act.checked = !act.checked; }
   };
-  panel.querySelector("#sf").onsubmit = async (e) => {
+  bindLinks(body);
+}
+
+function jSeekerForm(body) {
+  const T = JL(), p = JOBS.me.seeker || { land: ME?.land, city: ME?.city, german_level: ME?.german_level, employment: "any" };
+  const levels = META.levels;
+  body.innerHTML = `<div class="head"><h2>${esc(T.formTitle)}</h2><p>${esc(T.formHint)}</p></div>
+    <form class="form big" id="sf">
+      ${field("s-position", T.position, `<input id="s-position" maxlength="120" required placeholder="${esc(T.positionPh)}" value="${esc(p.position || "")}">`)}
+      <div class="field"><span class="lbl">${esc(T.employment)}</span>${chips("employment", META.employment, p.employment || "any", v => T.emp[v])}</div>
+      <label class="check"><input type="checkbox" id="s-shifts" ${p.shifts_ok ? "checked" : ""}> ${esc(T.shiftsOk)}</label>
+      ${field("s-land", T.land, `<select id="s-land">${opts(Object.keys(META.lands), p.land, v => META.lands[v], true)}</select>`)}
+      ${field("s-city", T.city, `<input id="s-city" maxlength="80" value="${esc(p.city || "")}">`)}
+      <div class="field"><span class="lbl">${esc(T.level)}</span>${chips("level", levels, p.german_level, v => v === "C1" ? L().c1 : v)}</div>
+      ${field("s-exp", T.experience, `<textarea id="s-exp" maxlength="800" required placeholder="${esc(T.experiencePh)}">${esc(p.experience || "")}</textarea>`)}
+      ${field("s-about", T.about, `<textarea id="s-about" maxlength="500">${esc(p.about || "")}</textarea>`)}
+      <button class="btn wide big" type="submit">${esc(T.submit)}</button>
+    </form>`;
+  bindPicks(body);
+  body.querySelector("#sf").onsubmit = async (e) => {
     e.preventDefault();
     const v = (id) => $(id).value.trim() || null;
-    const body = { position: v("s-position"), land: v("s-land"), city: v("s-city"), german_level: v("s-level"),
-      employment: v("s-emp") || "any", shifts_ok: $("s-shifts").checked, experience: v("s-exp"), about: v("s-about") };
-    try { await japi("/api/jobs/seeker", { method: "PUT", body: JSON.stringify(body) }); toast(T.sentForReview); loadJobs(); }
+    const data = { position: v("s-position"), land: v("s-land"), city: v("s-city"), german_level: pickVal(body, "level"),
+      employment: pickVal(body, "employment") || "any", shifts_ok: $("s-shifts").checked, experience: v("s-exp"), about: v("s-about") };
+    try { await japi("/api/jobs/seeker", { method: "PUT", body: JSON.stringify(data) });
+      toast(T.sentForReview); tg?.HapticFeedback?.notificationOccurred("success"); JOBS.sub = null; loadJobs(); window.scrollTo(0, 0); }
     catch (err) { jerr(err); }
   };
 }
 
-function reqItem(c, incoming) {
-  const T = JL();
-  const who = c.kind === "offer" ? (incoming ? T.from(c.company) : c.seeker?.position) : (incoming ? c.seeker?.position : T.from(c.company));
-  const seekerInfo = incoming && c.kind === "apply" && c.seeker ? `<p class="meta">${esc(where(c.seeker))}${c.seeker.german_level ? ", " + esc(c.seeker.german_level) : ""}</p>
-     <p class="text">${esc(T.expShort)}: ${esc(c.seeker.experience)}</p>` : "";
-  return `<div class="item"><h3>${esc(who || "")}</h3>
-    ${c.vacancy ? `<p class="meta">${esc(T.onVac(c.vacancy))}</p>` : ""}${seekerInfo}
-    <p class="text">«${esc(c.message)}»</p>${badge(c.status)}
-    ${incoming && c.status === "sent" ? `<div class="row-btns"><button class="btn" data-ans="${c.id}:1">${esc(T.accept)}</button>
-      <button class="btn line" data-ans="${c.id}:0">${esc(T.decline)}</button></div>` : ""}</div>`;
-}
-
-function jInbox(panel) {
-  const T = JL(), inc = JOBS.me.inbox, out = JOBS.me.outbox;
-  panel.innerHTML = (!inc.length && !out.length) ? `<div class="empty">${esc(T.inboxEmpty)}</div>` :
-    (inc.length ? `<div class="head"><p>${esc(T.incoming)}</p></div><div class="items">${inc.map(c => reqItem(c, true)).join("")}</div>` : "") +
-    (out.length ? `<div class="head"><p>${esc(T.outgoing)}</p></div><div class="items">${out.map(c => reqItem(c, false)).join("")}</div>` : "") +
-    `<p class="hint" style="margin:12px 16px">${esc(T.noScam)}</p>`;
-  panel.querySelectorAll("[data-ans]").forEach(b => b.onclick = async () => {
+function jInbox(body) {
+  const T = JL(), me = JOBS.me;
+  const invites = me.inbox.filter(c => c.kind === "offer");
+  const apps = me.outbox.filter(c => c.kind === "apply");
+  const item = (c, answer) => `<article class="card">
+      <h3>${esc(T.from(c.company || ""))}</h3>${c.vacancy ? `<p class="co">${esc(T.onVac(c.vacancy))}</p>` : ""}
+      <p class="text">«${esc(c.message)}»</p>${badge(c.status)}
+      ${answer && c.status === "sent" ? `<div class="row-btns"><button class="btn big" data-ans="${c.id}:1">${esc(T.agree)}</button>
+        <button class="btn big line" data-ans="${c.id}:0">${esc(T.refuse)}</button></div>` : ""}
+    </article>`;
+  body.innerHTML = `${invites.length ? `<div class="head"><h2>${esc(T.inboxTitle)}</h2><p>${esc(T.inboxExplain)}</p></div>${invites.map(c => item(c, true)).join("")}` : ""}
+    ${apps.length ? `<h2 class="sec">${esc(T.myApps)}</h2>${apps.map(c => item(c, false)).join("")}` : ""}
+    <p class="hint" style="margin:14px 16px">${esc(T.noScam)}</p>`;
+  body.querySelectorAll("[data-ans]").forEach(b => b.onclick = async () => {
     const [id, ok] = b.dataset.ans.split(":");
     try { await japi(`/api/jobs/requests/${id}/answer`, { method: "POST", body: JSON.stringify({ accept: ok === "1" }) });
       tg?.HapticFeedback?.notificationOccurred("success"); loadJobs(); } catch (e) { jerr(e); }
   });
 }
 
-function jEmployer(panel) {
+function jEmployer(body) {
   const T = JL(), e = JOBS.me.employer;
-  const field = (id, label, control) => `<div class="field"><label for="${id}">${esc(label)}</label>${control}</div>`;
   const [p1, p2] = T.priceLine(META.employer_price_eur, META.employer_pilot_days);
-  const regForm = (x = {}) => `<form class="form" id="ef">
+  const head = `<div class="head"><h2>${esc(T.empTitle)}</h2></div>`;
+  const regForm = (x = {}) => `<form class="form big" id="ef">
       ${field("e-company", T.company, `<input id="e-company" maxlength="160" required value="${esc(x.company || "")}">`)}
       ${field("e-address", T.address, `<input id="e-address" maxlength="240" required value="${esc(x.address || "")}">`)}
       ${field("e-reg", T.register, `<input id="e-reg" maxlength="80" required value="${esc(x.register_no || "")}">`)}
       ${field("e-person", T.person, `<input id="e-person" maxlength="120" required value="${esc(x.contact_person || "")}">`)}
       ${field("e-contact", T.contact, `<input id="e-contact" maxlength="160" required value="${esc(x.contact || "")}">`)}
       ${field("e-web", T.website, `<input id="e-web" maxlength="200" value="${esc(x.website || "")}">`)}
-      <button class="btn wide" type="submit">${esc(T.saveEmp)}</button></form>`;
+      <button class="btn wide big" type="submit">${esc(T.saveEmp)}</button></form>`;
   if (!e || e.status === "rejected") {
-    panel.innerHTML = `<div class="head"><p>${esc(T.empIntro)}</p></div>
+    body.innerHTML = head + `<div class="head"><p>${esc(T.empIntro)}</p></div>
       <div class="price"><strong>${esc(p1)}</strong><span>${esc(p2)}</span></div>
-      ${e ? `<div class="empty">${esc(T.empRejected)}</div>` : ""}${regForm(e || {})}`;
+      ${e ? `<div class="card"><p>${esc(T.empRejected)}</p></div>` : ""}${regForm(e || {})}`;
   } else if (e.status === "pending") {
-    panel.innerHTML = `<div class="empty">${esc(T.empPending)}</div>`;
+    body.innerHTML = head + `<div class="card"><p>${esc(T.empPending)}</p></div>`;
   } else if (!e.has_access) {
-    panel.innerHTML = `<div class="empty">${esc(T.empExpired(fmtDate(e.access_until)))}</div>`;
+    body.innerHTML = head + `<div class="card"><p>${esc(T.empExpired(fmtDate(e.access_until)))}</p></div>`;
   } else {
-    const vacs = e.vacancies.map(v => `<div class="item"><h3>${esc(v.title)}</h3><p class="meta">${esc(where(v))}</p>${badge(v.status)}
-        ${["approved", "pending"].includes(v.status) ? `<div><button class="btn line" data-close="${v.id}">${esc(T.close)}</button></div>` : ""}</div>`).join("");
     const openVacs = e.vacancies.filter(v => v.status === "approved");
-    const cands = JOBS.seekers.map(s => `<div class="item"><button class="toggle" aria-expanded="false"><h3>${esc(s.position)}</h3>
-        <p class="meta">${esc(where(s))}${s.german_level ? ", " + esc(s.german_level) : ""}, ${esc(T.emp[s.employment])}${s.shifts_ok ? ", " + esc(T.shifts) : ""}</p></button>
-        <div class="more"><p class="text">${esc(T.expShort)}: ${esc(s.experience)}</p>${s.about ? `<p class="text">${esc(s.about)}</p>` : ""}
+    const responses = JOBS.me.inbox.filter(c => c.kind === "apply");
+    const cands = JOBS.seekers.map(s => `<article class="vac${JOBS.openVac === -s.id ? " open" : ""}">
+        <button class="vac-head" data-cand="${s.id}"><h3>${esc(s.position)}</h3><p class="co">${esc(where(s))}</p>
+          <p class="tags"><span>${esc(T.emp[s.employment])}</span><span>${esc(s.german_level ? T.germanFrom(s.german_level) : T.noGerman)}</span>${s.shifts_ok ? `<span>${esc(T.shifts)}</span>` : ""}</p></button>
+        ${JOBS.openVac === -s.id ? `<div class="vac-body"><p class="text">${esc(T.expShort)}: ${esc(s.experience)}</p>${s.about ? `<p class="text">${esc(s.about)}</p>` : ""}
           ${openVacs.length ? field("ov-" + s.id, T.forVac, `<select id="ov-${s.id}"><option value="">${esc(T.noVacOpt)}</option>${openVacs.map(v => `<option value="${v.id}">${esc(v.title)}</option>`).join("")}</select>`) : ""}
-          ${field("om-" + s.id, T.offerMsg, `<textarea id="om-${s.id}" maxlength="600"></textarea>`)}
-          <button class="btn" data-offer="${s.id}">${esc(T.offer)}</button></div></div>`).join("");
-    panel.innerHTML = `<div class="price"><strong>${esc(e.company)}</strong><span>${esc(T.accessUntil(fmtDate(e.access_until)))}</span></div>
-      <div class="head"><p>${esc(T.candidates)}</p></div>${landFilter()}
-      ${cands ? `<div class="items">${cands}</div>` : `<div class="empty">${esc(T.noCand)}</div>`}
-      <div class="head"><p>${esc(T.myVacs)}</p></div>${vacs ? `<div class="items">${vacs}</div>` : ""}
-      <div class="head"><p>${esc(T.newVac)}</p></div>
-      <form class="form" id="vf">
-        ${field("v-title", T.vacTitle, `<input id="v-title" maxlength="120" required>`)}
-        ${field("v-land", L().land, `<select id="v-land">${opts(Object.keys(META.lands), JOBS.land || null, v => META.lands[v], true)}</select>`)}
-        ${field("v-city", T.vacCity, `<input id="v-city" maxlength="80" required>`)}
-        ${field("v-level", L().level, `<select id="v-level">${opts(META.levels, null, v => v === "C1" ? L().c1 : v, true)}</select>`)}
-        ${field("v-emp", T.employment, `<select id="v-emp">${opts(META.employment, "full", v => T.emp[v])}</select>`)}
+          ${field("om-" + s.id, T.inviteMsg, `<textarea id="om-${s.id}" maxlength="600"></textarea>`)}
+          <button class="btn big" data-offer="${s.id}">${esc(T.invite)}</button></div>` : ""}</article>`).join("");
+    const resp = responses.map(c => `<article class="card"><h3>${esc(c.seeker?.position || "")}</h3>
+        <p class="co">${esc(c.vacancy ? T.onVac(c.vacancy) : "")}${c.seeker ? ", " + esc(where(c.seeker)) : ""}</p>
+        ${c.seeker ? `<p class="text">${esc(T.expShort)}: ${esc(c.seeker.experience)}</p>` : ""}<p class="text">«${esc(c.message)}»</p>${badge(c.status)}
+        ${c.status === "sent" ? `<div class="row-btns"><button class="btn big" data-ans="${c.id}:1">${esc(T.agree)}</button><button class="btn big line" data-ans="${c.id}:0">${esc(T.refuse)}</button></div>` : ""}</article>`).join("");
+    const vacs = e.vacancies.map(v => `<article class="card"><h3>${esc(v.title)}</h3><p class="co">${esc(where(v))}</p>${badge(v.status)}
+        ${["approved", "pending"].includes(v.status) ? `<div class="row-btns"><button class="btn line" data-close="${v.id}">${esc(T.close)}</button></div>` : ""}</article>`).join("");
+    body.innerHTML = head + `<div class="price"><strong>${esc(e.company)}</strong><span>${esc(T.accessUntil(fmtDate(e.access_until)))}</span></div>
+      ${resp ? `<h2 class="sec">${esc(T.empResponses)}</h2>${resp}` : ""}
+      <h2 class="sec">${esc(T.candidates)}</h2>
+      <div class="filter"><select id="jland"><option value="">${esc(T.allLands)}</option>${Object.keys(META.lands).map(c =>
+        `<option value="${c}" ${c === JOBS.land ? "selected" : ""}>${esc(META.lands[c])}</option>`).join("")}</select></div>
+      ${cands || `<div class="card"><p>${esc(T.noCand)}</p></div>`}
+      ${vacs ? `<h2 class="sec">${esc(T.myVacs)}</h2>${vacs}` : ""}
+      <h2 class="sec">${esc(T.newVac)}</h2>
+      <form class="form big" id="vf">
+        ${field("v-title", T.vTitle, `<input id="v-title" maxlength="120" required>`)}
+        ${field("v-land", T.land, `<select id="v-land">${opts(Object.keys(META.lands), JOBS.land || null, v => META.lands[v], true)}</select>`)}
+        ${field("v-city", T.city, `<input id="v-city" maxlength="80" required>`)}
+        <div class="field"><span class="lbl">${esc(T.level)}</span>${chips("vlevel", META.levels, null, v => v === "C1" ? L().c1 : v)}</div>
+        <div class="field"><span class="lbl">${esc(T.employment)}</span>${chips("vemp", META.employment, "full", v => T.emp[v])}</div>
         ${field("v-salary", T.salary, `<input id="v-salary" maxlength="80">`)}
-        ${field("v-desc", T.vacDesc, `<textarea id="v-desc" maxlength="1500" required></textarea>`)}
-        <button class="btn wide" type="submit">${esc(T.postVac)}</button></form>`;
-    bindLandFilter(panel); toggles(panel);
-    panel.querySelectorAll("[data-close]").forEach(b => b.onclick = async () => {
+        ${field("v-desc", T.vDesc, `<textarea id="v-desc" maxlength="1500" required></textarea>`)}
+        <button class="btn wide big" type="submit">${esc(T.postVac)}</button></form>`;
+    bindPicks(body);
+    body.querySelector("#jland").onchange = (ev) => { JOBS.land = ev.target.value; loadJobs(); };
+    body.querySelectorAll("[data-cand]").forEach(b => b.onclick = () => { const id = -(+b.dataset.cand); JOBS.openVac = JOBS.openVac === id ? null : id; renderJobs(); });
+    body.querySelectorAll("[data-close]").forEach(b => b.onclick = async () => {
       try { await japi(`/api/jobs/vacancies/${b.dataset.close}/close`, { method: "POST" }); loadJobs(); } catch (er) { jerr(er); }
     });
-    panel.querySelectorAll("[data-offer]").forEach(b => b.onclick = async () => {
+    body.querySelectorAll("[data-ans]").forEach(b => b.onclick = async () => {
+      const [id, ok] = b.dataset.ans.split(":");
+      try { await japi(`/api/jobs/requests/${id}/answer`, { method: "POST", body: JSON.stringify({ accept: ok === "1" }) }); loadJobs(); } catch (er) { jerr(er); }
+    });
+    body.querySelectorAll("[data-offer]").forEach(b => b.onclick = async () => {
       const id = +b.dataset.offer, sel = $("ov-" + id);
-      const body = { seeker_id: id, message: $("om-" + id).value, vacancy_id: sel && sel.value ? +sel.value : null };
-      try { await japi("/api/jobs/offers", { method: "POST", body: JSON.stringify(body) }); toast(T.sentForReview); loadJobs(); }
+      const data = { seeker_id: id, message: $("om-" + id).value, vacancy_id: sel && sel.value ? +sel.value : null };
+      try { await japi("/api/jobs/offers", { method: "POST", body: JSON.stringify(data) }); toast(T.sentForReview); JOBS.openVac = null; loadJobs(); }
       catch (er) { jerr(er); }
     });
-    panel.querySelector("#vf").onsubmit = async (ev) => {
+    body.querySelector("#vf").onsubmit = async (ev) => {
       ev.preventDefault();
       const v = (id) => $(id).value.trim() || null;
-      const body = { title: v("v-title"), land: v("v-land"), city: v("v-city"), german_level: v("v-level"),
-        employment: v("v-emp") || "full", salary: v("v-salary"), description: v("v-desc") };
-      try { await japi("/api/jobs/vacancies", { method: "POST", body: JSON.stringify(body) }); toast(T.sentForReview); loadJobs(); }
+      const data = { title: v("v-title"), land: v("v-land"), city: v("v-city"), german_level: pickVal(body, "vlevel"),
+        employment: pickVal(body, "vemp") || "full", salary: v("v-salary"), description: v("v-desc") };
+      try { await japi("/api/jobs/vacancies", { method: "POST", body: JSON.stringify(data) }); toast(T.sentForReview); loadJobs(); }
       catch (er) { jerr(er); }
     };
     return;
   }
-  const ef = panel.querySelector("#ef");
+  const ef = body.querySelector("#ef");
   if (ef) ef.onsubmit = async (ev) => {
     ev.preventDefault();
     const v = (id) => $(id).value.trim() || null;
-    const body = { company: v("e-company"), address: v("e-address"), register_no: v("e-reg"),
+    const data = { company: v("e-company"), address: v("e-address"), register_no: v("e-reg"),
       contact_person: v("e-person"), contact: v("e-contact"), website: v("e-web") };
-    try { await japi("/api/jobs/employer", { method: "PUT", body: JSON.stringify(body) }); toast(T.sentForReview); loadJobs(); }
+    try { await japi("/api/jobs/employer", { method: "PUT", body: JSON.stringify(data) }); toast(T.sentForReview); loadJobs(); }
     catch (er) { jerr(er); }
   };
 }
