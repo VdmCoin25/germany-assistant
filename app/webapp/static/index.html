@@ -181,6 +181,19 @@
   .price { margin: 12px 16px 0; padding: 14px; background: var(--board); color: #FFFFFF; }
   .price strong { font-size: 20px; display: block; }
   .price span { color: rgba(255,255,255,.8); font-size: 14px; }
+
+  /* Main line: work is the primary destination, styled like a yellow German departure poster */
+  .board-wrap { background: var(--board-deep); min-height: calc(100vh - 170px); padding: 16px 0 6px; }
+  .board-wrap .board { min-height: 0; }
+  .mainline { display: grid; grid-template-columns: 48px 1fr; gap: 2px 14px; width: calc(100% - 32px); margin: 0 16px 4px;
+              padding: 18px 16px 16px; border: 0; text-align: left; cursor: pointer; background: var(--signal); color: #13203A; }
+  .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; border-color: #13203A; font-size: 20px; }
+  .m-dest { font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
+  .m-via { font-size: 15px; }
+  .m-count { font-size: 14px; font-weight: 600; }
+  .m-cta { margin-top: 10px; justify-self: start; background: #13203A; color: #FFFFFF; font-weight: 600; font-size: 15px; padding: 9px 14px; }
+  .mainline:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+  .board-label { margin: 18px 16px 2px; color: var(--on-board-dim); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -247,8 +260,8 @@ const I18N = {
     title: "Куди вам сьогодні?",
     nav: { home: "Табло", jobs: "Робота", profile: "Профіль", info: "Довідник", privacy: "Дані" },
     sections: [
+      ["jobs", "Робота", "Вакансії, ваша анкета, пропозиції від роботодавців", 1],
       ["documents", "Документи", "Розбір німецьких листів", 0],
-      ["jobs", "Робота", "Вакансії, анкета, пропозиції", 1],
       ["housing", "Житло", "Терміни, документи, калькулятор, лист", 1],
       ["translator", "Перекладач", "Німецька, українська, російська", 0],
       ["ai", "AI-помічник", "Питання про життя в Німеччині", 0],
@@ -259,7 +272,7 @@ const I18N = {
       translator: "Переклад з німецької на українську і назад: з тексту, фото й голосових. Розділ готується.",
       ai: "Відповіді на питання про життя в Німеччині з посиланнями на офіційні джерела. Розділ готується, поки дивіться довідник.",
     },
-    toChat: "Повернутися в чат", open: "Відкрито", soonState: "Готується",
+    toChat: "Повернутися в чат", open: "Відкрито", soonState: "Готується", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
     profileHead: "Анкета", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
     language: "Мова", land: "Федеральна земля", city: "Місто", level: "Рівень німецької", goal: "З чим потрібна допомога",
     status: "Статус перебування", broadcast: "Надсилати мені оголошення бота",
@@ -281,8 +294,8 @@ const I18N = {
     title: "Куда вам сегодня?",
     nav: { home: "Табло", jobs: "Работа", profile: "Профиль", info: "Справочник", privacy: "Данные" },
     sections: [
+      ["jobs", "Работа", "Вакансии, ваша анкета, предложения от работодателей", 1],
       ["documents", "Документы", "Разбор немецких писем", 0],
-      ["jobs", "Работа", "Вакансии, анкета, предложения", 1],
       ["housing", "Жильё", "Термины, документы, калькулятор, письмо", 1],
       ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
       ["ai", "AI-помощник", "Вопросы о жизни в Германии", 0],
@@ -293,7 +306,7 @@ const I18N = {
       translator: "Перевод с немецкого на украинский и русский и обратно: из текста, фото и голосовых. Раздел готовится.",
       ai: "Ответы на вопросы о жизни в Германии со ссылками на официальные источники. Раздел готовится, пока смотрите справочник.",
     },
-    toChat: "Вернуться в чат", open: "Открыто", soonState: "Готовится",
+    toChat: "Вернуться в чат", open: "Открыто", soonState: "Готовится", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
     profileHead: "Анкета", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
     language: "Язык", land: "Федеральная земля", city: "Город", level: "Уровень немецкого", goal: "С чем нужна помощь",
     status: "Статус пребывания", broadcast: "Присылать мне объявления бота",
@@ -363,7 +376,18 @@ function sheetBody(k) {
 }
 
 function renderHome() {
-  $("page-home").innerHTML = `<ol class="board">${L().sections.map(([k, name, via, ready], i) => `
+  const [main, ...rest] = L().sections;
+  const nVac = JOBS?.vacancies?.length || 0;
+  $("page-home").innerHTML = `<div class="board-wrap">
+    <button class="mainline" data-k="${main[0]}">
+      <span class="gleis" aria-hidden="true">1</span>
+      <span class="m-dest">${esc(main[1])}</span>
+      <span class="m-via">${esc(main[2])}</span>
+      ${nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
+      <span class="m-cta">${esc(L().findJob)}</span>
+    </button>
+    <p class="board-label">${esc(L().help)}</p>
+    <ol class="board">${rest.map(([k, name, via, ready], j) => { const i = j + 1; return `
     <li data-k="${k}">
       <button class="dep" aria-expanded="false">
         <span class="gleis" aria-hidden="true">${i + 1}</span>
@@ -372,7 +396,8 @@ function renderHome() {
         <span class="via">${esc(via)}</span>
       </button>
       <div class="announce">${sheetBody(k)}</div>
-    </li>`).join("")}</ol>`;
+    </li>`; }).join("")}</ol></div>`;
+  $("page-home").querySelector(".mainline").onclick = () => show("jobs");
   $("page-home").querySelectorAll(".board > li").forEach(li => {
     const btn = li.querySelector(".dep");
     btn.onclick = () => {
@@ -561,6 +586,7 @@ async function loadJobs() {
     JOBS.seekers = JOBS.me.employer?.has_access ? await japi("/api/jobs/seekers" + q) : [];
   } catch (e) { jerr(e); }
   renderJobs();
+  if (!$("page-home").querySelector(".board > li.open")) renderHome();
 }
 
 function renderJobs() {

@@ -10,8 +10,9 @@ from app.data.regions import GERMAN_LEVELS, GOALS, LANDS, STATUSES
 from app.i18n import t
 
 MENU_KEYS = [
-    "menu_documents", "menu_jobs",
-    "menu_housing", "menu_translator",
+    "menu_jobs",  # main section: full-width first row
+    "menu_documents", "menu_housing",
+    "menu_translator",
     "menu_ai", "menu_info",
     "menu_settings", "menu_profile",
 ]
@@ -27,7 +28,8 @@ def ib(text: str, data: str) -> InlineKeyboardButton:
 
 def main_menu(lang: str) -> ReplyKeyboardMarkup:
     buttons = [KeyboardButton(text=t(lang, k)) for k in MENU_KEYS]
-    return ReplyKeyboardMarkup(keyboard=_rows(buttons, 2), resize_keyboard=True, is_persistent=True)
+    rows = [[buttons[0]]] + _rows(buttons[1:], 2)
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True, is_persistent=True)
 
 
 def webapp_kb(lang: str, url: str) -> InlineKeyboardMarkup:
