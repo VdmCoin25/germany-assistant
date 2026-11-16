@@ -131,3 +131,15 @@ async def test_unknown_text_falls_back_to_menu(h):
 async def test_unregistered_user_is_asked_to_start(h):
     await h.send(UID, "hello")
     assert t("uk", "need_start") in h.session.texts()
+
+
+async def test_housing_section_terms_and_docs(h):
+    await register(h, lang="uk")
+    h.session.clear()
+    await h.send(UID, t("uk", "menu_housing"))
+    await h.press(UID, "hs:terms")
+    await h.press(UID, "hs:docs")
+    texts = h.session.texts()
+    assert any("Kaution" in x and "§ 551 BGB" in x for x in texts)
+    assert any("Western Union" in x for x in texts)
+    assert all(len(x) <= 4096 for x in texts)

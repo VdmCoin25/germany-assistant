@@ -3,7 +3,7 @@ from datetime import datetime
 
 from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 
 from app.bot.handlers.start import send_main_menu
 from app.bot.keyboards.common import info_topics_kb, links_kb
@@ -51,12 +51,39 @@ async def jobs(message: Message, user: User, lang: str, analytics: AnalyticsRepo
     await message.answer(t(lang, "section_jobs"), reply_markup=links_kb(await sources.by_topic("jobs"), lang=lang))
 
 
+def housing_kb(lang: str, settings: Settings) -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(text=t(lang, "hs_btn_terms"), callback_data="hs:terms")],
+            [InlineKeyboardButton(text=t(lang, "hs_btn_docs"), callback_data="hs:docs")]]
+    if settings.webapp_url:
+        rows.append([InlineKeyboardButton(text=t(lang, "hs_btn_tools"),
+                                          web_app=WebAppInfo(url=f"{settings.webapp_url}/#housing"))])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def housing_text(kind: str, lang: str) -> str:
+    from app.data import housing as h
+
+    date = ".".join(reversed(h.CHECKED.split("-")))
+    if kind == "terms":
+        body = "\n\n".join(f"<b>{x['de']}</b>\n{x[lang if lang in x else 'uk']}" for x in h.TERMS)
+        return f"{t(lang, 'hs_terms_title')}\n\n{body}\n\n<i>{t(lang, 'hs_sources', date=date)}</i>"
+    items = h.CHECKLIST.get(lang, h.CHECKLIST["uk"])
+    safety = h.SAFETY.get(lang, h.SAFETY["uk"])
+    return (f"{t(lang, 'hs_docs_title')}\n\n" + "\n".join(f"• {x}" for x in items) +
+            f"\n\n{t(lang, 'hs_safety_title')}\n\n" + "\n".join(f"• {x}" for x in safety))
+
+
 @router.message(menu_button("menu_housing"))
 async def housing(message: Message, user: User, lang: str, analytics: AnalyticsRepository,
-                  sources: SourceRepository) -> None:
+                  settings: Settings) -> None:
     await analytics.log("feature_used", user.telegram_id, feature="housing")
-    await message.answer(t(lang, "section_housing"),
-                         reply_markup=links_kb(await sources.by_topic("housing"), lang=lang))
+    await message.answer(t(lang, "section_housing"), reply_markup=housing_kb(lang, settings))
+
+
+@router.callback_query(F.data.in_({"hs:terms", "hs:docs"}))
+async def housing_info(cb: CallbackQuery, lang: str) -> None:
+    await cb.message.answer(housing_text(cb.data.split(":")[1], lang), disable_web_page_preview=True)
+    await cb.answer()
 
 
 @router.message(menu_button("menu_info"))

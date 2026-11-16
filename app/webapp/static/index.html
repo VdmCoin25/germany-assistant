@@ -193,6 +193,7 @@
 <main>
   <section class="page on" id="page-home"></section>
   <section class="page" id="page-jobs"></section>
+  <section class="page" id="page-housing"></section>
   <section class="page" id="page-profile"></section>
   <section class="page" id="page-info"></section>
   <section class="page" id="page-privacy"></section>
@@ -248,7 +249,7 @@ const I18N = {
     sections: [
       ["documents", "Документи", "Розбір німецьких листів", 0],
       ["jobs", "Робота", "Вакансії, анкета, пропозиції", 1],
-      ["housing", "Житло", "Офіційна інформація", 1],
+      ["housing", "Житло", "Терміни, документи, калькулятор, лист", 1],
       ["translator", "Перекладач", "Німецька, українська, російська", 0],
       ["ai", "AI-помічник", "Питання про життя в Німеччині", 0],
       ["info", "Довідник", "Anmeldung, Jobcenter, страхування та інше", 1],
@@ -282,7 +283,7 @@ const I18N = {
     sections: [
       ["documents", "Документы", "Разбор немецких писем", 0],
       ["jobs", "Работа", "Вакансии, анкета, предложения", 1],
-      ["housing", "Жильё", "Официальная информация", 1],
+      ["housing", "Жильё", "Термины, документы, калькулятор, письмо", 1],
       ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
       ["ai", "AI-помощник", "Вопросы о жизни в Германии", 0],
       ["info", "Справочник", "Anmeldung, Jobcenter, страховка и другое", 1],
@@ -333,12 +334,14 @@ function toast(text) {
 }
 
 function show(page) {
-  for (const p of ["home", "jobs", "profile", "info", "privacy"]) $("page-" + p).classList.toggle("on", p === page);
+  for (const p of ["home", "jobs", "housing", "profile", "info", "privacy"]) $("page-" + p).classList.toggle("on", p === page);
   $("nav").querySelectorAll("button").forEach(b =>
     b.dataset.page === page ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   window.scrollTo(0, 0);
   tg?.HapticFeedback?.selectionChanged();
+  if (tg?.BackButton) page === "home" ? tg.BackButton.hide() : tg.BackButton.show();
 }
+tg?.BackButton?.onClick?.(() => show("home"));
 
 function renderNav() {
   $("nav").innerHTML = Object.entries(L().nav).map(([k, v]) => `<button data-page="${k}">${esc(v)}</button>`).join("");
@@ -375,6 +378,7 @@ function renderHome() {
     btn.onclick = () => {
       if (li.dataset.k === "info") return show("info");
       if (li.dataset.k === "jobs") return show("jobs");
+      if (li.dataset.k === "housing") return show("housing");
       const open = !li.classList.contains("open");
       $("page-home").querySelectorAll(".board > li.open").forEach(o => {
         o.classList.remove("open"); o.querySelector(".dep").setAttribute("aria-expanded", "false"); });
@@ -738,11 +742,188 @@ function jEmployer(panel) {
   };
 }
 
+// ---------------- Housing window ----------------
+const H = {
+  uk: {
+    title: "Житло", tabs: { terms: "Терміни", docs: "Документи", calc: "Калькулятор", letter: "Лист" },
+    checked: (d) => `Перевірено за текстом законів ${d}. Це не юридична консультація.`, safety: "Безпека",
+    calcIntro: "Скільки грошей потрібно на старт. Усі числа — у євро на місяць.",
+    kalt: "Kaltmiete", neben: "Nebenkosten разом з опаленням", kMonths: "Кауція (у Kaltmiete, максимум 3)",
+    rates: "Платити кауцію трьома частинами (ваше право за § 551 BGB)", makler: "Комісія ріелтора (зазвичай 0)",
+    other: "Переїзд, меблі, інше (разово)",
+    warm: "Warmmiete щомісяця", kaution: "Кауція всього", atMove: "Потрібно в день заїзду",
+    m23: "У 2-й і 3-й місяць", first3: "Разом за перші 3 місяці",
+    calcNote: "Іноді кауцію бере на себе Jobcenter чи Sozialamt, часто як позику. Запитайте до підписання договору.",
+    letterIntro: "Складемо лист орендодавцю німецькою. Дані не надсилаються на сервер: лист збирається на вашому телефоні.",
+    name: "Ваше ім'я і прізвище (латиницею)", object: "Яка квартира (адреса або назва оголошення)", city: "Де ви зараз живете (місто)",
+    since: "З якого часу в Німеччині (наприклад, 2023)", adults: "Дорослих", kids: "Дітей",
+    income: "Як оплачуватиметься оренда", inc: { job: "Я працюю", jobcenter: "Jobcenter", sozialamt: "Sozialamt", none: "Не вказувати" },
+    jobTitle: "Ким працюєте (німецькою, наприклад Koch)", level: "Рівень німецької", moveIn: "Можу заїхати з (дата)",
+    contact: "Телефон або e-mail для відповіді", make: "Скласти лист", copy: "Копіювати німецький текст", copied: "Скопійовано",
+    yourLetter: "Лист німецькою", meaning: "Що в ньому написано",
+    needName: "Вкажіть ім'я і квартиру.",
+  },
+  ru: {
+    title: "Жильё", tabs: { terms: "Термины", docs: "Документы", calc: "Калькулятор", letter: "Письмо" },
+    checked: (d) => `Проверено по тексту законов ${d}. Это не юридическая консультация.`, safety: "Безопасность",
+    calcIntro: "Сколько денег нужно на старт. Все числа — в евро в месяц.",
+    kalt: "Kaltmiete", neben: "Nebenkosten вместе с отоплением", kMonths: "Залог (в Kaltmiete, максимум 3)",
+    rates: "Платить залог тремя частями (ваше право по § 551 BGB)", makler: "Комиссия риелтора (обычно 0)",
+    other: "Переезд, мебель, другое (разово)",
+    warm: "Warmmiete в месяц", kaution: "Залог всего", atMove: "Нужно в день въезда",
+    m23: "Во 2-й и 3-й месяц", first3: "Всего за первые 3 месяца",
+    calcNote: "Иногда залог берёт на себя Jobcenter или Sozialamt, часто как заём. Спросите до подписания договора.",
+    letterIntro: "Составим письмо арендодателю на немецком. Данные не отправляются на сервер: письмо собирается на вашем телефоне.",
+    name: "Ваше имя и фамилия (латиницей)", object: "Какая квартира (адрес или название объявления)", city: "Где вы сейчас живёте (город)",
+    since: "С какого времени в Германии (например, 2023)", adults: "Взрослых", kids: "Детей",
+    income: "Как будет оплачиваться аренда", inc: { job: "Я работаю", jobcenter: "Jobcenter", sozialamt: "Sozialamt", none: "Не указывать" },
+    jobTitle: "Кем работаете (по-немецки, например Koch)", level: "Уровень немецкого", moveIn: "Могу въехать с (дата)",
+    contact: "Телефон или e-mail для ответа", make: "Составить письмо", copy: "Копировать немецкий текст", copied: "Скопировано",
+    yourLetter: "Письмо на немецком", meaning: "Что в нём написано",
+    needName: "Укажите имя и квартиру.",
+  },
+};
+const HL = () => H[lang] || H.uk;
+let HOUSING = { data: null, tab: "terms" };
+
+async function loadHousing() {
+  try { HOUSING.data = await api("/api/housing"); } catch {}
+  renderHousing();
+}
+
+function renderHousing() {
+  const root = $("page-housing"); if (!root) return;
+  const T = HL();
+  root.innerHTML = `<div class="head"><h2>${esc(T.title)}</h2></div>
+    <div class="seg">${Object.entries(T.tabs).map(([k, v]) => `<button data-t="${k}" aria-pressed="${HOUSING.tab === k}">${esc(v)}</button>`).join("")}</div>
+    <div class="jpanel" id="hpanel"></div>`;
+  root.querySelectorAll(".seg button").forEach(b => b.onclick = () => { HOUSING.tab = b.dataset.t; renderHousing(); });
+  if (!HOUSING.data) return;
+  ({ terms: hTerms, docs: hDocs, calc: hCalc, letter: hLetter })[HOUSING.tab]($("hpanel"));
+}
+
+function hSources() {
+  const d = HOUSING.data;
+  return `<div class="items"><div class="item"><p class="meta">${esc(HL().checked(fmtDate(d.checked)))}</p>
+    <ul class="links">${d.sources.map(s => `<li><a href="${esc(s.url)}" data-ext><span class="name">${esc(s.title)}</span><span class="meta">${esc(host(s.url))}</span></a></li>`).join("")}</ul></div></div>`;
+}
+
+function hTerms(panel) {
+  panel.innerHTML = `<div class="items">${HOUSING.data.terms.map(x =>
+    `<div class="item"><h3>${esc(x.de)}</h3><p class="text">${esc(x[lang] || x.uk)}</p></div>`).join("")}</div>` + hSources();
+  bindLinks(panel);
+}
+
+function hDocs(panel) {
+  const d = HOUSING.data;
+  const li = (a) => a.map(x => `<div class="item"><p class="text" style="margin:0">${esc(x)}</p></div>`).join("");
+  panel.innerHTML = `<div class="items">${li(d.checklist[lang] || d.checklist.uk)}</div>
+    <div class="head"><p><strong>${esc(HL().safety)}</strong></p></div><div class="items">${li(d.safety[lang] || d.safety.uk)}</div>`;
+}
+
+function hCalc(panel) {
+  const T = HL();
+  const num = (id, label, val) => `<div class="field"><label for="${id}">${esc(label)}</label><input id="${id}" type="number" inputmode="decimal" min="0" step="1" value="${val}"></div>`;
+  panel.innerHTML = `<div class="head"><p>${esc(T.calcIntro)}</p></div>
+    <form class="form" id="hc" onsubmit="return false">
+      ${num("c-kalt", T.kalt, 500)}${num("c-neben", T.neben, 150)}
+      <div class="field"><label for="c-km">${esc(T.kMonths)}</label><select id="c-km">${[3, 2, 1, 0].map(m => `<option value="${m}">${m}</option>`).join("")}</select></div>
+      <label class="check"><input type="checkbox" id="c-rates" checked> ${esc(T.rates)}</label>
+      ${num("c-makler", T.makler, 0)}${num("c-other", T.other, 300)}
+    </form>
+    <div class="items" id="c-out"></div><p class="hint" style="margin:10px 16px">${esc(T.calcNote)}</p>`;
+  const eur = (n) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  const calc = () => {
+    const v = (id) => Math.max(0, parseFloat($(id).value.replace(",", ".")) || 0);
+    const kalt = v("c-kalt"), warm = kalt + v("c-neben"), kaution = kalt * Math.min(3, +$("c-km").value);
+    const rates = $("c-rates").checked, part = rates ? kaution / 3 : kaution;
+    const atMove = warm + part + v("c-makler") + v("c-other");
+    const m23 = warm + (rates ? kaution / 3 : 0);
+    const row = (a, b, strong) => `<div class="item"><p class="meta" style="margin:0">${esc(a)}</p><h3>${strong ? `<strong>${esc(b)}</strong>` : esc(b)}</h3></div>`;
+    $("c-out").innerHTML = row(T.warm, eur(warm)) + row(T.kaution, eur(kaution)) + row(T.atMove, eur(atMove), true) +
+      row(T.m23, eur(m23)) + row(T.first3, eur(atMove + 2 * m23));
+  };
+  panel.querySelectorAll("input, select").forEach(i => i.oninput = calc);
+  calc();
+}
+
+// German letter + same content in uk/ru so the user knows what they send.
+function buildLetter(f) {
+  const kidsDe = (n) => n === 1 ? "1 Kind" : `${n} Kinder`;
+  let household;
+  if (f.adults <= 1 && f.kids === 0) household = ["Ich würde allein einziehen.", { uk: "Я заїду сам(а).", ru: "Я въеду один (одна)." }];
+  else if (f.adults <= 1) household = [f.kids === 1 ? "Ich würde zusammen mit meinem Kind einziehen." : `Ich würde zusammen mit meinen ${f.kids} Kindern einziehen.`,
+    { uk: `Я заїду разом із дітьми: ${f.kids}.`, ru: `Я въеду вместе с детьми: ${f.kids}.` }];
+  else household = [`Wir sind ${f.adults + f.kids} Personen: ${f.adults} Erwachsene${f.kids ? " und " + kidsDe(f.kids) : ""}.`,
+    { uk: `Нас ${f.adults + f.kids}: дорослих ${f.adults}${f.kids ? ", дітей " + f.kids : ""}.`, ru: `Нас ${f.adults + f.kids}: взрослых ${f.adults}${f.kids ? ", детей " + f.kids : ""}.` }];
+  const income = {
+    job: [f.job ? `Ich arbeite als ${f.job}.` : "Ich bin berufstätig.", { uk: f.job ? `Я працюю: ${f.job}.` : "Я працюю.", ru: f.job ? `Я работаю: ${f.job}.` : "Я работаю." }],
+    jobcenter: ["Die Kosten der Unterkunft werden voraussichtlich vom Jobcenter übernommen. Eine Bestätigung reiche ich gerne nach.",
+      { uk: "Оренду, ймовірно, оплачуватиме Jobcenter. Підтвердження надішлю окремо.", ru: "Аренду, вероятно, будет оплачивать Jobcenter. Подтверждение пришлю отдельно." }],
+    sozialamt: ["Die Kosten der Unterkunft werden voraussichtlich vom Sozialamt übernommen. Eine Bestätigung reiche ich gerne nach.",
+      { uk: "Оренду, ймовірно, оплачуватиме Sozialamt. Підтвердження надішлю окремо.", ru: "Аренду, вероятно, будет оплачивать Sozialamt. Подтверждение пришлю отдельно." }],
+    none: null,
+  }[f.income];
+  const lines = [
+    ["Sehr geehrte Damen und Herren,", { uk: "Шановні пані та панове,", ru: "Уважаемые дамы и господа," }],
+    [`mit großem Interesse habe ich Ihre Anzeige für die Wohnung ${f.object} gelesen und möchte mich hiermit um die Wohnung bewerben.`,
+      { uk: `Я з цікавістю прочитав(ла) ваше оголошення про квартиру ${f.object} і хочу подати заявку.`, ru: `Я с интересом прочитал(а) ваше объявление о квартире ${f.object} и хочу подать заявку.` }],
+    [`Mein Name ist ${f.name}. Ich komme aus der Ukraine${f.since ? ` und lebe seit ${f.since} in Deutschland` : ""}${f.city ? `, derzeit in ${f.city}` : ""}.`,
+      { uk: `Мене звати ${f.name}. Я з України${f.since ? `, живу в Німеччині з ${f.since}` : ""}${f.city ? `, зараз у місті ${f.city}` : ""}.`,
+        ru: `Меня зовут ${f.name}. Я из Украины${f.since ? `, живу в Германии с ${f.since}` : ""}${f.city ? `, сейчас в городе ${f.city}` : ""}.` }],
+    household, ...(income ? [income] : []),
+    ...(f.level ? [[`Ich spreche Deutsch auf dem Niveau ${f.level} und lerne weiter.`, { uk: `Я говорю німецькою на рівні ${f.level} і продовжую вчити.`, ru: `Я говорю по-немецки на уровне ${f.level} и продолжаю учить.` }]] : []),
+    ...(f.moveIn ? [[`Ein Einzug wäre ab dem ${f.moveIn} möglich.`, { uk: `Можу заїхати з ${f.moveIn}.`, ru: `Могу въехать с ${f.moveIn}.` }]] : []),
+    ["Alle nötigen Unterlagen sende ich Ihnen gerne zu. Über eine Einladung zur Besichtigung würde ich mich sehr freuen.",
+      { uk: "Охоче надішлю всі потрібні документи. Буду радий(а) запрошенню на перегляд.", ru: "С радостью пришлю все нужные документы. Буду рад(а) приглашению на просмотр." }],
+    [`Mit freundlichen Grüßen\n${f.name}${f.contact ? "\n" + f.contact : ""}`, { uk: `З повагою,\n${f.name}`, ru: `С уважением,\n${f.name}` }],
+  ];
+  return { de: lines.map(l => l[0]).join("\n\n"), tr: lines.map(l => l[1][lang] || l[1].uk).join("\n\n") };
+}
+
+function hLetter(panel) {
+  const T = HL();
+  const field = (id, label, control) => `<div class="field"><label for="${id}">${esc(label)}</label>${control}</div>`;
+  const inp = (id, max, extra = "") => `<input id="${id}" maxlength="${max}" ${extra}>`;
+  panel.innerHTML = `<div class="head"><p>${esc(T.letterIntro)}</p></div>
+    <form class="form" id="hl">
+      ${field("l-name", T.name, inp("l-name", 80, 'autocomplete="name"'))}
+      ${field("l-object", T.object, inp("l-object", 120))}
+      ${field("l-city", T.city, inp("l-city", 80, `value="${esc(ME?.city || "")}"`))}
+      ${field("l-since", T.since, inp("l-since", 20))}
+      ${field("l-adults", T.adults, `<select id="l-adults">${[1, 2, 3, 4, 5].map(n => `<option>${n}</option>`).join("")}</select>`)}
+      ${field("l-kids", T.kids, `<select id="l-kids">${[0, 1, 2, 3, 4, 5].map(n => `<option>${n}</option>`).join("")}</select>`)}
+      ${field("l-income", T.income, `<select id="l-income">${Object.entries(T.inc).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select>`)}
+      ${field("l-job", T.jobTitle, inp("l-job", 60))}
+      ${field("l-level", T.level, `<select id="l-level">${opts(META.levels, ME?.german_level, v => v === "C1" ? L().c1 : v, true)}</select>`)}
+      ${field("l-move", T.moveIn, inp("l-move", 30))}
+      ${field("l-contact", T.contact, inp("l-contact", 80))}
+      <button class="btn wide" type="submit">${esc(T.make)}</button>
+    </form><div id="l-out"></div>`;
+  panel.querySelector("#hl").onsubmit = (e) => {
+    e.preventDefault();
+    const v = (id) => $(id).value.trim();
+    const f = { name: v("l-name"), object: v("l-object"), city: v("l-city"), since: v("l-since"), adults: +v("l-adults"),
+      kids: +v("l-kids"), income: v("l-income"), job: v("l-job"), level: v("l-level"), moveIn: v("l-move"), contact: v("l-contact") };
+    if (!f.name || !f.object) return toast(T.needName);
+    const out = buildLetter(f);
+    $("l-out").innerHTML = `<div class="head"><p><strong>${esc(T.yourLetter)}</strong></p></div>
+      <div class="items"><div class="item"><p class="text" id="l-de" style="margin:0">${esc(out.de)}</p>
+      <button class="btn" id="l-copy">${esc(T.copy)}</button></div></div>
+      <div class="head"><p>${esc(T.meaning)}</p></div><div class="items"><div class="item"><p class="text" style="margin:0">${esc(out.tr)}</p></div></div>`;
+    $("l-copy").onclick = async () => {
+      try { await navigator.clipboard.writeText(out.de); toast(T.copied); }
+      catch { const r = document.createRange(); r.selectNodeContents($("l-de")); getSelection().removeAllRanges(); getSelection().addRange(r); }
+    };
+    $("l-out").scrollIntoView({ behavior: "smooth" });
+  };
+}
+
 function renderAll(page = "home") {
   document.documentElement.lang = lang;
   $("owner").textContent = META.bot_name;
   $("title").textContent = L().title;
-  renderNav(); renderHome(); renderJobs(); renderProfile(); renderInfo(); renderPrivacy();
+  renderNav(); renderHome(); renderJobs(); renderHousing(); renderProfile(); renderInfo(); renderPrivacy();
   show(page);
 }
 
@@ -751,8 +932,8 @@ function renderAll(page = "home") {
     [META, SOURCES] = await Promise.all([api("/api/meta"), api("/api/sources")]);
     lang = tg?.initDataUnsafe?.user?.language_code === "ru" ? "ru" : "uk";
     if (tg?.initData) { ME = await api("/api/me"); if (ME.language) lang = ME.language; }
-    renderAll();
-    loadJobs();
+    renderAll(location.hash === "#housing" ? "housing" : location.hash === "#jobs" ? "jobs" : "home");
+    loadJobs(); loadHousing();
   } catch {
     document.querySelector("main").innerHTML = `<div class="head"><p>${esc(L().loadError)}</p></div>`;
   }

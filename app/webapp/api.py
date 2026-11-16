@@ -115,6 +115,13 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
             "submission_limit_per_hour": settings.submission_limit_per_hour,
         }
 
+    @app.get("/api/housing")
+    async def housing():
+        from app.data import housing as h
+
+        return {"terms": h.TERMS, "checklist": h.CHECKLIST, "safety": h.SAFETY, "sources": h.SOURCES,
+                "checked": h.CHECKED}
+
     @app.get("/api/me")
     async def get_me(data: Auth):
         async with sessionmaker() as s:

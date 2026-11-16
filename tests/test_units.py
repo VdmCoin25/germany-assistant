@@ -133,3 +133,12 @@ async def test_webhook_endpoint_checks_secret(settings, sm):
         ok = await c.post("/tg/webhook", json=update, headers={"X-Telegram-Bot-Api-Secret-Token": settings.webhook_token})
         assert ok.status_code == 200
     assert fake.texts()  # bot replied to /start
+
+
+async def test_housing_api(settings, sm):
+    app = create_app(settings, sm)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        d = (await c.get("/api/housing")).json()
+    assert {x["de"] for x in d["terms"]} >= {"Kaltmiete", "Warmmiete", "Kaution", "SCHUFA"}
+    assert all(s["url"].startswith("https://") for s in d["sources"])
+    assert set(d["checklist"]) == {"uk", "ru"} and set(d["safety"]) == {"uk", "ru"}
