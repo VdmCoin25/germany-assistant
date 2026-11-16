@@ -18,9 +18,13 @@ from tests.test_units import make_init_data  # noqa: E402
 
 TEST_TOKEN = "42:TEST-TOKEN"
 FILLED, EMPTY = "http://127.0.0.1:8101/", "http://127.0.0.1:8102/"
+import os
+
 SIZES = {"390": (390, 844), "360": (360, 740)}
 THEMES = ("light", "dark")
 LANGS = ("uk", "ru")
+if os.environ.get("UI_AUDIT_QUICK"):          # one size/theme/language for fast checks
+    SIZES, THEMES, LANGS = {"390": (390, 844)}, ("light",), ("uk",)
 
 # screen id -> (server, telegram user id, js to run after load)
 SCREENS = {
