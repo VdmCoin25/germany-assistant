@@ -119,10 +119,11 @@ async def test_webhook_endpoint_checks_secret(settings, sm):
     fake = FakeSession()
     bot = Bot(TOKEN, session=fake)
     from app.admin.handlers import router as admin_router
-    from app.bot.handlers import common, menu, settings as settings_h, start
-    for r in (admin_router, start.router, common.router, menu.router, settings_h.router, common.fallback_router):
+    from app.admin.moderation import router as moderation_router
+    from app.bot.handlers import common, jobs as jobs_h, menu, settings as settings_h, start
+    for r in (admin_router, moderation_router, jobs_h.router, start.router, common.router, menu.router, settings_h.router, common.fallback_router):
         r._parent_router = None
-    app = create_app(settings, sm, bot=bot, dp=build_dispatcher(settings, sm))
+    app = create_app(settings, sm, bot=bot, dp=build_dispatcher(settings, sm), webhook=True)
     update = {"update_id": 1, "message": {"message_id": 1, "date": 0, "chat": {"id": 5, "type": "private"},
                                           "from": {"id": 5, "is_bot": False, "first_name": "T"}, "text": "/start"}}
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:

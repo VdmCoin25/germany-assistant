@@ -24,7 +24,9 @@ ADMIN_HELP = (
     "<b>Admin</b>\n"
     "/stats — пользователи и активность за 7 дней\n"
     "/block &lt;telegram_id&gt; — заблокировать\n"
-    "/unblock &lt;telegram_id&gt; — разблокировать"
+    "/unblock &lt;telegram_id&gt; — разблокировать\n"
+    "/moderate — очередь модерации биржи работы\n"
+    "/grant_employer &lt;telegram_id&gt; &lt;дней&gt; — продлить доступ работодателю"
 )
 
 

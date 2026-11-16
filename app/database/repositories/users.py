@@ -43,7 +43,10 @@ class UserRepository:
         return True
 
     async def export(self, user: User) -> dict:
-        return {
+        from app.database.repositories.jobs import JobsRepository
+
+        jobs = await JobsRepository(self.s).export_user(user.telegram_id)
+        return {**({"jobs": jobs} if jobs else {}),
             "telegram_id": user.telegram_id,
             **{f: getattr(user, f) for f in PROFILE_FIELDS},
             "is_registered": user.is_registered,
@@ -54,6 +57,9 @@ class UserRepository:
 
     async def delete_all(self, user: User, user_hash: str) -> None:
         """GDPR erasure: profile and pseudonymous analytics linked to the user."""
+        from app.database.repositories.jobs import JobsRepository
+
+        await JobsRepository(self.s).delete_user(user.telegram_id)
         await self.s.execute(delete(AnalyticsEvent).where(AnalyticsEvent.user_hash == user_hash))
         await self.s.delete(user)
         await self.s.flush()

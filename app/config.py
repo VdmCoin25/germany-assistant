@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 20
     max_file_size_mb: int = 10
 
+    # Job exchange
+    employer_pilot_days: int = 30
+    employer_price_eur: int = 100
+    vacancy_days: int = 30
+
     # Analytics: salt for pseudonymous user hash (keep secret, change before production)
     analytics_salt: str = "change-me"
 

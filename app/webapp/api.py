@@ -63,10 +63,15 @@ class ProfileUpdate(BaseModel):
         return " ".join(v.split()) or None
 
 
-def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, dp=None) -> FastAPI:
+def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, dp=None,
+               webhook: bool = False) -> FastAPI:
     app = FastAPI(title=f"{settings.bot_name} Mini App", docs_url=None, redoc_url=None, openapi_url=None)
 
-    if bot is not None and dp is not None:
+    from app.webapp.jobs_api import build_jobs_router
+
+    app.include_router(build_jobs_router(settings, sessionmaker, bot, verify_init_data))
+
+    if webhook and bot is not None and dp is not None:
         @app.post("/tg/webhook")
         async def telegram_webhook(request: Request):
             secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
@@ -104,6 +109,9 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
             "goals": GOALS,
             "statuses": STATUSES,
             "topics": {k: {"uk": v[0], "ru": v[1]} for k, v in TOPICS.items()},
+            "employment": ["full", "part", "mini", "any"],
+            "employer_price_eur": settings.employer_price_eur,
+            "employer_pilot_days": settings.employer_pilot_days,
         }
 
     @app.get("/api/me")

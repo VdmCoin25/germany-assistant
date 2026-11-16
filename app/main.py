@@ -13,7 +13,8 @@ from aiogram.types import BotCommand, MenuButtonWebApp, WebAppInfo
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.admin.handlers import router as admin_router
-from app.bot.handlers import common, menu, settings as settings_h, start
+from app.admin.moderation import router as moderation_router
+from app.bot.handlers import common, jobs as jobs_h, menu, settings as settings_h, start
 from app.bot.middlewares.db import DbMiddleware
 from app.bot.middlewares.throttling import RateLimiter, ThrottlingMiddleware
 from app.config import Settings, get_settings
@@ -46,7 +47,7 @@ def build_dispatcher(settings: Settings, sessionmaker: async_sessionmaker, stora
     dp.message.middleware(throttle)
     dp.callback_query.middleware(throttle)
     # Order matters: admin and specific routers first, fallback last.
-    dp.include_routers(admin_router, start.router, common.router, menu.router, settings_h.router, common.fallback_router)
+    dp.include_routers(admin_router, moderation_router, start.router, jobs_h.router, common.router, menu.router, settings_h.router, common.fallback_router)
     dp.errors.register(common.on_error)
     return dp
 
@@ -91,11 +92,11 @@ async def run() -> None:
         await bot.set_webhook(f"{settings.webapp_url}/tg/webhook", secret_token=settings.webhook_token,
                               allowed_updates=allowed, drop_pending_updates=False)
         log.info("Webhook mode")
-        app = create_app(settings, sm, bot=bot, dp=dp)
+        app = create_app(settings, sm, bot=bot, dp=dp, webhook=True)
     else:
         await bot.delete_webhook(drop_pending_updates=False)
         tasks.append(dp.start_polling(bot, allowed_updates=allowed))
-        app = create_app(settings, sm)
+        app = create_app(settings, sm, bot=bot)
     if settings.run_webapp or settings.webhook_mode:
         server = uvicorn.Server(uvicorn.Config(app, host=settings.webapp_host, port=settings.webapp_port,
                                                log_level="warning", access_log=False))
