@@ -2,7 +2,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -58,6 +58,17 @@ class Settings(BaseSettings):
     ai_provider: str = "none"
     ai_api_key: str | None = None
     ai_model: str | None = None
+
+    # Jobs Source Radar (read-only Telegram monitor + admin catalog). Off by default.
+    jobs_radar_enabled: bool = False
+    tg_api_id: int | None = None
+    tg_api_hash: str | None = None
+    tg_session: SecretStr | None = None
+    jobs_join_daily_cap: int = 3
+    jobs_metadata_daily_cap: int = 50
+    jobs_classifier: str = "rules"
+    jobs_signal_retention_days: int = 14
+    jobs_digest_hour: int = 9
 
     log_level: str = "INFO"
 

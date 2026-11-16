@@ -135,7 +135,7 @@
 
 - `/add_job_chat <t.me-ссылка|@username>` → `approved` (добавлено админом вручную).
 - `/job_candidates` → список кандидатов с кнопками «одобрить / отклонить» (callback только для `ADMIN_IDS`).
-- `discovery.extract(text, source_chat)` → новые `candidate` с `discovered_from=link|mention`; дедуп по username/invite/chat id.
+- `discovery.extract(text, source_chat)` → новые `candidate` с `discovered_from=link|mention`; дедуп по username/invite/chat id. Ссылка или @упоминание может указывать на частного человека, поэтому кандидат создаётся с `entity_type=unknown`; монитор (J1.2) проверяет тип и **удаляет** строку, если это пользователь, а не канал/группа. `/job_candidates` не показывает `entity_type=user`.
 - Импорт CSV (`username,title,city,land,language,ads_allowed`) → `seed`/`approved`, повторный запуск не создаёт дублей.
 
 **Готово, когда:** `pytest -q` зелёный, включая тесты на разбор ссылок, дедуп, скоринг, админ-команды (не-админ получает отказ) и «флаг выключен → роутер не подключён». `alembic upgrade head` на локальной базе проходит, после импорта `tests/fixtures/job_chats_sample.csv` (10 строк, вымышленные чаты) в базе 10 ожидаемых строк, повторный импорт — всё ещё 10.

@@ -1,0 +1,11 @@
+username,title,city,land,language,ads_allowed
+radar_test_chat_01,Test Chat Berlin Work,Berlin,BE,uk,yes
+radar_test_chat_02,Test Chat Munich Jobs,München,BY,ru,unknown
+radar_test_chat_03,Test Chat Hamburg Jobs,Hamburg,HH,uk,yes
+radar_test_chat_04,Test Chat Cologne Work,Köln,NW,ru,no
+radar_test_chat_05,Test Chat Frankfurt Jobs,Frankfurt am Main,HE,uk,unknown
+radar_test_chat_06,Test Chat Stuttgart Work,Stuttgart,BW,uk,yes
+radar_test_chat_07,Test Chat Leipzig Jobs,Leipzig,SN,ru,unknown
+radar_test_chat_08,Test Chat Dresden Work,Dresden,SN,uk,yes
+radar_test_chat_09,Test Chat Germany Wide,,,de,unknown
+radar_test_chat_10,Test Chat Hannover Jobs,Hannover,NI,ru,yes

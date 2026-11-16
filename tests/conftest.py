@@ -14,6 +14,7 @@ from app.database.repositories.sources import SourceRepository
 from app.admin.handlers import router as admin_router
 from app.admin.moderation import router as moderation_router
 from app.bot.handlers import common, jobs as jobs_h, menu, settings as settings_h, start
+from app.jobs_radar.admin import router as jobs_radar_router
 from app.main import build_dispatcher
 
 ADMIN_ID = 999
@@ -75,7 +76,7 @@ class Harness:
         self.session = FakeSession()
         self.bot = Bot(TOKEN, session=self.session)
         # Routers are module-level singletons; detach them so each test gets a fresh Dispatcher.
-        for r in (admin_router, moderation_router, jobs_h.router, start.router, common.router, menu.router, settings_h.router, common.fallback_router):
+        for r in (admin_router, moderation_router, jobs_radar_router, jobs_h.router, start.router, common.router, menu.router, settings_h.router, common.fallback_router):
             r._parent_router = None
         self.dp = build_dispatcher(settings, sm)
 
