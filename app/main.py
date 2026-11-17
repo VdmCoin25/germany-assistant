@@ -47,7 +47,12 @@ def build_dispatcher(settings: Settings, sessionmaker: async_sessionmaker, stora
     dp.message.middleware(throttle)
     dp.callback_query.middleware(throttle)
     # Order matters: admin and specific routers first, fallback last.
-    dp.include_routers(admin_router, moderation_router, start.router, jobs_h.router, common.router, menu.router, settings_h.router, common.fallback_router)
+    dp.include_routers(admin_router, moderation_router)
+    if settings.jobs_radar_enabled:
+        from app.jobs_radar.admin import router as jobs_radar_router
+
+        dp.include_router(jobs_radar_router)
+    dp.include_routers(start.router, jobs_h.router, common.router, menu.router, settings_h.router, common.fallback_router)
     dp.errors.register(common.on_error)
     return dp
 

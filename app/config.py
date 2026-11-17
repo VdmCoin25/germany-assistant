@@ -2,7 +2,7 @@
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -59,7 +59,33 @@ class Settings(BaseSettings):
     ai_api_key: str | None = None
     ai_model: str | None = None
 
+    # Jobs Source Radar (read-only Telegram monitor + admin catalog). Off by default.
+    jobs_radar_enabled: bool = False
+    tg_api_id: int | None = None
+    tg_api_hash: str | None = None
+    tg_session: SecretStr | None = None
+    jobs_join_daily_cap: int = 3
+    jobs_metadata_daily_cap: int = 50
+    jobs_classifier: str = "rules"
+    jobs_signal_retention_days: int = 14
+    jobs_digest_hour: int = 9
+
     log_level: str = "INFO"
+
+    @field_validator("tg_api_id", "tg_api_hash", "tg_session", "ai_api_key", "ai_model", mode="before")
+    @classmethod
+    def _blank_to_none(cls, v):
+        return None if isinstance(v, str) and not v.strip() else v
+
+    @field_validator(
+        "jobs_radar_enabled", "jobs_join_daily_cap", "jobs_metadata_daily_cap",
+        "jobs_signal_retention_days", "jobs_digest_hour", mode="before",
+    )
+    @classmethod
+    def _blank_to_default(cls, v, info):
+        if isinstance(v, str) and not v.strip():
+            return cls.model_fields[info.field_name].default
+        return v
 
     @field_validator("admin_ids", mode="before")
     @classmethod

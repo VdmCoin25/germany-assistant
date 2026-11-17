@@ -8,3 +8,4 @@ fastapi==0.163.1
 uvicorn[standard]==0.54.0
 redis>=5,<7
 aiohttp-socks>=0.10
+telethon==1.45.0
