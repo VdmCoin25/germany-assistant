@@ -1,16 +1,16 @@
 import "@telegram-apps/telegram-ui/dist/styles.css";
 import "./styles.css";
 import { AppRoot } from "@telegram-apps/telegram-ui";
-import { useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { makeT, type Lang } from "./i18n";
 import { FormCity } from "./screens/FormCity";
 import { Home, type HomeData, type JobsState } from "./screens/Home";
+const Kit = lazy(() => import("./screens/Kit").then((m) => ({ default: m.Kit })));   // review page, not in the main bundle
 import { tg, useColorScheme } from "./tg";
 
 // J2 prototype: data comes from ?demo=… presets; the API is wired in J4.
 const params = new URLSearchParams(location.search);
-const look = (params.get("look") === "b" ? "b" : "a") as "a" | "b";
 const lang: Lang = (params.get("lang") ?? tg?.initDataUnsafe.user?.language_code) === "ru" ? "ru" : "uk";
 const demo = params.get("demo") ?? "offers";
 
@@ -28,10 +28,10 @@ function App() {
   const back = useCallback(() => setScreen("home"), []);
   return (
     <AppRoot appearance={scheme}>
-      <div className={`app look-${look}`} data-scheme={scheme}>
-        {screen === "form"
-          ? <FormCity t={t} look={look} step={2} total={6} initial={params.get("q") ?? ""} back={back} next={back} />
-          : <Home t={t} look={look} data={PRESETS[demo] ?? PRESETS.offers} go={go} />}
+      <div className="app" data-scheme={scheme}>
+        {screen === "form" ? <FormCity t={t} step={2} total={6} initial={params.get("q") ?? ""} back={back} next={back} />
+          : screen === "kit" ? <Suspense fallback={null}><Kit t={t} /></Suspense>
+          : <Home t={t} data={PRESETS[demo] ?? PRESETS.offers} go={go} />}
       </div>
     </AppRoot>
   );

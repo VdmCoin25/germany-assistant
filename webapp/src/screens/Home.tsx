@@ -1,4 +1,5 @@
 import { Cell, List, Section } from "@telegram-apps/telegram-ui";
+import { RouteCell } from "../components/RouteCell";
 import { useCallback } from "react";
 import { Board, type Scene } from "../components/Board";
 import { Route } from "../components/Route";
@@ -20,14 +21,14 @@ export function routeOf(j: JobsState) {
     case "new": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: false, lamp: "signal" } };
     case "review": return { idx: 1, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
     case "published": return { idx: 2, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
-    case "offers": return { idx: 3, status: "arrived", action: true, scene: { rain: false, train: true, lamp: "signal" } };
+    case "offers": return { idx: 3, status: "boarding", action: true, scene: { rain: false, train: true, lamp: "signal" } };
     case "contact": return { idx: 4, status: "arrived", action: false, scene: { rain: false, train: true, lamp: "dim" } };
   }
 }
 
-type Props = { t: T; look: "a" | "b"; data: HomeData; go: (s: string) => void };
+type Props = { t: T; data: HomeData; go: (s: string) => void };
 
-export function Home({ t, look, data, go }: Props) {
+export function Home({ t, data, go }: Props) {
   const r = routeOf(data.jobs) as { idx: number; status: "boarding" | "enroute" | "arrived"; action: boolean; scene: Scene };
   const jobsLine =
     data.jobs.step === "new" ? t("jobs.new")
@@ -54,15 +55,8 @@ export function Home({ t, look, data, go }: Props) {
       />
       <List>
         <Section>
-          <Cell
-            onClick={onPrimary}
-            subtitle={jobsLine}
-            after={<span className={`status status--${r.status}`}>{statusText}</span>}
-            multiline
-          >
-            {t("jobs.title")}
-          </Cell>
-          <Route t={t} current={r.idx} action={r.action} size={look === "b" ? "platforms" : "line"} />
+          <RouteCell title={t("jobs.title")} explain={jobsLine} status={r.status} statusText={statusText} onClick={onPrimary} />
+          <Route t={t} current={r.idx} action={r.action} size="platforms" />
         </Section>
         {data.jobs.step === "new" && <p className="hint">{t("jobs.privacy")}</p>}
         <Section header={t("help.title")}>

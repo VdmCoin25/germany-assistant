@@ -1,6 +1,5 @@
 import { Cell, Input, List, Section } from "@telegram-apps/telegram-ui";
 import { useCallback, useId, useMemo, useState, type KeyboardEvent } from "react";
-import { Board } from "../components/Board";
 import type { T } from "../i18n";
 import { haptic, useBackButton, useBottomButton } from "../tg";
 
@@ -10,11 +9,11 @@ const CITIES: [string, string][] = [
   ["Bremen", "Bremen"], ["Bremerhaven", "Bremen"], ["München", "Bayern"], ["Hamburg", "Hamburg"], ["Leipzig", "Sachsen"],
 ];
 
-type Props = { t: T; look: "a" | "b"; step: number; total: number; initial?: string; back: () => void; next: () => void };
+type Props = { t: T; step: number; total: number; initial?: string; back: () => void; next: () => void };
 
 /** One question per screen. The city field is an ARIA combobox: typing filters a listbox,
  *  arrows move the active option, Enter picks it, Escape closes the list. */
-export function FormCity({ t, look, step, total, initial = "", back, next }: Props) {
+export function FormCity({ t, step, total, initial = "", back, next }: Props) {
   const [q, setQ] = useState(initial);
   const [picked, setPicked] = useState<string | null>(null);
   const [active, setActive] = useState(-1);
@@ -39,11 +38,8 @@ export function FormCity({ t, look, step, total, initial = "", back, next }: Pro
 
   return (
     <>
-      {look === "b"
-        ? <Board size="compact" scene={{ rain: false, train: false, lamp: "signal" }}
-                 caption={t("route.step", { n: step, total })} station={t("jobs.title")} />
-        : <div className="progress num">{t("form.progress", { n: step, total })}
-            <div className="progress__bar"><i style={{ width: `${(step / total) * 100}%` }} /></div></div>}
+      <div className="progress num">{t("form.progress", { n: step, total })}
+        <div className="progress__bar"><i style={{ width: `${(step / total) * 100}%` }} /></div></div>
       <h2 className="q">{t("form.where")}</h2>
       <List>
         <Section footer={picked ? t("form.landAuto") : t("form.pickCity")}>
