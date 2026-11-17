@@ -75,9 +75,10 @@
           padding: 18px 16px 16px; border-bottom: 3px solid var(--on-board);
           background: linear-gradient(180deg, #031A14 0%, #07382B 62%, #0E5A44 100%); }
   .sign canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .sign .top { position: relative; padding-right: 96px; }
-  .sign .owner { margin: 0; font-size: 13px; color: var(--on-board-dim); }
-  .sign h1 { position: relative; margin: 34px 0 0; padding-right: 96px; font-size: 26px; line-height: 1.15; font-weight: 600;
+  .sign .top { position: relative; padding-right: 110px; }   /* keeps clear of the lamp */
+  .sign .owner, .sign .updated { margin: 0; font-size: 13px; color: var(--on-board-dim); font-variant-numeric: tabular-nums; }
+  .sign .sub { position: relative; margin: 2px 0 0; padding-right: 110px; font-size: 15px; color: var(--on-board-dim); }
+  .sign h1 { position: relative; margin: 26px 0 0; padding-right: 110px; font-size: 26px; line-height: 1.15; font-weight: 600;
              letter-spacing: -0.01em; text-shadow: 0 1px 12px rgba(3,26,20,.6); }
   .sign .clock { position: absolute; right: 22px; top: 84px; width: 56px; padding: 3px 0 2px; text-align: center;
                  background: #F4F1E8; color: #13203A; font-size: 15px; font-weight: 600; line-height: 1.2;
@@ -288,16 +289,12 @@
       background-image: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)); }
   }
 
-  /* ---- Bottom bar: platform edge with the white safety line ---- */
-  nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--nav-bg);
-        padding-bottom: env(safe-area-inset-bottom); }
-  nav::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
-                background: repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 14px, transparent 14px 20px); }
-  nav button { flex: 1; border: 0; background: none; padding: 16px 4px 16px; font-size: 15px; color: var(--pencil);
-               cursor: pointer; position: relative; }
-  nav button[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  nav button[aria-current="page"]::before { content: ""; position: absolute; left: 22%; right: 22%; top: 3px; height: 3px;
-                                            background: var(--signal); }
+  /* ---- Bottom bar: one quiet top edge; the current tab is a soft emerald pill ---- */
+  nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 4px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+        background: var(--sheen), var(--nav-bg); box-shadow: 0 -1px 0 rgba(255,255,255,.08); }
+  nav button { flex: 1; border: 0; background: none; padding: 10px 2px; border-radius: 12px; font-size: 15px; color: var(--pencil);
+               cursor: pointer; transition: background-color 200ms var(--ease), color 200ms var(--ease); }
+  nav button[aria-current="page"] { color: var(--signal); font-weight: 600; background: rgba(63,224,160,.13); }
 
   .toast { position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
            padding: 12px 16px; border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-size: 15px;
@@ -314,9 +311,9 @@
 <body>
 <header class="sign">
   <canvas id="rain" aria-hidden="true"></canvas>
-  <div class="top"><p class="owner" id="owner">Germany Assistant</p></div>
-  <span class="clock" id="clock" aria-hidden="true"></span>
+  <div class="top"><p class="owner"><span id="owner"></span> · <span id="updated"></span></p></div>
   <h1 id="title"></h1>
+  <p class="sub" id="station-sub"></p>
 </header>
 
 <main>
@@ -338,12 +335,9 @@ if (tg?.colorScheme === "dark") document.documentElement.dataset.theme = "dark";
 const cssVar = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 try { tg?.setHeaderColor?.("#031A14"); tg?.setBackgroundColor?.(cssVar("--platform")); tg?.setBottomBarColor?.(cssVar("--nav-bg")); } catch {}
 
-// Station clock (Berlin time)
-function tick() {
-  const t = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }).format(new Date());
-  document.getElementById("clock").textContent = t;
-}
-tick(); setInterval(tick, 15000);
+// What the header scene shows; set from the user's job route (renderSign), read by the canvas loop.
+// rain: waiting for review or for offers; train "standing": an offer waits for an answer, otherwise trains pass by.
+const SCENE = { rain: true, train: "passing" };
 
 // Night platform: rain, a warm station lamp with a light cone, low drifting fog.
 // One static frame when the user prefers reduced motion; paused while the page is hidden.
@@ -397,10 +391,12 @@ tick(); setInterval(tick, 15000);
   }
   // Distant regional train crossing the horizon now and then (generic, no operator branding).
   function drawTrain(ts) {
-    if (still) return;
+    if (SCENE.train === "standing") {
+      if (!train.stand) { train.stand = true; train.on = true; train.x = still ? 0 : -260; }
+    } else { train.stand = false; if (still) return; }
     if (!train.on && ts > train.next) { train.on = true; train.x = -260; }
     if (!train.on) return;
-    const y = h - 34, len = 250, carH = 7;
+    const y = h - 20, len = 250, carH = 7;   // runs below the text, above the platform edge
     ctx.save(); ctx.globalAlpha = .55;
     ctx.fillStyle = "#DCE3EE"; ctx.fillRect(train.x, y, len, carH);
     ctx.beginPath(); ctx.moveTo(train.x + len, y); ctx.quadraticCurveTo(train.x + len + 14, y + 1, train.x + len + 16, y + carH);
@@ -410,6 +406,10 @@ tick(); setInterval(tick, 15000);
     for (let i = 4; i < len - 4; i += 7) { if (i % 50 > 44) continue; ctx.fillRect(train.x + i, y + 1.5, 4, 2.5); }
     ctx.fillStyle = "#02140F"; for (let i = 50; i < len; i += 50) ctx.fillRect(train.x + i - 1, y, 2, carH);
     ctx.restore();
+    if (SCENE.train === "standing") {   // pull in and stop at the platform
+      train.x = still ? 0 : Math.min(0, train.x + Math.max(.6, -train.x * .06));
+      return;
+    }
     ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.fillRect(0, y + carH + 1, w, 1);   // rails, barely visible
     train.x += 3.6;
     if (train.x > w + 20) { train.on = false; train.next = ts + 20000 + Math.random() * 25000; }
@@ -434,6 +434,7 @@ tick(); setInterval(tick, 15000);
     }
   }
   function drawRain() {
+    if (!SCENE.rain) return;
     ctx.lineWidth = 1; ctx.lineCap = "round";
     for (const d of drops) {
       const k = inCone(d.x, d.y);
@@ -444,6 +445,7 @@ tick(); setInterval(tick, 15000);
   }
   function draw(ts = 0) { ctx.clearRect(0, 0, w, h); drawTrain(ts); drawLamp(); drawBench(); drawRain(); drawFog(); }
   size(); addEventListener("resize", () => { size(); draw(); });
+  window.redrawScene = () => draw(performance.now());   // a still frame must follow SCENE changes too
   if (still) { draw(); return; }
   let last = 0;
   (function frame(ts) {
@@ -455,6 +457,15 @@ tick(); setInterval(tick, 15000);
 const I18N = {
   uk: {
     title: "Куди вам сьогодні?",
+    yours: "Ваші відправлення", updated: (t) => `Оновлено ${t}`, noCity: "Deutschland",
+    noCityHint: "Місто з’явиться, коли заповните анкету",
+    steps: ["Анкета", "Перевірка", "Пропозиції", "Згода", "Контакт передано"], step: (n, name) => `Крок ${n} з 5 · ${name}`,
+    jobLine: { new: "Заповніть анкету — 2 хвилини, анонімно", rejected: "Анкету не опублікували. Виправте її та надішліть ще раз",
+      review: "Анкету перевіряє адміністратор", published: "Анкета видна роботодавцям, пропозицій поки немає",
+      paused: "Анкету приховано: роботодавці її не бачать", offers: (n) => n === 1 ? "1 запрошення чекає відповіді" : `${n} запрошення чекають відповіді`,
+      contact: "Контакт передано" },
+    jobCta: { new: "Заповнити анкету", rejected: "Виправити анкету", review: "Моя анкета", published: "Моя анкета", paused: "Моя анкета",
+      offers: "Відповісти на запрошення", contact: "Дивитися пропозиції" },
     nav: { home: "Табло", jobs: "Робота", profile: "Профіль", info: "Довідник", privacy: "Дані" },
     sections: [
       ["jobs", "Робота", "Вакансії в Німеччині і ваша анкета", 1],
@@ -492,6 +503,15 @@ const I18N = {
   },
   ru: {
     title: "Куда вам сегодня?",
+    yours: "Ваши отправления", updated: (t) => `Обновлено ${t}`, noCity: "Deutschland",
+    noCityHint: "Город появится, когда заполните анкету",
+    steps: ["Анкета", "Проверка", "Предложения", "Согласие", "Контакт передан"], step: (n, name) => `Шаг ${n} из 5 · ${name}`,
+    jobLine: { new: "Заполните анкету — 2 минуты, анонимно", rejected: "Анкету не опубликовали. Исправьте её и отправьте ещё раз",
+      review: "Анкету проверяет администратор", published: "Анкета видна работодателям, предложений пока нет",
+      paused: "Анкета скрыта: работодатели её не видят", offers: (n) => n === 1 ? "1 приглашение ждёт ответа" : `${n} приглашения ждут ответа`,
+      contact: "Контакт передан" },
+    jobCta: { new: "Заполнить анкету", rejected: "Исправить анкету", review: "Моя анкета", published: "Моя анкета", paused: "Моя анкета",
+      offers: "Ответить на приглашение", contact: "Смотреть предложения" },
     nav: { home: "Табло", jobs: "Работа", profile: "Профиль", info: "Справочник", privacy: "Данные" },
     sections: [
       ["jobs", "Работа", "Вакансии в Германии и ваша анкета", 1],
@@ -614,16 +634,51 @@ function sheetBody(k) {
   return "";
 }
 
+// ---- The board follows the user's job route (same logic as the new app at /app-v2) ----
+const ROUTE = { new: [0, true], rejected: [0, true], review: [1, false], published: [2, false], paused: [2, false],
+                offers: [3, true], contact: [4, false] };
+function jobState() {
+  const me = JOBS?.me; if (!me) return null;
+  const s = me.seeker, offers = (me.inbox || []).filter(c => c.kind === "offer");
+  if (!s) return "new";
+  if (s.status === "rejected") return "rejected";
+  if (s.status === "pending") return "review";
+  if (offers.some(c => c.status === "sent")) return "offers";
+  if (offers.some(c => c.status === "accepted")) return "contact";
+  return s.is_active ? "published" : "paused";
+}
+// A real place only: a name in Latin letters (German places), else the Land, else nothing. Junk like "Ччч" never shows.
+function placeName(city, land) {
+  const c = (city || "").trim();
+  if (/^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß .()\-]{1,}$/.test(c)) return c;
+  return land && META?.lands?.[land] ? META.lands[land] : null;
+}
+function renderSign() {
+  const T = L(), st = jobState(), s = JOBS?.me?.seeker;
+  const now = new Date(), hh = String(now.getHours()).padStart(2, "0"), mm = String(now.getMinutes()).padStart(2, "0");
+  const place = placeName(s?.city || ME?.city, s?.land || ME?.land);
+  $("owner").textContent = T.yours;
+  $("updated").textContent = T.updated(`${hh}:${mm}`);
+  $("title").textContent = place || T.noCity;
+  $("station-sub").textContent = s?.position || (place ? "" : T.noCityHint);
+  SCENE.rain = st === null || st === "review" || st === "published";          // waiting
+  SCENE.train = st === "offers" || st === "contact" ? "standing" : "passing";  // an offer has arrived
+  window.redrawScene?.();
+}
+
 function renderHome() {
   const [main, ...rest] = L().sections;
   const nVac = JOBS?.vacancies?.length || 0;
+  const st = jobState();
+  const waiting = (JOBS?.me?.inbox || []).filter(c => c.kind === "offer" && c.status === "sent").length;
   $("page-home").innerHTML = `<div class="board-wrap">
     <button class="mainline" data-k="${main[0]}">
       <span class="gleis" aria-hidden="true">1</span>
       <span class="m-dest">${esc(main[1])}</span>
-      <span class="m-via">${esc(main[2])}</span>
-      ${nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
-      <span class="m-cta">${esc(L().findJob)}</span>
+      <span class="m-via">${esc(st ? (st === "offers" ? L().jobLine.offers(waiting) : L().jobLine[st]) : main[2])}</span>
+      ${st ? `<span class="m-count">${esc(L().step(ROUTE[st][0] + 1, L().steps[ROUTE[st][0]]))}</span>`
+           : nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
+      <span class="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</span>
     </button>
     <p class="board-label">${esc(L().help)}</p>
     <ol class="board">${rest.map(([k, name, via, ready], j) => { const i = j + 1; return `
@@ -636,7 +691,11 @@ function renderHome() {
       </button>
       <div class="announce">${sheetBody(k)}</div>
     </li>`; }).join("")}</ol></div>`;
-  $("page-home").querySelector(".mainline").onclick = () => show("jobs");
+  $("page-home").querySelector(".mainline").onclick = () => {
+    JOBS.sub = st === "new" || st === "rejected" ? "form" : st === "offers" ? "inbox" : null;
+    renderJobs(); show("jobs");
+  };
+  renderSign();
   $("page-home").querySelectorAll(".board > li").forEach(li => {
     const btn = li.querySelector(".dep");
     btn.onclick = () => {
@@ -1269,8 +1328,7 @@ function hLetter(panel) {
 
 function renderAll(page = "home") {
   document.documentElement.lang = lang;
-  $("owner").textContent = META.bot_name;
-  $("title").textContent = L().title;
+  renderSign();
   renderNav(); renderHome(); renderJobs(); renderHousing(); renderProfile(); renderInfo(); renderPrivacy();
   show(page);
 }
