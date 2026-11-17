@@ -73,6 +73,9 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
     from app.webapp.jobs_api import build_jobs_router
 
     app.include_router(build_jobs_router(settings, sessionmaker, bot, verify_init_data))
+    from app.webapp.deadlines_api import build_deadlines_router
+
+    app.include_router(build_deadlines_router(settings, sessionmaker, verify_init_data))
 
     if webhook and bot is not None and dp is not None:
         @app.post("/tg/webhook")

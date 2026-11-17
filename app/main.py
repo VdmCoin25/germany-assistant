@@ -122,6 +122,9 @@ async def run() -> None:
         server = uvicorn.Server(uvicorn.Config(app, host=settings.webapp_host, port=settings.webapp_port,
                                                log_level="warning", access_log=False))
         tasks.append(server.serve())
+    from app.services.reminders import reminders_loop
+
+    tasks.append(reminders_loop(bot, sm, settings.default_language))
     if settings.webapp_url and settings.keepalive_interval_sec > 0:
         tasks.append(keepalive(settings.webapp_url, settings.keepalive_interval_sec))
     try:

@@ -45,8 +45,11 @@ class UserRepository:
     async def export(self, user: User) -> dict:
         from app.database.repositories.jobs import JobsRepository
 
+        from app.database.repositories.deadlines import DeadlineRepository
+
         jobs = await JobsRepository(self.s).export_user(user.telegram_id)
-        return {**({"jobs": jobs} if jobs else {}),
+        dates = [{"title": d.title, "due": d.due.isoformat()} for d in await DeadlineRepository(self.s).for_user(user.telegram_id)]
+        return {**({"jobs": jobs} if jobs else {}), **({"deadlines": dates} if dates else {}),
             "telegram_id": user.telegram_id,
             **{f: getattr(user, f) for f in PROFILE_FIELDS},
             "is_registered": user.is_registered,
@@ -59,7 +62,10 @@ class UserRepository:
         """GDPR erasure: profile and pseudonymous analytics linked to the user."""
         from app.database.repositories.jobs import JobsRepository
 
+        from app.database.repositories.deadlines import DeadlineRepository
+
         await JobsRepository(self.s).delete_user(user.telegram_id)
+        await DeadlineRepository(self.s).delete_user(user.telegram_id)
         await self.s.execute(delete(AnalyticsEvent).where(AnalyticsEvent.user_hash == user_hash))
         await self.s.delete(user)
         await self.s.flush()

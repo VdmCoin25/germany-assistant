@@ -264,6 +264,14 @@
   .changes time { color: var(--pencil); font-variant-numeric: tabular-nums; }
   .changes button:focus-visible { outline: 2px solid var(--signal); }
   .later-line { margin: 16px 16px 0; font-size: 15px; color: var(--pencil); }
+  .next-date { all: unset; box-sizing: border-box; display: block; width: calc(100% - 32px); margin: 8px 16px 0; padding: 10px 12px;
+               border-left: 3px solid var(--signal); font-size: 15px; cursor: pointer; }
+  .next-date:focus-visible { outline: 2px solid var(--signal); }
+  .dates { list-style: none; margin: 12px 16px 0; padding: 0; }
+  .dates li { display: grid; grid-template-columns: 96px 1fr 44px; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .dates time { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dates b { display: block; font-weight: 600; } .dates .meta { display: block; font-size: 13px; color: var(--pencil); }
+  .date-del { width: 44px; height: 44px; border: 0; background: none; color: var(--pencil); font-size: 22px; cursor: pointer; }
 
   /* ---- Badges and tags ---- */
   .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 8px; margin-top: 8px; border-radius: var(--radius-tag);
@@ -471,6 +479,7 @@
   <section class="page" id="page-profile"></section>
   <section class="page" id="page-info"></section>
   <section class="page" id="page-privacy"></section>
+  <section class="page" id="page-dates"></section>
 </main>
 
 <nav id="nav"></nav>
@@ -658,6 +667,11 @@ const I18N = {
       translator: "Переклад з німецької на українську і назад: з тексту, фото й голосових. Розділ готується.",
       ai: "Відповіді на питання про життя в Німеччині з посиланнями на офіційні джерела. Розділ готується, поки дивіться довідник.",
     },
+    dates: { title: "Мої терміни", intro: "Бот нагадає в чаті за 3 дні та напередодні.", add: "Додати", what: "Що за термін", when: "Дата",
+      quick: ["Термін у Jobcenter", "Відповісти на лист", "Weiterbewilligungsantrag", "Ausländerbehörde", "Kita"],
+      status24: "Кінець статусу §24", none: "Поки немає дат.", del: "Видалити", added: "Додано. Бот нагадає в чаті.",
+      left: (n) => n <= 0 ? "сьогодні" : n === 1 ? "завтра" : `через ${n} дн.`,
+      next: (t, d, w) => `Найближчий термін: ${t}, ${d}, ${w}`, empty: "Мої терміни: бот нагадає про важливі дати" },
     toChat: "Повернутися в чат", later: "Поки готуємо", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
     profileHead: "Профіль", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
     appearance: "Оформлення", themeMode: "Тема", themeAuto: "Як у Telegram", themeDark: "Темна", themeLight: "Світла", palette: "Колір",
@@ -707,6 +721,11 @@ const I18N = {
       translator: "Перевод с немецкого на украинский и русский и обратно: из текста, фото и голосовых. Раздел готовится.",
       ai: "Ответы на вопросы о жизни в Германии со ссылками на официальные источники. Раздел готовится, пока смотрите справочник.",
     },
+    dates: { title: "Мои сроки", intro: "Бот напомнит в чате за 3 дня и накануне.", add: "Добавить", what: "Что за срок", when: "Дата",
+      quick: ["Термин в Jobcenter", "Ответить на письмо", "Weiterbewilligungsantrag", "Ausländerbehörde", "Kita"],
+      status24: "Конец статуса §24", none: "Пока нет дат.", del: "Удалить", added: "Добавлено. Бот напомнит в чате.",
+      left: (n) => n <= 0 ? "сегодня" : n === 1 ? "завтра" : `через ${n} дн.`,
+      next: (t, d, w) => `Ближайший срок: ${t}, ${d}, ${w}`, empty: "Мои сроки: бот напомнит о важных датах" },
     toChat: "Вернуться в чат", later: "Пока готовим", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
     profileHead: "Профиль", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
     appearance: "Оформление", themeMode: "Тема", themeAuto: "Как в Telegram", themeDark: "Тёмная", themeLight: "Светлая", palette: "Цвет",
@@ -785,7 +804,7 @@ function toast(text) {
 }
 
 function show(page) {
-  for (const p of ["home", "jobs", "housing", "profile", "info", "privacy"]) $("page-" + p).classList.toggle("on", p === page);
+  for (const p of ["home", "jobs", "housing", "profile", "info", "privacy", "dates"]) $("page-" + p).classList.toggle("on", p === page);
   $("nav").querySelectorAll("button").forEach(b =>
     b.dataset.page === page ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   window.scrollTo(0, 0);
@@ -864,6 +883,7 @@ function renderHome() {
            : nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
       <span class="m-actions"><button type="button" class="m-emp" id="m-emp">${esc(JL().lead.btn)}</button><button type="button" class="m-cta" id="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</button></span>
     </div>
+    ${tg?.initData && DATES ? nextDateLine() : ""}
     <p class="board-label">${esc(L().help)}</p>
     ${[1].map((ok) => `
     <ol class="board">${rest.filter(r => !!r[3] === !!ok).map(([k, name, via], j) => `
@@ -882,6 +902,7 @@ function renderHome() {
   };
   $("page-home").querySelector(".mainline").onclick = (ev) => { if (!ev.target.closest(".m-emp")) openJobs(); };
   $("m-emp").onclick = () => openLead("home");
+  const nd = $("next-date"); if (nd) nd.onclick = () => show("dates");
   renderSign();
   $("page-home").querySelectorAll(".board > li").forEach(li => {
     const btn = li.querySelector(".dep");
@@ -1847,10 +1868,57 @@ function hLetter(panel) {
   };
 }
 
+// ---------------- My dates ----------------
+// The user's own dates; the bot reminds 3 days before and the day before (app/services/reminders.py).
+let DATES = null;
+const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const daysLeft = (iso) => Math.round((new Date(iso + "T00:00:00") - new Date(todayISO() + "T00:00:00")) / 864e5);
+const STATUS24_END = "2027-03-04";   // UkraineAufenthFGV, see app/data/guides.py (residence)
+function nextDateLine() {
+  const D = L().dates, n = DATES[0];
+  return `<button type="button" class="next-date" id="next-date">${esc(n ? D.next(n.title, fmtDate(n.due).slice(0, 5), D.left(daysLeft(n.due))) : D.empty)}</button>`;
+}
+async function loadDates() {
+  if (!tg?.initData) return;
+  try { DATES = await api("/api/deadlines"); } catch { DATES = DATES || []; }
+  renderHome(); renderDates();
+}
+function renderDates() {
+  const root = $("page-dates"); if (!root) return;
+  const D = L().dates, list = DATES || [], has24 = list.some(x => x.due === STATUS24_END);
+  root.innerHTML = `<div class="head"><h2>${esc(D.title)}</h2><p>${esc(D.intro)}</p></div>
+    ${list.length ? `<ol class="dates">${list.map(x => `<li><time datetime="${esc(x.due)}">${esc(fmtDate(x.due))}</time>
+        <span><b>${esc(x.title)}</b><span class="meta">${esc(D.left(daysLeft(x.due)))}</span></span>
+        <button type="button" class="date-del" data-del="${x.id}" aria-label="${esc(D.del)}: ${esc(x.title)}">×</button></li>`).join("")}</ol>`
+      : `<p class="empty">${esc(D.none)}</p>`}
+    <form class="form" id="df" novalidate>
+      ${field("d-what", D.what, `<input id="d-what" maxlength="120" required>`)}
+      <div class="pick">${D.quick.map(q => `<button type="button" data-dq="${esc(q)}">${esc(q)}</button>`).join("")}
+        ${has24 ? "" : `<button type="button" data-d24>${esc(D.status24)} (${esc(fmtDate(STATUS24_END))})</button>`}</div>
+      ${field("d-when", D.when, `<input id="d-when" type="date" required min="${todayISO()}">`)}
+      <button class="btn wide big" type="submit">${esc(D.add)}</button></form>`;
+  root.querySelectorAll("[data-dq]").forEach(b => b.onclick = () => { $("d-what").value = b.dataset.dq; $("d-when").focus(); tg?.HapticFeedback?.selectionChanged(); });
+  const b24 = root.querySelector("[data-d24]"); if (b24) b24.onclick = () => { $("d-what").value = D.status24; $("d-when").value = STATUS24_END; tg?.HapticFeedback?.selectionChanged(); };
+  root.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    try { await api(`/api/deadlines/${b.dataset.del}`, { method: "DELETE" }); DATES = DATES.filter(x => x.id !== +b.dataset.del); renderDates(); renderHome(); }
+    catch { toast(L().error); }
+  });
+  $("df").onsubmit = async (ev) => {
+    ev.preventDefault();
+    if (!validate(ev.target)) return;
+    const btn = ev.target.querySelector("button[type=submit]"); btn.disabled = true;
+    try {
+      const d = await api("/api/deadlines", { method: "POST", body: JSON.stringify({ title: $("d-what").value.trim(), due: $("d-when").value }) });
+      DATES = [...(DATES || []), d].sort((a, b) => a.due.localeCompare(b.due) || a.id - b.id);
+      toast(D.added); tg?.HapticFeedback?.notificationOccurred("success"); renderDates(); renderHome();
+    } catch { toast(L().error); btn.disabled = false; }
+  };
+}
+
 function renderAll(page = "home") {
   document.documentElement.lang = lang;
   renderSign();
-  renderNav(); renderHome(); renderJobs(); renderHousing(); renderProfile(); renderInfo(); renderPrivacy();
+  renderNav(); renderHome(); renderJobs(); renderHousing(); renderProfile(); renderInfo(); renderPrivacy(); renderDates();
   show(page);
 }
 
@@ -1868,7 +1936,7 @@ async function init() {
     [META, SOURCES] = await Promise.all([api("/api/meta"), api("/api/sources")]);
     if (tg?.initData) { ME = await api("/api/me"); if (ME.language) lang = ME.language; }
     renderAll(location.hash === "#housing" ? "housing" : location.hash === "#jobs" ? "jobs" : "home");
-    loadJobs(); loadHousing();
+    loadJobs(); loadHousing(); loadDates();
   } catch {
     failed($("page-home"), init);
   }
