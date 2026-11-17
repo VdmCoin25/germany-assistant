@@ -1,4 +1,5 @@
 """Main menu sections. Sections without a connected integration say so honestly."""
+import html
 from datetime import datetime
 
 from aiogram import F, Router
@@ -8,6 +9,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from app.bot.handlers.start import send_main_menu
 from app.bot.keyboards.common import info_topics_kb, links_kb
 from app.config import Settings
+from app.data.guides import CHECKED, GUIDES
 from app.data.sources_seed import TOPICS
 from app.database.models import User
 from app.database.repositories.analytics import AnalyticsRepository
@@ -108,10 +110,15 @@ async def info_topic(cb: CallbackQuery, lang: str, sources: SourceRepository) ->
         return
     items = await sources.by_topic(key)
     title = TOPICS[key][1 if lang == "ru" else 0]
+    guide = GUIDES.get(key)
+    head = ""
+    if guide:
+        points = "\n".join(f"• {html.escape(p)}" for p in guide["ru" if lang == "ru" else "uk"])
+        head = f"{points}\n<i>{t(lang, 'info_checked', date=CHECKED.strftime('%d.%m.%Y'))}</i>\n\n"
     if not items:
-        body = t(lang, "info_empty")
+        body = head + t(lang, "info_empty")
     else:
         lines = [f"• {s.title_ru if lang == 'ru' else s.title_uk} — <i>{_fmt_date(s.checked_at, lang)}</i>" for s in items]
-        body = "\n".join(lines) + "\n\n" + t(lang, "info_disclaimer")
+        body = head + "\n".join(lines) + "\n\n" + t(lang, "info_disclaimer")
     await cb.message.edit_text(f"<b>{title}</b>\n\n{body}", reply_markup=links_kb(items, back="info:back", lang=lang))
     await cb.answer()

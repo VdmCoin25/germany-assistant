@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.config import Settings
 from app.data.regions import GERMAN_LEVELS, GOALS, LANDS, STATUSES
+from app.data.guides import changes_json, guides_json
 from app.data.sources_seed import TOPICS
 from app.database.repositories.analytics import user_hash
 from app.database.repositories.sources import SourceRepository
@@ -109,6 +110,8 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
             "goals": GOALS,
             "statuses": STATUSES,
             "topics": {k: {"uk": v[0], "ru": v[1]} for k, v in TOPICS.items()},
+            "guides": guides_json(),
+            "changes": changes_json(),
             "employment": ["full", "part", "mini", "any"],
             "employer_price_eur": settings.employer_price_eur,
             "employer_pilot_days": settings.employer_pilot_days,
