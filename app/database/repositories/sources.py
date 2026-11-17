@@ -10,13 +10,18 @@ class SourceRepository:
         self.s = session
 
     async def seed_if_empty(self) -> int:
-        count = await self.s.scalar(select(func.count(InfoSource.id)))
-        if count:
-            return 0
+        """Add catalog links the DB does not have yet (by topic + url). Rows admins edited or disabled
+        are left alone, so a redeploy never overwrites their changes."""
+        have = {(t, u) for t, u in (await self.s.execute(select(InfoSource.topic, InfoSource.url))).all()}
+        base = await self.s.scalar(select(func.count(InfoSource.id))) or 0
+        added = 0
         for i, item in enumerate(SEED):
-            self.s.add(InfoSource(sort_order=i, **item))
+            if (item["topic"], item["url"]) in have:
+                continue
+            self.s.add(InfoSource(sort_order=base + i, **item))
+            added += 1
         await self.s.flush()
-        return len(SEED)
+        return added
 
     async def by_topic(self, topic: str) -> list[InfoSource]:
         res = await self.s.scalars(

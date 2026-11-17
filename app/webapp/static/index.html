@@ -154,8 +154,6 @@
   .board-wrap { min-height: calc(var(--app-h, 100vh) - 170px); padding: 16px 0 8px; }
   .board { list-style: none; margin: 0 16px; padding: 0; color: var(--ink); border-radius: var(--radius-card); overflow: hidden;
            background: var(--plate); border: 1px solid var(--plate-edge); }
-  .board.later { background: transparent; border-style: dashed; }
-  .board.later .dest { font-weight: 400; }
   .board > li:last-child { border-bottom: 0; }
   .board > li { border-bottom: 1px solid var(--board-line); }
   .board-label { margin: 16px 16px 2px; color: var(--pencil); font-size: 15px; }
@@ -164,7 +162,6 @@
   /* platform number: a filled square plate, like the Gleis signs on German stations */
   .gleis { grid-row: span 2; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 3px;
            background: var(--ink); color: var(--platform); font-weight: 600; font-size: 17px; }
-  .board.later .gleis { background: transparent; color: var(--pencil); box-shadow: inset 0 0 0 1.5px var(--rim); }
   .dest { font-weight: 600; font-size: 17px; line-height: 1.3; }
   .via { grid-column: 2 / 4; font-size: 15px; color: var(--pencil); }
   .announce { display: none; margin: 0 16px 16px 76px; padding: 2px 0 2px 12px; border-left: 3px solid var(--signal); }
@@ -257,6 +254,16 @@
   .dep, .topics summary, .vac-head { transition: background-color 180ms var(--ease); }
   .dep:active, .topics summary:active, .vac-head:active { background-color: rgba(255,255,255,.04); }
   .topics .links { padding: 0 16px 8px; }
+  .points { margin: 0; padding: 0 16px 0 34px; font-size: 15px; }
+  .points li { margin: 0 0 6px; max-width: 60ch; }
+  .checked { margin: 4px 16px 4px; font-size: 13px; color: var(--pencil); }
+  .checked a { color: var(--pencil); text-underline-offset: 3px; }
+  .changes { list-style: none; margin: 8px 16px 0; padding: 0; border-left: 2px solid var(--signal); }
+  .changes button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 88px 1fr; gap: 12px; width: 100%;
+                    padding: 8px 0 8px 12px; cursor: pointer; font-size: 15px; }
+  .changes time { color: var(--pencil); font-variant-numeric: tabular-nums; }
+  .changes button:focus-visible { outline: 2px solid var(--signal); }
+  .later-line { margin: 16px 16px 0; font-size: 15px; color: var(--pencil); }
 
   /* ---- Badges and tags ---- */
   .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 8px; margin-top: 8px; border-radius: var(--radius-tag);
@@ -650,7 +657,7 @@ const I18N = {
     goals: { documents: "Документи", jobs: "Робота", housing: "Житло", translation: "Переклад", other: "Інше" },
     statuses: { p24: "§24, тимчасовий захист", other: "Інший дозвіл" },
     infoHead: "Довідник", infoNote: "Лише офіційні сайти. Правила можуть відрізнятися в різних землях і містах, тож уточнюйте на місці.",
-    checked: (d) => `посилання перевірено ${d}`,
+    checked: (d) => `посилання перевірено ${d}`, changesHead: "Що змінилося", answerChecked: (d) => `Перевірено ${d}`, source: "Джерело",
     privacyHead: "Мої дані",
     privacyText: "Ми зберігаємо тільки анкету: мову, землю, місто, рівень німецької, мету і, якщо ви вказали, статус. Тексти листів і документів після обробки не зберігаються.",
     privacyWarn: "Ніколи не надсилайте боту паролі, PIN-коди чи дані банківських карток.",
@@ -699,7 +706,7 @@ const I18N = {
     goals: { documents: "Документы", jobs: "Работа", housing: "Жильё", translation: "Перевод", other: "Другое" },
     statuses: { p24: "§24, временная защита", other: "Другое разрешение" },
     infoHead: "Справочник", infoNote: "Только официальные сайты. Правила могут отличаться в разных землях и городах, поэтому уточняйте на месте.",
-    checked: (d) => `ссылка проверена ${d}`,
+    checked: (d) => `ссылка проверена ${d}`, changesHead: "Что изменилось", answerChecked: (d) => `Проверено ${d}`, source: "Источник",
     privacyHead: "Мои данные",
     privacyText: "Мы храним только анкету: язык, землю, город, уровень немецкого, цель и, если вы указали, статус. Тексты писем и документов после обработки не сохраняются.",
     privacyWarn: "Никогда не отправляйте боту пароли, PIN-коды и данные банковских карт.",
@@ -785,8 +792,8 @@ function renderNav() {
   });
 }
 
-function linkList(topic) {
-  const seen = new Set();
+function linkList(topic, skip) {
+  const seen = new Set(skip ? [skip] : []);
   return `<ul class="links">${SOURCES.filter(x => x.topic === topic && !seen.has(x.url) && seen.add(x.url)).map(x =>
     `<li><a href="${esc(x.url)}" data-ext><span class="name">${esc(lang === "ru" ? x.title_ru : x.title_uk)}</span>
      <span class="meta">${esc(host(x.url))}${x.checked_at ? ", " + esc(L().checked(fmtDate(x.checked_at))) : ""}</span></a></li>`
@@ -845,16 +852,18 @@ function renderHome() {
            : nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
       <span class="m-actions"><button type="button" class="m-emp" id="m-emp">${esc(JL().lead.btn)}</button><button type="button" class="m-cta" id="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</button></span>
     </div>
-    ${[[1, L().help], [0, L().later]].map(([ok, label]) => `<p class="board-label">${esc(label)}</p>
-    <ol class="board ${ok ? "" : "later"}">${rest.filter(r => !!r[3] === !!ok).map(([k, name, via]) => `
+    <p class="board-label">${esc(L().help)}</p>
+    ${[1].map((ok) => `
+    <ol class="board">${rest.filter(r => !!r[3] === !!ok).map(([k, name, via], j) => `
     <li data-k="${k}">
       <button class="dep" aria-expanded="false">
-        <span class="gleis" aria-hidden="true">${rest.findIndex(r => r[0] === k) + 2}</span>
+        <span class="gleis" aria-hidden="true">${j + 2}</span>
         <span class="dest">${esc(name)}</span>
         <span class="via">${esc(via)}</span>
       </button>
       <div class="announce">${sheetBody(k)}</div>
-    </li>`).join("")}</ol>`).join("")}</div>`;
+    </li>`).join("")}</ol>`).join("")}
+    <p class="later-line">${esc(L().later)}: ${esc(rest.filter(r => !r[3]).map(r => r[1]).join(", "))}</p></div>`;
   const openJobs = () => {
     JOBS.sub = st === "new" || st === "rejected" ? "form" : st === "offers" ? "inbox" : null;
     renderJobs(); show("jobs");
@@ -964,11 +973,23 @@ async function saveProfile(patch) {
   } catch { toast(L().error); renderProfile(); }
 }
 
+// Reference: what changed (dated, newest first), then topics. A topic opens to a short answer with its
+// check date and source, then the official links. Rules live in app/data/guides.py with their sources.
 function renderInfo() {
+  const G = META.guides || {}, CH = META.changes || [];
+  const answer = (k) => { const g = G[k]; if (!g) return "";
+    return `<ul class="points">${(g[lang] || g.uk).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <p class="checked">${esc(L().answerChecked(fmtDate(g.checked)))}, ${esc(L().source.toLowerCase())}: <a href="${esc(g.source.url)}" data-ext>${esc(g.source.title)}</a></p>`; };
   $("page-info").innerHTML = `<div class="head"><h2>${esc(L().infoHead)}</h2><p>${esc(L().infoNote)}</p></div>
+    ${CH.length ? `<h2 class="sec">${esc(L().changesHead)}</h2><ol class="changes">${CH.map(c =>
+      `<li><button type="button" data-topic="${esc(c.topic)}"><time datetime="${esc(c.date)}">${esc(fmtDate(c.date))}</time><span>${esc(c[lang] || c.uk)}</span></button></li>`).join("")}</ol>` : ""}
     <div class="topics">${Object.entries(META.topics).map(([k, t]) =>
-      `<details><summary>${esc(t[lang] || t.uk)}</summary>${linkList(k)}</details>`).join("")}</div>`;
+      `<details id="topic-${k}"><summary>${esc(t[lang] || t.uk)}</summary>${answer(k)}${linkList(k, (META.guides || {})[k]?.source.url)}</details>`).join("")}</div>`;
   bindLinks($("page-info"));
+  $("page-info").querySelectorAll("[data-topic]").forEach(b => b.onclick = () => {
+    const d = $("topic-" + b.dataset.topic); if (!d) return;
+    d.open = true; d.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
 }
 
 function renderPrivacy() {
