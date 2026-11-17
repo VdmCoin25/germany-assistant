@@ -48,6 +48,26 @@ async def seed(sm, kind: str) -> None:
             await j.moderate("vacancy", v2.id, True, **kw)
             c = await j.offer(3001, p.id, "Добрий день! Запрошуємо на пробний день у четвер о 10:00.", v1.id)
             await j.moderate("contact", c.id, True, **kw)
+            # one user per step of the job route, for the new Mini App (users 2002-2005)
+            def seeker(tg, pos):
+                return j.upsert_seeker(tg, position=pos, land="BE", city="Berlin", german_level="A1", employment="any",
+                                       shifts_ok=False, experience="2 роки на складі.", about=None)
+            for tg in (2002, 2003, 2004, 2005, 2006):
+                u = await users.get_or_create(tg)
+                u.language, u.land, u.city, u.is_registered = "uk", "BE", "Berlin", True
+            await seeker(2002, "Комплектувальник на склад")                          # in review
+            p3 = await seeker(2003, "Прибиральниця")                                  # rejected
+            await j.moderate("seeker", p3.id, False, **kw)
+            p4 = await seeker(2004, "Водій категорії B")                               # published, no offers
+            await j.moderate("seeker", p4.id, True, **kw)
+            p6 = await seeker(2006, "Офіціантка")                                      # published, hidden by the owner
+            await j.moderate("seeker", p6.id, True, **kw)
+            await j.set_seeker_active(2006, False)
+            p5 = await seeker(2005, "Помічник кухаря")                                 # contact passed
+            await j.moderate("seeker", p5.id, True, **kw)
+            c5 = await j.offer(3001, p5.id, "Запрошуємо на співбесіду.", v2.id)
+            await j.moderate("contact", c5.id, True, **kw)
+            await j.answer(2005, c5.id, True)
         await s.commit()
 
 

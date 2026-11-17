@@ -1,42 +1,72 @@
 import "@telegram-apps/telegram-ui/dist/styles.css";
 import "./styles.css";
 import { AppRoot } from "@telegram-apps/telegram-ui";
-import { lazy, Suspense, useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { HomeSkeleton, LoadError, OfflineNote, OutsideTelegram } from "./components/States";
+import { useHomeData, useOnline } from "./data";
 import { makeT, type Lang } from "./i18n";
 import { FormCity } from "./screens/FormCity";
-import { Home, type HomeData, type JobsState } from "./screens/Home";
-const Kit = lazy(() => import("./screens/Kit").then((m) => ({ default: m.Kit })));   // review page, not in the main bundle
+import { Home, type HomeData } from "./screens/Home";
 import { tg, useColorScheme } from "./tg";
 
-// J2 prototype: data comes from ?demo=… presets; the API is wired in J4.
-const params = new URLSearchParams(location.search);
-const lang: Lang = (params.get("lang") ?? tg?.initDataUnsafe.user?.language_code) === "ru" ? "ru" : "uk";
-const demo = params.get("demo") ?? "offers";
+const Kit = lazy(() => import("./screens/Kit").then((m) => ({ default: m.Kit })));   // review page, not in the main bundle
 
-const PRESETS: Record<string, HomeData> = {
-  new: { city: null, position: null, updated: null, jobs: { step: "new" } },
-  review: { city: "Berlin", position: lang === "ru" ? "Повар / помощник повара" : "Кухар / помічник кухаря", updated: "21:01", jobs: { step: "review" } },
-  offers: { city: "Berlin", position: lang === "ru" ? "Повар / помощник повара" : "Кухар / помічник кухаря", updated: "21:01", jobs: { step: "offers", waiting: 2 } as JobsState },
-};
+const BOT = "ukraineingermany_bot";
+const params = new URLSearchParams(location.search);
+const pickLang = (...c: (string | null | undefined)[]): Lang => (c.find(Boolean) === "ru" ? "ru" : "uk");
+
+// Screens not rebuilt yet open the matching section of the current app (until J4 is done).
+const OLD_APP: Record<string, string> = { form: "/#jobs", offers: "/#jobs", housing: "/#housing", reference: "/" };
+const goOld = (s: string) => { location.href = OLD_APP[s] ?? "/"; };
+
+/** Design review only: ?demo=new|review|offers or ?screen=kit|form render fixed data. */
+function Demo() {
+  const lang = pickLang(params.get("lang"));
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  const t = makeT(lang);
+  const pos = lang === "ru" ? "Повар / помощник повара" : "Кухар / помічник кухаря";
+  const presets: Record<string, HomeData> = {
+    new: { city: null, position: null, updated: null, jobs: { step: "new" } },
+    review: { city: "Berlin", position: pos, updated: "21:01", jobs: { step: "review" } },
+    offers: { city: "Berlin", position: pos, updated: "21:01", jobs: { step: "offers", waiting: 2 } },
+  };
+  const back = useCallback(() => history.back(), []);
+  const screen = params.get("screen");
+  if (screen === "kit") return <Suspense fallback={null}><Kit t={t} /></Suspense>;
+  if (screen === "form") return <FormCity t={t} step={2} total={6} initial={params.get("q") ?? ""} back={back} next={back} />;
+  return <Home t={t} data={presets[params.get("demo") ?? "offers"] ?? presets.offers} go={() => {}} />;
+}
+
+/** Real data from our API, signed with Telegram initData. */
+function Live() {
+  const online = useOnline();
+  const { res, reload } = useHomeData();
+  const lang = pickLang(params.get("lang"), res.state === "ok" ? res.data.language : null, tg?.initDataUnsafe.user?.language_code);
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  const t = makeT(lang);
+  return (
+    <>
+      {!online && <OfflineNote t={t} />}
+      {res.state === "loading" && <HomeSkeleton t={t} />}
+      {res.state === "error" && <LoadError t={t} status={res.status} retry={reload} />}
+      {res.state === "ok" && <Home t={t} data={res.data} go={goOld} />}
+    </>
+  );
+}
 
 function App() {
   const scheme = useColorScheme();
-  const t = makeT(lang);
-  const [screen, setScreen] = useState(params.get("screen") ?? "home");
-  const go = useCallback((s: string) => setScreen(s), []);
-  const back = useCallback(() => setScreen("home"), []);
+  const demo = params.has("demo") || params.has("screen");
+  const outside = !demo && !tg?.initData;
   return (
     <AppRoot appearance={scheme}>
       <div className="app" data-scheme={scheme}>
-        {screen === "form" ? <FormCity t={t} step={2} total={6} initial={params.get("q") ?? ""} back={back} next={back} />
-          : screen === "kit" ? <Suspense fallback={null}><Kit t={t} /></Suspense>
-          : <Home t={t} data={PRESETS[demo] ?? PRESETS.offers} go={go} />}
+        {demo ? <Demo /> : outside ? <OutsideTelegram t={makeT(pickLang(navigator.language.slice(0, 2)))} bot={BOT} /> : <Live />}
       </div>
     </AppRoot>
   );
 }
 
-document.documentElement.lang = lang;
 tg?.ready(); tg?.expand();
 createRoot(document.getElementById("root")!).render(<App />);

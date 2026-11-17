@@ -47,8 +47,8 @@
   }
   const noop = () => {};
   window.Telegram = { WebApp: {
-    initData: "query_id=TEST&user=%7B%22id%22%3A2001%7D&auth_date=0&hash=test", version: "9.5",
-    initDataUnsafe: { user: { id: 2001, language_code: "uk" } }, colorScheme: scheme, themeParams: tp,
+    initData: window.__TG_INIT_DATA__ ?? "query_id=TEST&user=%7B%22id%22%3A2001%7D&auth_date=0&hash=test", version: "9.5",
+    initDataUnsafe: { user: { id: window.__TG_USER__ ?? 2001, language_code: window.__TG_LANG__ ?? "uk" } }, colorScheme: scheme, themeParams: tp,
     ready: noop, expand: noop, onEvent: noop, offEvent: noop, isVersionAtLeast: () => true,
     MainButton: makeButton("main"), SecondaryButton: makeButton("secondary"),
     BackButton: { show: noop, hide: noop, onClick: noop, offClick: noop },

@@ -102,8 +102,13 @@ def seeker_public(p: SeekerProfile) -> dict:
             "updated": _d(p.updated_at)}
 
 
+def _ts(x: datetime | None) -> str | None:
+    """Full timestamp (UTC, ISO 8601) for screens that show a time, not only a date."""
+    return aware(x).isoformat() if x else None
+
+
 def seeker_own(p: SeekerProfile) -> dict:
-    return {**seeker_public(p), "status": p.status, "is_active": p.is_active}
+    return {**seeker_public(p), "status": p.status, "is_active": p.is_active, "updated_at": _ts(p.updated_at)}
 
 
 def vacancy_out(v: Vacancy, e: Employer | None = None) -> dict:
@@ -159,8 +164,12 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
                 sk = await s.get(SeekerProfile, c.seeker_id)
                 vac = await s.get(Vacancy, c.vacancy_id) if c.vacancy_id else None
                 return {"id": c.id, "kind": c.kind, "status": c.status, "message": c.message,
-                        "created": _d(c.created_at), "company": emp_.company if emp_ else None,
+                        "created": _d(c.created_at), "created_at": _ts(c.created_at),
+                        "answered_at": _ts(c.answered_at), "company": emp_.company if emp_ else None,
                         "vacancy": vac.title if vac else None, "vacancy_id": c.vacancy_id,
+                        # details for the offer card in the new Mini App (v1 ignores them)
+                        "vacancy_info": {"city": vac.city, "land": vac.land, "employment": vac.employment,
+                                         "salary": vac.salary, "german_level": vac.german_level} if vac else None,
                         "seeker": seeker_public(sk) if sk else None}
 
             return {"seeker": seeker_own(p) if p else None, "employer": emp,

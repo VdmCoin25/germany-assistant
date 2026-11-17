@@ -75,6 +75,11 @@ async def test_full_exchange_flow(settings, sm):
         await approve_all(sm, settings, "contact")
         inbox = (await c.get("/api/jobs/me", headers=hdr(SEEKER))).json()["inbox"]
         assert inbox[0]["status"] == "sent"
+        # the new Mini App shows the vacancy details and an exact time on the offer card
+        info = inbox[0]["vacancy_info"]
+        assert info["city"] == VACANCY_BODY["city"] and info["employment"] == VACANCY_BODY["employment"]
+        assert "T" in inbox[0]["created_at"] and inbox[0]["answered_at"] is None
+        assert "T" in (await c.get("/api/jobs/me", headers=hdr(SEEKER))).json()["seeker"]["updated_at"]
 
         # employer cannot answer the seeker's offer; seeker accepts -> both get contacts
         assert (await c.post(f"/api/jobs/requests/{inbox[0]['id']}/answer", headers=hdr(BOSS),

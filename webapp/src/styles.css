@@ -92,3 +92,16 @@ mark { background: none; color: inherit; font-weight: 600; }
 /* ---- Kit page (J3 review only) ---- */
 .kit h3 { margin: 24px 16px 4px; font-size: var(--fs-13); font-weight: 400; color: var(--quiet); }
 .kit .pressed button { opacity: .75; transform: scale(.99); }
+
+/* ---- Loading, offline, outside Telegram ---- */
+.skel { display: block; height: 14px; margin: 0 0 12px; border-radius: 4px; background: var(--tg-theme-section-separator-color, #c8c7cc); opacity: .6; }
+.skel--light { background: rgba(255,255,255,.35); }
+.skel--big { height: 28px; margin-top: 24px; }
+.skel--route { height: 32px; margin-top: 20px; }
+.skel-board { min-height: 132px; }
+.skel-rows { padding: 20px 16px; background: var(--tg-theme-section-bg-color, #fff); }
+.offline { margin: 0; padding: 8px 16px; font-size: var(--fs-13); color: var(--tg-theme-text-color, #000);
+           background: var(--tg-theme-section-bg-color, #fff); border-bottom: 1px solid var(--tg-theme-section-separator-color, #c8c7cc); }
+.link-button { display: inline-block; padding: 12px 20px; border-radius: var(--radius-button); text-decoration: none; font-weight: 600;
+               background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
+.link-button:focus-visible { outline: 2px solid var(--tg-theme-button-color, #2481cc); outline-offset: 2px; }
