@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Germany Assistant</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // Apply the saved palette and mode before the first paint (no flash of the default theme).
+  try { var t = JSON.parse(localStorage.getItem("ui_theme_v1") || "{}"), d = document.documentElement;
+        d.dataset.palette = t.palette || "emerald";
+        d.dataset.mode = t.mode === "light" || t.mode === "dark" ? t.mode
+          : (window.Telegram && Telegram.WebApp && Telegram.WebApp.colorScheme === "light" ? "light" : "dark"); } catch (e) {}
+</script>
 <style>
   /* Fonts are self-hosted (no requests to Google: DSGVO). IBM Plex Sans, SIL OFL — see /static/fonts/OFL.txt */
   @font-face { font-family: "Plex"; font-weight: 400; font-display: swap;
@@ -29,42 +36,98 @@
   /* Night platform. Header: the platform sign in the rain under a station lamp.
      Below: the platform itself — departures with platform numbers, enamel plates, lamp light for the main action.
      One look for Telegram's light and dark themes. Source of truth: docs/DESIGN_SYSTEM.md */
+  /* ---- Themes: a colour palette × light or dark. The user picks both in Profile → Appearance. ----
+     Each palette defines its own accents and the night sky of the header; the mode decides surfaces and text. */
+  :root, [data-palette="emerald"] {
+    --p-deep: #04201A; --p-tint: #E8F4EE; --p-accent: #3FE0A0; --p-accent-ink: #03281D; --p-accent-l: #0A7A50;
+    --p-sky1: #031A14; --p-sky2: #07382B; --p-sky3: #0E5A44; --p-scene: #02140F;
+  }
+  [data-palette="sapphire"] {
+    --p-deep: #0B1628; --p-tint: #EAF0FA; --p-accent: #7DB2FF; --p-accent-ink: #06204A; --p-accent-l: #1D57C2;
+    --p-sky1: #0A1B3D; --p-sky2: #0F2C5E; --p-sky3: #163E80; --p-scene: #081430;
+  }
+  [data-palette="amethyst"] {
+    --p-deep: #150F26; --p-tint: #F0ECFA; --p-accent: #BBA4FF; --p-accent-ink: #1E0F4A; --p-accent-l: #5E3DC4;
+    --p-sky1: #140B2C; --p-sky2: #241650; --p-sky3: #3A2A78; --p-scene: #0C0720;
+  }
+  [data-palette="amber"] {
+    --p-deep: #1E1608; --p-tint: #F7F1E6; --p-accent: #FFC566; --p-accent-ink: #3A2400; --p-accent-l: #8F5300;
+    --p-sky1: #1E1404; --p-sky2: #3A270A; --p-sky3: #5C3F12; --p-scene: #140D02;
+  }
+  [data-palette="graphite"] {
+    --p-deep: #111418; --p-tint: #EEF0F3; --p-accent: #D3DAE3; --p-accent-ink: #12171D; --p-accent-l: #374250;
+    --p-sky1: #0D1014; --p-sky2: #1B2129; --p-sky3: #2C3440; --p-scene: #07090C;
+  }
   :root {
-    /* surfaces */
-    --platform: #04201A;          /* deep emerald night: page background */
-    --sheet: #0B3A2E;             /* emerald plate: panels */
-    --board: #0F5A45;             /* lighter emerald plate: price, info */
-    --nav-bg: #03170F;            /* platform edge */
-    /* text */
-    --ink: #EEF8F3;
-    --pencil: #A9CBBD;
+    /* dark mode (default) */
+    --platform: var(--p-deep);
+    --sheet: color-mix(in srgb, var(--p-deep) 70%, var(--p-accent) 14%);
+    --board: color-mix(in srgb, var(--p-deep) 55%, var(--p-accent) 30%);
+    --nav-bg: color-mix(in srgb, var(--p-deep) 85%, #000);
+    --ink: #F1F5F3;
+    --pencil: color-mix(in srgb, #F1F5F3 66%, var(--p-accent) 10%);
     --on-board: #FFFFFF;
-    --on-board-dim: rgba(255,255,255,.74);
-    /* lines */
-    --rule: rgba(255,255,255,.14);
-    --board-line: rgba(255,255,255,.12);
-    --rim: rgba(255,255,255,.55);
-    --field-line: rgba(255,255,255,.7);
-    /* states */
-    --signal: #3FE0A0;            /* bright emerald: the main action */
-    --on-signal: #03281D;         /* text on --signal */
+    --on-board-dim: rgba(255,255,255,.76);
+    --rule: rgba(255,255,255,.12);
+    --board-line: rgba(255,255,255,.10);
+    --rim: rgba(255,255,255,.45);
+    --field-line: rgba(255,255,255,.6);
+    --signal: var(--p-accent);
+    --on-signal: var(--p-accent-ink);
     --danger: #FF8E80;
     --success: #9BE7C4;
-    --on-status: #04201A;         /* text on --success / --danger */
+    --on-status: #10161A;
     --tag-bg: rgba(255,255,255,.08);
-    --field-bg: rgba(0,0,0,.15);
-    /* shape and finish: soft corners, a light sheen across the top of every plate, smooth motion */
-    --radius: 12px;
-    --radius-card: 16px;
-    --radius-tag: 8px;
-    --sheen: linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.02) 38%, rgba(255,255,255,0) 60%);
-    --edge-light: inset 0 1px 0 rgba(255,255,255,.10);
+    --field-bg: rgba(255,255,255,.06);
+    /* liquid glass: a tinted translucent pane, a bright rim on top, depth below */
+    --glass: linear-gradient(180deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.05) 45%, rgba(255,255,255,.03) 100%),
+             color-mix(in srgb, var(--p-deep) 55%, transparent);
+    --glass-border: rgba(255,255,255,.16);
+    --glass-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.25);
+    --ambient: radial-gradient(60% 40% at 15% 0%, color-mix(in srgb, var(--p-accent) 22%, transparent), transparent 70%),
+               radial-gradient(50% 35% at 100% 55%, color-mix(in srgb, var(--p-accent) 14%, transparent), transparent 70%);
+    --accent-grad: linear-gradient(135deg, color-mix(in srgb, var(--signal), #fff 22%) 0%, var(--signal) 55%, color-mix(in srgb, var(--signal), #000 18%) 100%);
+    --accent-soft: color-mix(in srgb, var(--signal) 16%, transparent);
+    /* shape: crisper corners; motion */
+    --radius: 8px;
+    --radius-card: 10px;
+    --radius-tag: 5px;
+    --sheen: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.03) 40%, rgba(255,255,255,0) 60%);
+    --edge-light: inset 0 1px 0 rgba(255,255,255,.22);
     --ease: cubic-bezier(.2,.7,.2,1);
     color-scheme: dark;
   }
+  [data-mode="light"] {
+    --platform: var(--p-tint);
+    --sheet: #FFFFFF;
+    --board: var(--p-accent-l);
+    --nav-bg: color-mix(in srgb, var(--p-tint) 70%, #fff);
+    --ink: #15201C;
+    --pencil: #4C5A55;
+    --rule: rgba(0,0,0,.09);
+    --board-line: rgba(0,0,0,.08);
+    --rim: rgba(0,0,0,.32);
+    --field-line: rgba(0,0,0,.42);
+    --signal: var(--p-accent-l);
+    --on-signal: #FFFFFF;
+    --danger: #B3261E;
+    --success: #1B7A4B;
+    --on-status: #FFFFFF;
+    --tag-bg: rgba(0,0,0,.05);
+    --field-bg: rgba(255,255,255,.7);
+    --glass: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.66) 100%);
+    --glass-border: rgba(255,255,255,.9);
+    --glass-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0,0,0,.06), 0 10px 28px color-mix(in srgb, var(--p-accent-l) 14%, transparent);
+    --ambient: radial-gradient(60% 40% at 15% 0%, color-mix(in srgb, var(--p-accent-l) 16%, transparent), transparent 70%),
+               radial-gradient(50% 35% at 100% 55%, color-mix(in srgb, var(--p-accent-l) 10%, transparent), transparent 70%);
+    --sheen: linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 55%);
+    --edge-light: inset 0 1px 0 rgba(255,255,255,.6);
+    color-scheme: light;
+  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { background: var(--platform); }
-  body { margin: 0; font: 17px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--platform);
+  body { margin: 0; font: 17px/1.5 "Plex", system-ui, sans-serif; color: var(--ink); background: var(--ambient), var(--platform);
+         background-attachment: fixed; transition: background-color 300ms var(--ease), color 300ms var(--ease);
          padding-bottom: calc(64px + env(safe-area-inset-bottom)); font-variant-numeric: tabular-nums; }
   button, input, select { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
@@ -73,16 +136,16 @@
   /* Platform at night: rain, one warm station lamp and low fog. Static when reduced motion is on. */
   .sign { position: relative; overflow: hidden; color: var(--on-board); min-height: 148px; box-sizing: border-box;
           padding: 18px 16px 16px; border-bottom: 3px solid var(--on-board);
-          background: linear-gradient(180deg, #031A14 0%, #07382B 62%, #0E5A44 100%); }
+          background: linear-gradient(180deg, var(--p-sky1) 0%, var(--p-sky2) 62%, var(--p-sky3) 100%); }
   .sign canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .sign .top { position: relative; padding-right: 110px; }   /* keeps clear of the lamp */
   .sign .owner, .sign .updated { margin: 0; font-size: 13px; color: var(--on-board-dim); font-variant-numeric: tabular-nums; }
   .sign .sub { position: relative; margin: 2px 0 0; padding-right: 110px; font-size: 15px; color: var(--on-board-dim); }
   .sign h1 { position: relative; margin: 26px 0 0; padding-right: 110px; font-size: 26px; line-height: 1.15; font-weight: 600;
-             letter-spacing: -0.01em; text-shadow: 0 1px 12px rgba(3,26,20,.6); }
+             letter-spacing: -0.01em; text-shadow: 0 1px 12px color-mix(in srgb, var(--p-sky1) 70%, transparent); }
   .sign .clock { position: absolute; right: 22px; top: 84px; width: 56px; padding: 3px 0 2px; text-align: center;
                  background: #F4F1E8; color: #13203A; font-size: 15px; font-weight: 600; line-height: 1.2;
-                 box-shadow: 0 0 0 2px #02140F, 0 2px 8px rgba(0,0,0,.35); }
+                 box-shadow: 0 0 0 2px var(--p-scene), 0 2px 8px rgba(0,0,0,.35); }
 
   /* ---- Page ---- */
   main { max-width: 640px; margin: 0 auto; min-height: calc(var(--app-h, 100vh) - 151px); }
@@ -98,33 +161,34 @@
 
   /* ---- Departure board (home) ---- */
   .board-wrap { min-height: calc(var(--app-h, 100vh) - 170px); padding: 16px 0 8px; }
-  .board { list-style: none; margin: 0; padding: 0 0 8px; color: var(--on-board); }
+  .board { list-style: none; margin: 0 16px; padding: 0; color: var(--ink); border-radius: var(--radius-card); overflow: hidden;
+           background: var(--glass); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+           -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); }
+  .board > li:last-child { border-bottom: 0; }
   .board > li { border-bottom: 1px solid var(--board-line); }
   .board-label { margin: 16px 16px 2px; color: var(--pencil); font-size: 15px; }
   .dep { display: grid; grid-template-columns: 44px 1fr auto; gap: 0 16px; align-items: start; width: 100%;
          text-align: left; background: none; border: 0; padding: 16px 16px; cursor: pointer; }
-  .gleis { grid-row: span 2; width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid var(--on-board);
-           border-radius: 10px; font-weight: 600; font-size: 17px; }
+  .gleis { grid-row: span 2; width: 36px; height: 36px; display: grid; place-items: center; border: 2px solid currentColor;
+           border-radius: 6px; font-weight: 600; font-size: 17px; }
   .dest { font-weight: 600; font-size: 17px; line-height: 1.3; }
-  .via { grid-column: 2 / 4; font-size: 15px; color: var(--on-board-dim); }
-  .state { font-size: 15px; font-weight: 600; white-space: nowrap; padding-top: 3px; color: var(--on-board); }
-  .state.wait { color: var(--on-board-dim); font-weight: 400; }
+  .via { grid-column: 2 / 4; font-size: 15px; color: var(--pencil); }
+  .state { font-size: 15px; font-weight: 600; white-space: nowrap; padding-top: 3px; color: var(--ink); }
+  .state.wait { color: var(--pencil); font-weight: 400; }
   .announce { display: none; margin: 0 16px 16px 76px; padding: 2px 0 2px 12px; border-left: 3px solid var(--signal); }
   .board > li.open .announce { display: block; animation: fade-in 220ms var(--ease) both; }
   .announce p { margin: 0; font-size: 15px; max-width: 58ch; }
   .announce .links { margin-top: 0; }
   .announce .links li { border-color: var(--board-line); }
-  .announce .links .name { text-decoration-color: var(--on-board-dim); }
-  .announce .links .meta { color: var(--on-board-dim); }
 
   /* Main line: the lit poster under the lamp */
   .mainline { display: grid; grid-template-columns: 48px 1fr; gap: 2px 16px; width: calc(100% - 32px); margin: 0 16px 4px;
               padding: 16px 16px 16px; border: 0; border-radius: var(--radius); text-align: left; cursor: pointer;
-              background: var(--sheen), linear-gradient(135deg, #5BEAB2 0%, #2CC98C 55%, #1FAE79 100%); color: var(--on-signal);
-              border-radius: 20px; box-shadow: var(--edge-light), 0 8px 24px rgba(0,0,0,.18);
+              background: var(--sheen), var(--accent-grad); color: var(--on-signal);
+              border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 28px color-mix(in srgb, var(--signal) 28%, transparent);
               transition: transform 200ms var(--ease), filter 200ms var(--ease); }
   .mainline:active { transform: scale(.985); filter: brightness(1.04); }
-  .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; border-color: var(--on-signal); border-radius: 10px; font-size: 20px; }
+  .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; border-color: var(--on-signal); border-radius: 6px; font-size: 20px; }
   .mainline:focus-visible { outline: 3px solid var(--on-board); outline-offset: 2px; }
   .m-dest { font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
   .m-via { font-size: 15px; }
@@ -157,8 +221,12 @@
               text-decoration: underline; text-underline-offset: 4px; font-size: 15px; }
 
   /* ---- Emerald plates: soft cards with a light sheen on top ---- */
-  .card, .vac, .empty, .plain, .items, .topics, .form {
-    border-radius: var(--radius-card); background: var(--sheen), var(--sheet); box-shadow: var(--edge-light); }
+  .card, .vac, .empty, .plain, .items, .topics, .form, .failed {
+    border-radius: var(--radius-card); background: var(--glass); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .card, .vac, .empty, .plain, .items, .topics, .form, .failed, nav { background: var(--sheen), var(--sheet); }
+  }
   .card { margin: 12px 16px 0; padding: 16px; }
   .card h2 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
   .card h3 { margin: 0; font-size: 17px; line-height: 1.3; }
@@ -245,12 +313,65 @@
   .form.big .field input, .form.big .field select { font-size: 17px; padding: 8px 0 8px; }
   .form.big .field label, .form.big .lbl { font-size: 15px; color: var(--pencil); display: block; }
 
+  /* ---- Interactive fields: labels, switch, saved mark, swatches ---- */
+  .lbl { margin: 16px 0 0; font-size: 13px; color: var(--pencil); }
+  .seg--inline { margin: 8px 0 0; }
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; margin-top: 12px;
+            font-size: 15px; cursor: pointer; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch i { position: relative; flex: none; width: 50px; height: 30px; border-radius: 15px; background: var(--tag-bg);
+              box-shadow: inset 0 0 0 1.5px var(--rim); transition: background-color 220ms var(--ease), box-shadow 220ms var(--ease); }
+  .switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+                     background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform 220ms var(--ease); }
+  .switch input:checked + i { background: var(--sheen), var(--accent-grad); box-shadow: none; }
+  .switch input:checked + i::after { transform: translateX(20px); }
+  .switch input:focus-visible + i { outline: 2px solid var(--signal); outline-offset: 2px; }
+  .saved { height: 20px; margin: 8px 0 0; font-size: 13px; color: var(--success); opacity: 0; transform: translateY(4px);
+           transition: opacity 200ms var(--ease), transform 200ms var(--ease); }
+  .saved.on { opacity: 1; transform: none; }
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+  .swatch { display: grid; justify-items: center; gap: 6px; padding: 8px 2px; border: 0; border-radius: var(--radius); background: transparent;
+            font-size: 12px; color: var(--pencil); cursor: pointer; transition: background-color 180ms var(--ease); }
+  .swatch__chip { width: 34px; height: 34px; border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 2px 8px rgba(0,0,0,.25);
+                  background: linear-gradient(135deg, var(--p-sky3), var(--p-accent)); }
+  .swatch[aria-checked="true"] { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+  .swatch[aria-checked="true"] .swatch__chip { outline: 2px solid var(--signal); outline-offset: 2px; }
+  /* fields: boxed glass inputs with a soft focus glow */
+  .field input, .field select, .filter select { border: 1px solid var(--glass-border) !important; border-radius: var(--radius) !important;
+    background-color: var(--field-bg) !important; padding: 10px 12px !important; transition: box-shadow 200ms var(--ease), border-color 200ms var(--ease); }
+  .field select, .filter select { padding-right: 32px !important; background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55% !important; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--signal) !important;
+    box-shadow: 0 0 0 4px var(--accent-soft) !important; }
+  .field label { margin-bottom: 6px; }
+  .pick button { backdrop-filter: blur(8px); background: var(--field-bg); border: 1px solid var(--glass-border); }
+  .pick button:active { transform: scale(.97); }
+  .pick button[aria-checked="true"] { background: var(--sheen), var(--accent-grad); border-color: transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 4px 14px color-mix(in srgb, var(--signal) 30%, transparent); }
+
+  /* ---- Step-by-step profile ---- */
+  .wiz-progress { margin: 16px 16px 0; font-size: 13px; color: var(--pencil); }
+  .wiz-progress p { margin: 0 0 8px; }
+  .wiz-bar { height: 4px; border-radius: 2px; background: var(--tag-bg); overflow: hidden; }
+  .wiz-bar i { display: block; height: 100%; background: var(--accent-grad); transition: width 300ms var(--ease); }
+  .wiz-step { animation: page-in 240ms var(--ease) both; }
+  .wiz-q { margin: 20px 16px 4px; font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+  .wiz-nav { margin: 16px; }
+  .wiz-nav .hint { margin: 0 0 4px; }
+  .wiz-nav .btn[disabled] { opacity: .45; filter: saturate(.5); cursor: default; }
+  .wiz-row { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%;
+             padding: 12px 16px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+  .wiz-row:last-child { border-bottom: 0; }
+  .wiz-row b { display: block; font-size: 15px; } .wiz-row .meta { display: block; font-size: 13px; color: var(--pencil); white-space: pre-line; }
+  .wiz-edit { font-size: 15px; color: var(--signal); font-weight: 600; flex: none; }
+  .wiz-preview { border-style: dashed !important; }
+  @media (prefers-reduced-motion: reduce) { .wiz-step { animation: none; } .wiz-bar i { transition: none; } }
+
   /* ---- Tabs (housing) ---- */
-  .seg { display: flex; gap: 4px; margin: 16px 16px 0; padding: 4px; border-radius: 14px; background: rgba(0,0,0,.22); }
-  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 10px; background: transparent; padding: 8px 4px;
-                font-size: 13px; font-weight: 600; line-height: 1.25; color: var(--pencil); cursor: pointer;
+  .seg { display: flex; gap: 4px; margin: 16px 16px 0; padding: 4px; border-radius: var(--radius-card); background: var(--glass); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+  .seg button { flex: 1; min-height: 44px; border: 0; border-radius: 6px; background: transparent; padding: 8px 4px;
+                font-size: 13px; font-weight: 600; line-height: 1.25; color: color-mix(in srgb, var(--ink) 78%, transparent); cursor: pointer;
                 transition: background-color 200ms var(--ease), color 200ms var(--ease); }
-  .seg button[aria-pressed="true"] { background: var(--sheen), var(--board); color: var(--ink); box-shadow: var(--edge-light); }
+  .seg button[aria-pressed="true"] { background: var(--sheen), var(--accent-grad); color: var(--on-signal); box-shadow: var(--edge-light); }
   .jpanel { padding-bottom: 12px; }
 
   /* ---- Jobs window ---- */
@@ -261,7 +382,7 @@
   .jobs .check input { width: 24px; height: 24px; }
   .invite-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: calc(100% - 32px);
                    margin: 16px 16px 0; padding: 16px; border: 0; border-radius: var(--radius-card); color: var(--on-signal);
-                   background: var(--sheen), linear-gradient(135deg, #5BEAB2 0%, #2CC98C 60%, #1FAE79 100%); box-shadow: var(--edge-light);
+                   background: var(--sheen), var(--accent-grad); box-shadow: var(--edge-light);
                    font-size: 17px; text-align: left; cursor: pointer; }
   .invite-banner span { padding: 8px 12px; border-radius: var(--radius); background: var(--on-signal); color: var(--on-board);
                         font-weight: 600; font-size: 15px; white-space: nowrap; }
@@ -287,14 +408,20 @@
     .btn:hover, .mainline:hover, .invite-banner:hover, .dep:hover, .vac-head:hover, .pick button:hover, .seg button:hover,
     .topics summary:hover, nav button:hover, .backlink:hover, .emp-link:hover {
       background-image: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)); }
+    /* keep the accent gradient under the hover tint */
+    .mainline:hover, .invite-banner:hover, .pick button[aria-checked="true"]:hover, .seg button[aria-pressed="true"]:hover {
+      background-image: linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)), var(--sheen), var(--accent-grad); }
   }
+  /* light mode: the dark-on-accent CTA pill flips to white, so its text takes the palette ink */
+  [data-mode="light"] .m-cta, [data-mode="light"] .invite-banner span { color: var(--p-accent-ink); }
 
   /* ---- Bottom bar: one quiet top edge; the current tab is a soft emerald pill ---- */
   nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 4px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-        background: var(--sheen), var(--nav-bg); box-shadow: 0 -1px 0 rgba(255,255,255,.08); }
-  nav button { flex: 1; border: 0; background: none; padding: 10px 2px; border-radius: 12px; font-size: 15px; color: var(--pencil);
+        background: var(--glass); border-top: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+        -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%); }
+  nav button { flex: 1; border: 0; background: none; padding: 10px 2px; border-radius: var(--radius); font-size: 15px; color: var(--pencil);
                cursor: pointer; transition: background-color 200ms var(--ease), color 200ms var(--ease); }
-  nav button[aria-current="page"] { color: var(--signal); font-weight: 600; background: rgba(63,224,160,.13); }
+  nav button[aria-current="page"] { color: var(--signal); font-weight: 600; background: var(--accent-soft); }
 
   .toast { position: fixed; left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
            padding: 12px 16px; border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-size: 15px;
@@ -333,11 +460,41 @@ const tg = window.Telegram?.WebApp;
 tg?.ready(); tg?.expand();
 if (tg?.colorScheme === "dark") document.documentElement.dataset.theme = "dark";
 const cssVar = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-try { tg?.setHeaderColor?.("#031A14"); tg?.setBackgroundColor?.(cssVar("--platform")); tg?.setBottomBarColor?.(cssVar("--nav-bg")); } catch {}
+
 
 // What the header scene shows; set from the user's job route (renderSign), read by the canvas loop.
 // rain: waiting for review or for offers; train "standing": an offer waits for an answer, otherwise trains pass by.
-const SCENE = { rain: true, train: "passing" };
+const SCENE = { rain: true, train: "passing", ink: "#02140F" };
+
+// ---- Appearance: palette × mode, chosen in Profile. Saved on this phone and in Telegram's cloud. ----
+const PALETTES = ["emerald", "sapphire", "amethyst", "amber", "graphite"];
+const THEME_KEY = "ui_theme_v1";
+function readTheme() {
+  try { const t = JSON.parse(localStorage.getItem(THEME_KEY) || "{}");
+        return { mode: ["auto", "dark", "light"].includes(t.mode) ? t.mode : "auto", palette: PALETTES.includes(t.palette) ? t.palette : "emerald" }; }
+  catch { return { mode: "auto", palette: "emerald" }; }
+}
+let THEME = readTheme();
+function applyTheme(t = THEME, persist = false) {
+  THEME = t;
+  const mode = t.mode === "auto" ? (tg?.colorScheme === "light" ? "light" : "dark") : t.mode;
+  const root = document.documentElement;
+  root.dataset.palette = t.palette; root.dataset.mode = mode;
+  SCENE.ink = cssVar("--p-scene") || SCENE.ink;
+  try { tg?.setHeaderColor?.(cssVar("--p-sky1")); tg?.setBackgroundColor?.(cssVar("--p-deep") && mode === "light" ? cssVar("--p-tint") : cssVar("--p-deep"));
+        tg?.setBottomBarColor?.(mode === "light" ? cssVar("--p-tint") : cssVar("--p-deep")); } catch {}
+  window.redrawScene?.();
+  if (persist) {
+    try { localStorage.setItem(THEME_KEY, JSON.stringify(t)); } catch {}
+    try { tg?.CloudStorage?.setItem(THEME_KEY, JSON.stringify(t)); } catch {}
+  }
+}
+applyTheme();
+tg?.onEvent?.("themeChanged", () => { if (THEME.mode === "auto") applyTheme(); });
+try { tg?.CloudStorage?.getItem(THEME_KEY, (e, v) => {   // same look on another phone
+  if (e || !v) return;
+  try { const t = JSON.parse(v); if (t.mode !== THEME.mode || t.palette !== THEME.palette) { applyTheme({ mode: t.mode, palette: t.palette }); try { localStorage.setItem(THEME_KEY, v); } catch {} if (typeof renderProfile === "function" && META) renderProfile(); } } catch {}
+}); } catch {}
 
 // Night platform: rain, a warm station lamp with a light cone, low drifting fog.
 // One static frame when the user prefers reduced motion; paused while the page is hidden.
@@ -375,19 +532,19 @@ const SCENE = { rain: true, train: "passing" };
     g.addColorStop(0, `rgba(${LIGHT},.20)`); g.addColorStop(1, `rgba(${LIGHT},.04)`);
     ctx.fillStyle = g; ctx.fill();
     // post, arm, lantern
-    ctx.fillStyle = "#02140F";
+    ctx.fillStyle = SCENE.ink;
     ctx.fillRect(px - 2, top, 4, h - top);
     ctx.fillRect(px - 4, h - 8, 8, 8);
-    ctx.strokeStyle = "#02140F"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.strokeStyle = SCENE.ink; ctx.lineWidth = 3; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(px, top + 4); ctx.quadraticCurveTo(px - 14, top - 4, hx, top + 4); ctx.stroke();
     ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, top + 4); ctx.lineTo(hx, hy - 6); ctx.stroke();
-    ctx.fillStyle = "#02140F";
+    ctx.fillStyle = SCENE.ink;
     ctx.beginPath(); ctx.moveTo(hx - 11, hy - 1); ctx.lineTo(hx + 11, hy - 1); ctx.lineTo(hx + 5, hy - 7); ctx.lineTo(hx - 5, hy - 7); ctx.closePath(); ctx.fill();
     ctx.save(); ctx.shadowColor = `rgba(${LIGHT},.95)`; ctx.shadowBlur = 18;
     ctx.fillStyle = "#FFE3B0";
     ctx.beginPath(); ctx.moveTo(hx - 9, hy - 1); ctx.lineTo(hx + 9, hy - 1); ctx.lineTo(hx + 6, hy + 11); ctx.lineTo(hx - 6, hy + 11); ctx.closePath(); ctx.fill();
     ctx.restore();
-    ctx.fillStyle = "#02140F"; ctx.fillRect(hx - 7, hy + 11, 14, 2);
+    ctx.fillStyle = SCENE.ink; ctx.fillRect(hx - 7, hy + 11, 14, 2);
   }
   // Distant regional train crossing the horizon now and then (generic, no operator branding).
   function drawTrain(ts) {
@@ -404,7 +561,7 @@ const SCENE = { rain: true, train: "passing" };
     ctx.fillStyle = "#B8243A"; ctx.fillRect(train.x, y + carH - 2, len + 14, 1.5);
     ctx.fillStyle = "rgba(255,214,150,.95)";
     for (let i = 4; i < len - 4; i += 7) { if (i % 50 > 44) continue; ctx.fillRect(train.x + i, y + 1.5, 4, 2.5); }
-    ctx.fillStyle = "#02140F"; for (let i = 50; i < len; i += 50) ctx.fillRect(train.x + i - 1, y, 2, carH);
+    ctx.fillStyle = SCENE.ink; for (let i = 50; i < len; i += 50) ctx.fillRect(train.x + i - 1, y, 2, carH);
     ctx.restore();
     if (SCENE.train === "standing") {   // pull in and stop at the platform
       train.x = still ? 0 : Math.min(0, train.x + Math.max(.6, -train.x * .06));
@@ -416,7 +573,7 @@ const SCENE = { rain: true, train: "passing" };
   }
   function drawBench() {
     const { px } = lamp, x0 = px - 64, x1 = px - 16, seat = h - 14;
-    ctx.fillStyle = "#02140F";
+    ctx.fillStyle = SCENE.ink;
     ctx.fillRect(x0, seat, x1 - x0, 3);                 // seat
     ctx.fillRect(x0 + 1, seat - 10, x1 - x0 - 2, 2);     // backrest boards
     ctx.fillRect(x0 + 1, seat - 6, x1 - x0 - 2, 2);
@@ -482,6 +639,9 @@ const I18N = {
     },
     toChat: "Повернутися в чат", soonState: "Готується", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
     profileHead: "Профіль", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
+    appearance: "Оформлення", themeMode: "Тема", themeAuto: "Як у Telegram", themeDark: "Темна", themeLight: "Світла", palette: "Колір",
+    palettes: { emerald: "Смарагд", sapphire: "Сапфір", amethyst: "Аметист", amber: "Бурштин", graphite: "Графіт" },
+    aboutYou: "Про вас", savedShort: "Збережено",
     language: "Мова", land: "Федеральна земля", city: "Місто", level: "Рівень німецької", goal: "З чим потрібна допомога",
     status: "Статус перебування", broadcast: "Надсилати мені оголошення бота",
     save: "Зберегти анкету", saved: "Анкету збережено", notSet: "Не вказано", c1: "C1 і вище",
@@ -528,6 +688,9 @@ const I18N = {
     },
     toChat: "Вернуться в чат", soonState: "Готовится", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
     profileHead: "Профиль", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
+    appearance: "Оформление", themeMode: "Тема", themeAuto: "Как в Telegram", themeDark: "Тёмная", themeLight: "Светлая", palette: "Цвет",
+    palettes: { emerald: "Изумруд", sapphire: "Сапфир", amethyst: "Аметист", amber: "Янтарь", graphite: "Графит" },
+    aboutYou: "О вас", savedShort: "Сохранено",
     language: "Язык", land: "Федеральная земля", city: "Город", level: "Уровень немецкого", goal: "С чем нужна помощь",
     status: "Статус пребывания", broadcast: "Присылать мне объявления бота",
     save: "Сохранить анкету", saved: "Анкета сохранена", notSet: "Не указано", c1: "C1 и выше",
@@ -629,7 +792,7 @@ function linkList(topic) {
 }
 
 function sheetBody(k) {
-  if (k === "jobs" || k === "housing") return linkList(k);
+  // no outside services on the main screens: sections open inside the app
   if (L().soon[k]) return `<p>${esc(L().soon[k])}</p><button class="btn" data-chat>${esc(L().toChat)}</button>`;
   return "";
 }
@@ -723,39 +886,79 @@ function opts(list, current, labelFn, allowEmpty) {
     list.map(v => `<option value="${esc(v)}" ${v === current ? "selected" : ""}>${esc(labelFn(v))}</option>`).join("");
 }
 
-function renderProfile() {
-  const m = META, me = ME || {};
-  if (!tg?.initData) {
-    $("page-profile").innerHTML = `<div class="head"><h2>${esc(L().profileHead)}</h2><p>${esc(L().openInTg)}</p></div>`;
-    return;
-  }
-  const field = (id, label, control) => `<div class="field"><label for="${id}">${esc(label)}</label>${control}</div>`;
-  $("page-profile").innerHTML = `
-    <div class="head"><h2>${esc(L().profileHead)}</h2><p>${esc(L().profileNote)}</p></div>
-    <form class="form" id="pf">
-      ${field("f-language", L().language, `<select id="f-language">${opts(m.languages, me.language || lang, v => ({uk: "Українська", ru: "Русский", de: "Deutsch"}[v] || v))}</select>`)}
-      ${field("f-land", L().land, `<select id="f-land">${opts(Object.keys(m.lands), me.land, v => m.lands[v], true)}</select>`)}
-      ${field("f-city", L().city, `<input id="f-city" maxlength="80" autocomplete="address-level2" value="${esc(me.city || "")}">`)}
-      ${field("f-level", L().level, `<select id="f-level">${opts(m.levels, me.german_level, v => v === "C1" ? L().c1 : v, true)}</select>`)}
-      ${field("f-goal", L().goal, `<select id="f-goal">${opts(m.goals, me.goal, v => L().goals[v], true)}</select>`)}
-      ${field("f-status", L().status, `<select id="f-status">${opts(m.statuses, me.residence_status, v => L().statuses[v], true)}</select>`)}
-      <label class="check"><input type="checkbox" id="f-broadcast" ${me.broadcast_consent ? "checked" : ""}> ${esc(L().broadcast)}</label>
-      <button class="btn wide" type="submit">${esc(L().save)}</button>
-    </form>`;
-  $("pf").onsubmit = (e) => { e.preventDefault(); saveProfile(); };
+// Profile: appearance first (works without signing in), then the user's answers.
+// Every choice saves at once with a short "saved" mark; no form submit, no dropdowns where a tap is enough.
+function appearanceBlock() {
+  const T = L();
+  const modes = [["auto", T.themeAuto], ["dark", T.themeDark], ["light", T.themeLight]];
+  return `<h2 class="sec">${esc(T.appearance)}</h2>
+    <div class="form appearance">
+      <p class="lbl">${esc(T.themeMode)}</p>
+      <div class="seg seg--inline" role="radiogroup" aria-label="${esc(T.themeMode)}">${modes.map(([v, t]) =>
+        `<button type="button" role="radio" data-theme-mode="${v}" aria-checked="${THEME.mode === v}" aria-pressed="${THEME.mode === v}">${esc(t)}</button>`).join("")}</div>
+      <p class="lbl">${esc(T.palette)}</p>
+      <div class="swatches" role="radiogroup" aria-label="${esc(T.palette)}">${PALETTES.map(pal =>
+        `<button type="button" role="radio" class="swatch" data-pal="${pal}" aria-checked="${THEME.palette === pal}">
+           <span class="swatch__chip" data-palette="${pal}" aria-hidden="true"></span><span>${esc(T.palettes[pal])}</span></button>`).join("")}</div>
+    </div>`;
+}
+function bindAppearance(root) {
+  root.querySelectorAll("[data-theme-mode]").forEach(b => b.onclick = () => {
+    applyTheme({ ...THEME, mode: b.dataset.themeMode }, true); tg?.HapticFeedback?.selectionChanged(); renderProfile(); });
+  root.querySelectorAll("[data-pal]").forEach(b => b.onclick = () => {
+    applyTheme({ ...THEME, palette: b.dataset.pal }, true); tg?.HapticFeedback?.selectionChanged(); renderProfile(); });
 }
 
-async function saveProfile() {
-  const v = (id) => $(id).value.trim() || null;
-  const body = { language: v("f-language"), land: v("f-land"), city: v("f-city"), german_level: v("f-level"),
-                 goal: v("f-goal"), residence_status: v("f-status"), broadcast_consent: $("f-broadcast").checked };
+function renderProfile() {
+  const m = META, me = ME || {}, T = L();
+  const root = $("page-profile");
+  if (!tg?.initData) {
+    root.innerHTML = `<div class="head"><h2>${esc(T.profileHead)}</h2><p>${esc(T.openInTg)}</p></div>` + appearanceBlock();
+    bindAppearance(root); return;
+  }
+  const langs = m.languages.map(v => [v, { uk: "Українська", ru: "Русский", de: "Deutsch" }[v] || v]);
+  root.innerHTML = `
+    <div class="head"><h2>${esc(T.profileHead)}</h2><p>${esc(T.profileNote)}</p></div>
+    ${appearanceBlock()}
+    <h2 class="sec">${esc(T.aboutYou)}</h2>
+    <div class="form" id="pf">
+      <p class="lbl">${esc(T.language)}</p>
+      <div class="seg seg--inline" role="radiogroup" aria-label="${esc(T.language)}">${langs.map(([v, t]) =>
+        `<button type="button" role="radio" data-lang="${v}" aria-checked="${(me.language || lang) === v}" aria-pressed="${(me.language || lang) === v}">${esc(t)}</button>`).join("")}</div>
+      <div class="field"><label for="f-land">${esc(T.land)}</label><select id="f-land">${opts(Object.keys(m.lands), me.land, v => m.lands[v], true)}</select></div>
+      <div class="field"><label for="f-city">${esc(T.city)}</label><input id="f-city" maxlength="80" autocomplete="address-level2" value="${esc(me.city || "")}"></div>
+      <p class="lbl">${esc(T.level)}</p>${chips("p-level", m.levels, me.german_level, v => v === "C1" ? T.c1 : v)}
+      <p class="lbl">${esc(T.goal)}</p>${chips("p-goal", m.goals, me.goal, v => T.goals[v])}
+      <p class="lbl">${esc(T.status)}</p>${chips("p-status", m.statuses, me.residence_status, v => T.statuses[v])}
+      <label class="switch"><span>${esc(T.broadcast)}</span>
+        <input type="checkbox" role="switch" id="f-broadcast" ${me.broadcast_consent ? "checked" : ""}><i aria-hidden="true"></i></label>
+      <p class="saved" id="p-saved" role="status" aria-live="polite"></p>
+    </div>`;
+  bindAppearance(root);
+  root.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => saveProfile({ language: b.dataset.lang }));
+  const pick = (name, key) => root.querySelectorAll(`.pick[data-name="${name}"] button`).forEach(b => b.onclick = () => {
+    const on = b.getAttribute("aria-checked") !== "true";          // tap again to clear
+    b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(on && x === b)));
+    tg?.HapticFeedback?.selectionChanged();
+    saveProfile({ [key]: on ? b.dataset.v : null });
+  });
+  pick("p-level", "german_level"); pick("p-goal", "goal"); pick("p-status", "residence_status");
+  $("f-land").onchange = (e) => saveProfile({ land: e.target.value || null });
+  $("f-city").onchange = (e) => saveProfile({ city: e.target.value.trim() || null });
+  $("f-broadcast").onchange = (e) => { tg?.HapticFeedback?.selectionChanged(); saveProfile({ broadcast_consent: e.target.checked }); };
+}
+
+let savedTimer;
+async function saveProfile(patch) {
+  const mark = $("p-saved");
   try {
-    await api("/api/me", { method: "PATCH", body: JSON.stringify(body) });
-    ME = { ...ME, ...body };
-    tg?.HapticFeedback?.notificationOccurred("success");
-    if (body.language && body.language !== lang) { lang = body.language; renderAll("profile"); }
-    toast(L().saved);
-  } catch { toast(L().error); }
+    await api("/api/me", { method: "PATCH", body: JSON.stringify(patch) });
+    ME = { ...ME, ...patch };
+    if (patch.language && patch.language !== lang) { lang = patch.language; renderAll("profile"); toast(L().saved); return; }
+    if ("city" in patch || "land" in patch) renderSign();
+    if (mark) { mark.textContent = L().savedShort; mark.classList.add("on"); clearTimeout(savedTimer);
+                savedTimer = setTimeout(() => mark.classList.remove("on"), 1600); }
+  } catch { toast(L().error); renderProfile(); }
 }
 
 function renderInfo() {
@@ -799,7 +1002,7 @@ const J = {
     profRejected: "Анкета не пройшла перевірку. Виправте її і надішліть знову.",
     edit: "Змінити анкету", fix: "Виправити анкету", visible: "Показувати анкету роботодавцям",
     hidden: "Анкету приховано", shown: "Анкету знову видно",
-    vacTitle: "Вакансії", noVac: "Поки що немає перевірених вакансій у цьому регіоні. Ось офіційні сайти з вакансіями:",
+    vacTitle: "Вакансії", noVac: "Поки що немає перевірених вакансій у цьому регіоні. Коли з’являться, вони будуть тут.",
     more: "Детальніше", less: "Згорнути", apply: "Відгукнутися", sendApply: "Надіслати відгук",
     applyText: "Добрий день! Мене цікавить ця вакансія. Буду рада/радий розповісти про свій досвід.",
     applyLabel: "Ваше повідомлення роботодавцю (можна залишити як є)",
@@ -807,6 +1010,14 @@ const J = {
     sentForReview: "Надіслано. Адміністратор перевірить і передасть.",
     employerLink: "Ви роботодавець? Розмістіть вакансію",
     formTitle: "Анкета", formHint: "Не пишіть телефон чи адресу. Бот сам передасть контакти, коли ви погодитесь на запрошення.",
+    wiz: { progress: (n) => `Крок ${n} з 6 · анонімна анкета`, q1: "Яку роботу шукаєте?", q2: "Де хочете працювати?", q3: "Яка зайнятість підходить?",
+      q4: "Як ви знаєте німецьку?", q5: "Який у вас досвід?", q6: "Що ще розповісти про себе?", popular: "Часто шукають:",
+      common: ["Склад", "Прибирання", "Кухня", "Догляд за літніми людьми", "Водій"], next6: "Далі", toPreview: "Переглянути анкету",
+      needPosition: "Напишіть професію", needLand: "Виберіть землю", needLevel: "Виберіть варіант", needExp: "Напишіть хоча б кілька слів",
+      noGerman: "Не знаю", levelHint: "Можна приблизно. A1 — кілька фраз, B1 — можу пояснити, що мені потрібно.",
+      noContacts: "без телефону й адреси", tagNoGerman: "Без німецької", tagGerman: (l) => `Німецька ${l}`, previewTitle: "Так вас побачить роботодавець", hidden: "Не видно: ім’я, телефон, Telegram, фото",
+      edit: "Змінити", next: "Анкету перевірить адміністратор. Пропозиції прийдуть сюди і в чат з ботом.", restored: "Продовжуємо з того місця, де ви зупинилися." },
+
     position: "Яку роботу шукаєте", positionPh: "Наприклад: кухар, водій, прибиральниця",
     land: "Федеральна земля", city: "Місто", level: "Ваш рівень німецької", employment: "Яка зайнятість підходить",
     shiftsOk: "Можу працювати змінами", experience: "Ваш досвід", experiencePh: "Наприклад: 5 років працювала кухарем у ресторані в Києві",
@@ -849,7 +1060,7 @@ const J = {
     profRejected: "Анкета не прошла проверку. Исправьте её и отправьте снова.",
     edit: "Изменить анкету", fix: "Исправить анкету", visible: "Показывать анкету работодателям",
     hidden: "Анкета скрыта", shown: "Анкету снова видно",
-    vacTitle: "Вакансии", noVac: "Пока нет проверенных вакансий в этом регионе. Вот официальные сайты с вакансиями:",
+    vacTitle: "Вакансии", noVac: "Пока нет проверенных вакансий в этом регионе. Когда появятся, они будут здесь.",
     more: "Подробнее", less: "Свернуть", apply: "Откликнуться", sendApply: "Отправить отклик",
     applyText: "Добрый день! Меня интересует эта вакансия. С радостью расскажу о своём опыте.",
     applyLabel: "Ваше сообщение работодателю (можно оставить как есть)",
@@ -857,6 +1068,14 @@ const J = {
     sentForReview: "Отправлено. Администратор проверит и передаст.",
     employerLink: "Вы работодатель? Разместите вакансию",
     formTitle: "Анкета", formHint: "Не пишите телефон и адрес. Бот сам передаст контакты, когда вы согласитесь на приглашение.",
+    wiz: { progress: (n) => `Шаг ${n} из 6 · анонимная анкета`, q1: "Какую работу ищете?", q2: "Где хотите работать?", q3: "Какая занятость подходит?",
+      q4: "Как вы знаете немецкий?", q5: "Какой у вас опыт?", q6: "Что ещё рассказать о себе?", popular: "Часто ищут:",
+      common: ["Склад", "Уборка", "Кухня", "Уход за пожилыми", "Водитель"], next6: "Дальше", toPreview: "Посмотреть анкету",
+      needPosition: "Напишите профессию", needLand: "Выберите землю", needLevel: "Выберите вариант", needExp: "Напишите хотя бы несколько слов",
+      noGerman: "Не знаю", levelHint: "Можно примерно. A1 — несколько фраз, B1 — могу объяснить, что мне нужно.",
+      noContacts: "без телефона и адреса", tagNoGerman: "Без немецкого", tagGerman: (l) => `Немецкий ${l}`, previewTitle: "Так вас увидит работодатель", hidden: "Не видно: имя, телефон, Telegram, фото",
+      edit: "Изменить", next: "Анкету проверит администратор. Предложения придут сюда и в чат с ботом.", restored: "Продолжаем с того места, где вы остановились." },
+
     position: "Какую работу ищете", positionPh: "Например: повар, водитель, уборщица",
     land: "Федеральная земля", city: "Город", level: "Ваш уровень немецкого", employment: "Какая занятость подходит",
     shiftsOk: "Могу работать сменами", experience: "Ваш опыт", experiencePh: "Например: 5 лет работала поваром в ресторане в Киеве",
@@ -927,6 +1146,7 @@ async function loadJobs() {
 }
 
 function jobsBack() {
+  if (wizBack()) return true;
   if (JOBS.sub) { JOBS.sub = null; renderJobs(); window.scrollTo(0, 0); return true; }
   if (JOBS.view === "employer" && JOBS.me?.seeker) { JOBS.view = "seeker"; renderJobs(); return true; }
   return false;
@@ -987,7 +1207,7 @@ function jSeekerHome(body) {
     <h2 class="sec">${esc(T.vacTitle)}</h2>
     <div class="filter"><select id="jland" aria-label="${esc(T.land)}"><option value="">${esc(T.allLands)}</option>${Object.keys(META.lands).map(c =>
       `<option value="${c}" ${c === JOBS.land ? "selected" : ""}>${esc(META.lands[c])}</option>`).join("")}</select></div>
-    ${vacs || `<div class="card"><p>${esc(T.noVac)}</p>${linkList("jobs")}</div>`}
+    ${vacs || `<div class="card"><p>${esc(T.noVac)}</p></div>`}
     <button class="emp-link" id="to-emp">${esc(T.employerLink)}</button>`;
   body.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { JOBS.sub = b.dataset.go; renderJobs(); window.scrollTo(0, 0); });
   body.querySelector("#jland").onchange = (e) => { JOBS.land = e.target.value; loadJobs(); };
@@ -1010,32 +1230,106 @@ function jSeekerHome(body) {
   bindLinks(body);
 }
 
+// Step-by-step profile (same flow as the new app): one question per screen, progress, draft in Telegram's cloud,
+// a preview of exactly what employers see, then send. Fields map 1:1 onto PUT /api/jobs/seeker.
+const WIZ_KEY = "seeker_draft_v1";
+let WIZ = null;   // { step, d, fromPreview, restored }
+function wizSave() { try { tg?.CloudStorage?.setItem(WIZ_KEY, JSON.stringify({ ...WIZ.d, step: WIZ.step })); } catch {} }
+function wizClear() { try { tg?.CloudStorage?.removeItem ? tg.CloudStorage.removeItem(WIZ_KEY) : tg?.CloudStorage?.setItem(WIZ_KEY, ""); } catch {} }
+
 function jSeekerForm(body) {
-  const T = JL(), p = JOBS.me.seeker || { land: ME?.land, city: ME?.city, german_level: ME?.german_level, employment: "any" };
-  const levels = META.levels;
-  body.innerHTML = `<div class="head"><h2>${esc(T.formTitle)}</h2><p>${esc(T.formHint)}</p></div>
-    <form class="form big" id="sf" novalidate>
-      ${field("s-position", T.position, `<input id="s-position" maxlength="120" required placeholder="${esc(T.positionPh)}" value="${esc(p.position || "")}">`)}
-      <div class="field"><span class="lbl">${esc(T.employment)}</span>${chips("employment", META.employment, p.employment || "any", v => T.emp[v])}</div>
-      <label class="check"><input type="checkbox" id="s-shifts" ${p.shifts_ok ? "checked" : ""}> ${esc(T.shiftsOk)}</label>
-      ${field("s-land", T.land, `<select id="s-land">${opts(Object.keys(META.lands), p.land, v => META.lands[v], true)}</select>`)}
-      ${field("s-city", T.city, `<input id="s-city" maxlength="80" value="${esc(p.city || "")}">`)}
-      <div class="field"><span class="lbl">${esc(T.level)}</span>${chips("level", levels, p.german_level, v => v === "C1" ? L().c1 : v)}</div>
-      ${field("s-exp", T.experience, `<textarea id="s-exp" maxlength="800" required placeholder="${esc(T.experiencePh)}">${esc(p.experience || "")}</textarea>`)}
-      ${field("s-about", T.about, `<textarea id="s-about" maxlength="500">${esc(p.about || "")}</textarea>`)}
-      <button class="btn wide big" type="submit">${esc(T.submit)}</button>
-    </form>`;
-  bindPicks(body);
-  body.querySelector("#sf").onsubmit = async (e) => {
-    e.preventDefault();
-    if (!validate(e.target)) return;
-    const v = (id) => $(id).value.trim() || null;
-    const data = { position: v("s-position"), land: v("s-land"), city: v("s-city"), german_level: pickVal(body, "level"),
-      employment: pickVal(body, "employment") || "any", shifts_ok: $("s-shifts").checked, experience: v("s-exp"), about: v("s-about") };
+  if (!WIZ) {
+    const p = JOBS.me.seeker || {};
+    WIZ = { step: 1, fromPreview: false, d: { position: p.position || "", employment: p.employment || "any", shifts_ok: !!p.shifts_ok,
+      land: p.land || ME?.land || null, city: p.city || ME?.city || "", german_level: p.german_level || ME?.german_level || null,
+      experience: p.experience || "", about: p.about || "" } };
+    try { tg?.CloudStorage?.getItem(WIZ_KEY, (e, v) => {          // continue where the user stopped
+      if (e || !v || !WIZ || WIZ.touched) return;
+      try { const x = JSON.parse(v); if (!x.position) return; const { step, ...d } = x;
+            WIZ.d = { ...WIZ.d, ...d }; WIZ.step = Math.min(Math.max(+step || 1, 1), 6); WIZ.restored = true;
+            if (JOBS.sub === "form") renderJobs(); } catch {}
+    }); } catch {}
+  }
+  const T = JL(), W = T.wiz, d = WIZ.d, st = WIZ.step;
+  const ok = (n) => ({ 1: d.position.trim().length >= 2, 2: !!d.land, 4: !!d.german_level, 5: d.experience.trim().length >= 2 })[n] ?? true;
+  const need = { 1: W.needPosition, 2: W.needLand, 4: W.needLevel, 5: W.needExp };
+  let html;
+  if (st === "preview") {
+    const where = [d.city, d.land ? META.lands[d.land] : null].filter((x, i, a) => x && a.indexOf(x) === i).join(", ");
+    const rows = [[1, T.position, d.position], [2, T.city, where],
+      [3, T.employment, T.emp[d.employment] + (d.shifts_ok ? ", " + T.shiftsOk.toLowerCase() : "")],
+      [4, T.level, d.german_level === "A0" ? W.noGerman : d.german_level], [5, T.experience, d.experience], [6, T.about, d.about || "—"]];
+    html = `<div class="head"><h2>${esc(W.previewTitle)}</h2></div>
+      <article class="card wiz-preview"><h3>${esc(d.position)}</h3>
+        <p class="co">${esc([where, T.emp[d.employment]].filter(Boolean).join(" · "))}</p>
+        <p class="tags"><span>${esc(d.german_level && d.german_level !== "A0" ? W.tagGerman(d.german_level) : W.tagNoGerman)}</span>${d.shifts_ok ? `<span>${esc(T.shifts)}</span>` : ""}</p>
+        <p class="text">${esc(d.experience)}</p>${d.about ? `<p class="text">${esc(d.about)}</p>` : ""}
+        <p class="hint">${esc(W.hidden)}</p></article>
+      <div class="items">${rows.map(([n, k, v]) => `<button type="button" class="wiz-row" data-edit="${n}"><span><b>${esc(k)}</b><span class="meta">${esc(v)}</span></span><span class="wiz-edit">${esc(W.edit)}</span></button>`).join("")}</div>
+      <p class="hint" style="margin:12px 16px">${esc(W.next)}</p>
+      <div class="wiz-nav"><button type="button" class="btn wide big" id="wiz-send">${esc(T.submit)}</button></div>`;
+  } else {
+    html = `<div class="wiz-progress"><p>${esc(W.progress(st))}</p><div class="wiz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${st}"><i style="width:${st / 6 * 100}%"></i></div></div>`
+      + (WIZ.restored ? `<p class="hint" style="margin:8px 16px 0">${esc(W.restored)}</p>` : "") + `<div class="wiz-step">`;
+    if (st === 1) html += `<h2 class="wiz-q">${esc(W.q1)}</h2><div class="form"><div class="field"><label for="w-pos">${esc(T.position)}</label>
+        <input id="w-pos" maxlength="120" placeholder="${esc(T.positionPh)}" value="${esc(d.position)}"></div>
+        <p class="lbl">${esc(W.popular)}</p><div class="pick">${W.common.map(c => `<button type="button" data-fill="${esc(c)}" aria-checked="${d.position === c}">${esc(c)}</button>`).join("")}</div></div>`;
+    if (st === 2) html += `<h2 class="wiz-q">${esc(W.q2)}</h2><div class="form">
+        <div class="field"><label for="w-land">${esc(T.land)}</label><select id="w-land">${opts(Object.keys(META.lands), d.land, v => META.lands[v], true)}</select></div>
+        <div class="field"><label for="w-city">${esc(T.city)}</label><input id="w-city" maxlength="80" value="${esc(d.city)}"></div></div>`;
+    if (st === 3) html += `<h2 class="wiz-q">${esc(W.q3)}</h2><div class="form">${chips("w-emp", META.employment, d.employment, v => T.emp[v])}
+        <label class="switch"><span>${esc(T.shiftsOk)}</span><input type="checkbox" role="switch" id="w-shifts" ${d.shifts_ok ? "checked" : ""}><i aria-hidden="true"></i></label></div>`;
+    if (st === 4) html += `<h2 class="wiz-q">${esc(W.q4)}</h2><div class="form">${chips("w-level", META.levels, d.german_level, v => v === "A0" ? W.noGerman : v === "C1" ? L().c1 : v)}
+        <p class="hint">${esc(W.levelHint)}</p></div>`;
+    if (st === 5) html += `<h2 class="wiz-q">${esc(W.q5)}</h2><div class="form"><div class="field"><label for="w-exp">${esc(T.experience)}</label>
+        <textarea id="w-exp" maxlength="800" placeholder="${esc(T.experiencePh)}">${esc(d.experience)}</textarea>
+        <p class="hint"><span id="w-cnt">${d.experience.length}</span> / 800 · ${esc(W.noContacts)}</p></div></div>`;
+    if (st === 6) html += `<h2 class="wiz-q">${esc(W.q6)}</h2><div class="form"><div class="field"><label for="w-about">${esc(T.about)}</label>
+        <textarea id="w-about" maxlength="500">${esc(d.about)}</textarea></div></div>`;
+    html += `</div><div class="wiz-nav"><p class="hint" id="wiz-need" ${ok(st) ? "hidden" : ""}>${esc(need[st] || "")}</p>
+      <button type="button" class="btn wide big" id="wiz-next" ${ok(st) ? "" : "disabled"}>${esc(st === 6 ? W.toPreview : W.next6)}</button></div>`;
+  }
+  body.innerHTML = html;
+  const go = (n) => { WIZ.step = n; WIZ.restored = false; if (n !== "preview") wizSave(); renderJobs(); window.scrollTo(0, 0); tg?.HapticFeedback?.selectionChanged(); };
+  const refresh = () => { WIZ.touched = true; const b = $("wiz-next"), h = $("wiz-need"); if (b) b.disabled = !ok(st); if (h) h.hidden = ok(st); };
+  const next = $("wiz-next");
+  if (next) next.onclick = () => { if (WIZ.fromPreview || st === 6) { WIZ.fromPreview = false; go("preview"); } else go(st + 1); };
+  body.querySelectorAll("[data-fill]").forEach(b => b.onclick = () => {
+    d.position = b.dataset.fill; $("w-pos").value = d.position;
+    b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    refresh(); tg?.HapticFeedback?.selectionChanged(); });
+  const on = (id, ev, fn) => { const el = $(id); if (el) el[ev] = fn; };
+  on("w-pos", "oninput", (e) => { d.position = e.target.value; refresh(); });
+  on("w-land", "onchange", (e) => { d.land = e.target.value || null; refresh(); });
+  on("w-city", "oninput", (e) => { d.city = e.target.value; refresh(); });
+  on("w-shifts", "onchange", (e) => { d.shifts_ok = e.target.checked; refresh(); tg?.HapticFeedback?.selectionChanged(); });
+  on("w-exp", "oninput", (e) => { d.experience = e.target.value; $("w-cnt").textContent = d.experience.length; refresh(); });
+  on("w-about", "oninput", (e) => { d.about = e.target.value; refresh(); });
+  body.querySelectorAll(".pick[data-name] button").forEach(b => b.onclick = () => {
+    b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    if (b.parentElement.dataset.name === "w-emp") d.employment = b.dataset.v; else d.german_level = b.dataset.v;
+    refresh(); tg?.HapticFeedback?.selectionChanged();
+  });
+  body.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => { WIZ.fromPreview = true; go(+b.dataset.edit); });
+  const send = $("wiz-send");
+  if (send) send.onclick = async () => {
+    if (send.disabled) return;
+    send.disabled = true;
+    const data = { position: d.position.trim(), land: d.land, city: d.city.trim() || null, german_level: d.german_level,
+      employment: d.employment || "any", shifts_ok: d.shifts_ok, experience: d.experience.trim(), about: d.about.trim() || null };
     try { await japi("/api/jobs/seeker", { method: "PUT", body: JSON.stringify(data) });
-      toast(T.sentForReview); tg?.HapticFeedback?.notificationOccurred("success"); JOBS.sub = null; loadJobs(); window.scrollTo(0, 0); }
-    catch (err) { jerr(err); }
+      wizClear(); WIZ = null; toast(T.sentForReview); tg?.HapticFeedback?.notificationOccurred("success"); JOBS.sub = null; loadJobs(); window.scrollTo(0, 0); }
+    catch (err) { jerr(err); send.disabled = false; }
   };
+}
+
+// Back inside the step-by-step form: preview → step 6, edit → preview, step n → n-1, step 1 → leave the form.
+function wizBack() {
+  if (!WIZ || JOBS.sub !== "form") return false;
+  if (WIZ.step === "preview") { WIZ.step = 6; renderJobs(); return true; }
+  if (WIZ.fromPreview) { WIZ.fromPreview = false; WIZ.step = "preview"; renderJobs(); return true; }
+  if (WIZ.step > 1) { WIZ.step -= 1; wizSave(); renderJobs(); window.scrollTo(0, 0); return true; }
+  return false;
 }
 
 function jInbox(body) {
