@@ -100,6 +100,21 @@ class Employer(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class Deadline(Base):
+    """A date the user asked to be reminded about (a Jobcenter appointment, a reply to a letter).
+    The bot writes 3 days before and the day before; the flags make sending idempotent."""
+
+    __tablename__ = "deadlines"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_tg: Mapped[int] = mapped_column(BigInteger, index=True)
+    title: Mapped[str] = mapped_column(String(120))
+    due: Mapped[date] = mapped_column(Date, index=True)
+    sent_3: Mapped[bool] = mapped_column(Boolean, default=False)
+    sent_1: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class EmployerLead(Base):
     """A short request from an employer who wants to hire people. An admin reviews it and calls back
     on `contact` to agree the details; nothing from it is published."""
