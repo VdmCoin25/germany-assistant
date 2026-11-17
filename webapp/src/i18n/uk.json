@@ -3,7 +3,6 @@
   "board.updated": "Оновлено {time}",
   "board.noCity": "Deutschland",
   "board.noCityHint": "Місто з’явиться, коли заповните анкету",
-  "board.station": "{city} Hbf",
   "status.boarding": "Посадка",
   "status.enroute": "В дорозі",
   "status.arrived": "Прибуло",
