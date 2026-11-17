@@ -1,4 +1,5 @@
-import { Cell, Input, List, Section, Select, Switch } from "@telegram-apps/telegram-ui";
+import { Cell, List, Section } from "@telegram-apps/telegram-ui";
+import { Input, Select, Switch } from "../components/Fields";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type ApiError } from "../api";
 import { HomeSkeleton, LoadError } from "../components/States";
@@ -38,11 +39,11 @@ export function HousingScreen({ t, lang, exit, city, level }: { t: T; lang: Lang
   );
 
   if (page === "terms") return (
-    <><h2 className="q">{t("h.terms")}</h2>
+    <><h1 className="q">{t("h.terms")}</h1>
       <List><Section>{data.terms.map((x) => <Cell key={x.de} subtitle={x[lang] || x.uk} multiline>{x.de}</Cell>)}</Section>{sources}</List></>
   );
   if (page === "docs") return (
-    <><h2 className="q">{t("h.docs")}</h2>
+    <><h1 className="q">{t("h.docs")}</h1>
       <List>
         <Section>{(data.checklist[lang] || data.checklist.uk).map((x) => <Cell key={x} multiline>{x}</Cell>)}</Section>
         <Section header={t("h.safety")}>{(data.safety[lang] || data.safety.uk).map((x) => <Cell key={x} multiline>{x}</Cell>)}</Section>
@@ -55,7 +56,7 @@ export function HousingScreen({ t, lang, exit, city, level }: { t: T; lang: Lang
   const entries: [Page, Key, Key][] = [["terms", "h.terms", "h.termsSub"], ["docs", "h.docs", "h.docsSub"],
     ["calc", "h.calc", "h.calcSub"], ["letter", "h.letter", "h.letterSub"]];
   return (
-    <><h2 className="q">{t("housing.title")}</h2>
+    <><h1 className="q">{t("housing.title")}</h1>
       <List><Section footer={t("h.checked", { date: fmtDate(data.checked) })}>
         {entries.map(([p, a, b]) => <Cell key={p} subtitle={t(b)} multiline onClick={() => open(p)}>{t(a)}</Cell>)}
       </Section></List></>
@@ -76,14 +77,14 @@ function Calc({ t }: { t: T }) {
     <Input header={t(label)} type="number" inputMode="decimal" min={0} value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} />
   );
   return (
-    <><h2 className="q">{t("h.calc")}</h2><p className="lead">{t("h.calcIntro")}</p>
+    <><h1 className="q">{t("h.calc")}</h1><p className="lead">{t("h.calcIntro")}</p>
       <List>
         <Section footer={t("h.kMonthsHint")}>
           {num("kalt", "h.kalt")}{num("neben", "h.neben")}
           <Select header={t("h.kMonths")} value={v.months} onChange={(e) => setV({ ...v, months: e.target.value })}>
             {["3", "2", "1", "0"].map((m) => <option key={m} value={m}>{m}</option>)}
           </Select>
-          <Cell Component="label" multiline after={<Switch checked={rates} onChange={(e) => setRates(e.target.checked)} />}>{t("h.rates")}</Cell>
+          <Cell Component="label" multiline after={<Switch label={t("h.rates")} checked={rates} onChange={(e) => setRates(e.target.checked)} />}>{t("h.rates")}</Cell>
           {num("makler", "h.makler")}{num("other", "h.other")}
         </Section>
         <Section footer={t("h.calcNote")}>
@@ -162,7 +163,7 @@ function Letter({ t, lang, city, level }: { t: T; lang: Lang; city: string | nul
       {opts.map((n) => <option key={n} value={n}>{n}</option>)}</Select>
   );
   return (
-    <><h2 className="q">{t("h.letter")}</h2><p className="lead">{t("h.letterIntro")}</p>
+    <><h1 className="q">{t("h.letter")}</h1><p className="lead">{t("h.letterIntro")}</p>
       <List>
         <Section footer={ok ? undefined : t("h.needFields")}>
           {inp("name", "h.name", 80, "h.namePh")}{inp("object", "h.object", 120, "h.objectPh")}{inp("city", "h.city", 80)}{inp("since", "h.since", 20, "h.sincePh")}

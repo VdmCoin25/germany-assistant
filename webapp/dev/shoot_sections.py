@@ -9,13 +9,16 @@ from tests.test_units import make_init_data  # noqa: E402
 BASE = "http://127.0.0.1:8101/app-v2/"
 MOCK = (pathlib.Path(__file__).parent / "mock-telegram.js").read_text()
 OUT = pathlib.Path(sys.argv[1])
+import os
+W, H = (360, 740) if os.environ.get("NARROW") else (390, 844)
 TXT = {"uk": {"housing": "Житло", "ref": "Довідник", "set": "Налаштування і мої дані", "terms": "Терміни", "docs": "Документи для оренди",
               "calc": "Калькулятор", "letter": "Лист орендодавцю"},
        "ru": {"housing": "Жильё", "ref": "Справочник", "set": "Настройки и мои данные", "terms": "Термины", "docs": "Документы для аренды",
               "calc": "Калькулятор", "letter": "Письмо арендодателю"}}
 
 
-async def page(b, scheme, lang, w=390, h=844):
+async def page(b, scheme, lang, w=None, h=None):
+    w, h = w or W, h or H
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2)
     await ctx.route("https://telegram.org/**", lambda r: r.abort())
     await ctx.add_init_script(f"window.__TG_INIT_DATA__ = {json.dumps(make_init_data(2001, '42:TEST-TOKEN'))};"
@@ -27,7 +30,12 @@ async def page(b, scheme, lang, w=390, h=844):
 
 
 async def click(pg, text):
-    await pg.get_by_text(text, exact=True).first.click(force=True); await pg.wait_for_timeout(500)
+    el = pg.get_by_text(text, exact=True).first
+    # In Telegram the bottom button lives outside the web view; the mock draws it on top, so step around it.
+    await pg.evaluate("() => { const b = document.getElementById('tg-bottom-bar'); if (b) b.style.visibility = 'hidden'; }")
+    await el.click(force=True)
+    await pg.evaluate("() => { const b = document.getElementById('tg-bottom-bar'); if (b) b.style.visibility = ''; }")
+    await pg.wait_for_timeout(500)
 
 
 async def snap(pg, name, full=False):
@@ -40,7 +48,7 @@ async def main():
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome")
         for scheme in ("light", "dark"):
             for lang in ("uk", "ru"):
-                T, sfx = TXT[lang], f"__390_{scheme}_{lang}"
+                T, sfx = TXT[lang], f"__{W}_{scheme}_{lang}"
                 ctx, pg = await page(b, scheme, lang)
                 await click(pg, T["housing"]); await snap(pg, f"housing{sfx}")
                 for k in ("terms", "docs", "calc"):

@@ -14,7 +14,15 @@
   --radius-section: 12px; --radius-field: 10px; --radius-button: 12px;
   --fs-13: 13px; --fs-15: 15px; --fs-17: 17px; --fs-20: 20px; --fs-24: 24px; --fs-28: 28px;
 }
-[data-scheme="dark"] { --route: #7FA6EE; }   /* --board is 1.6:1 on dark backgrounds; this blue is 6.9:1 on #1C1C1D */
+[data-scheme="dark"] { --route: #7FA6EE; }
+
+/* TelegramUI paints captions, subtitles and section headers in Telegram's hint and accent colours.
+   In the light theme those are 3.3:1 and 4.0:1 on white at 13–15 px, below WCAG AA (4.5:1),
+   so inside the app we pass TelegramUI the same colours mixed towards the text colour. */
+.app { --tgui--hint_color: var(--quiet); --tgui--subtitle_text_color: var(--quiet);
+       --tgui--section_header_text_color: color-mix(in srgb, var(--tg-theme-section-header-text-color, #6d6d72) 80%, var(--tg-theme-text-color, #000));
+       --tgui--accent_text_color: var(--accent-text);
+       --tgui--link_color: var(--accent-text); --tgui--secondary_hint_color: var(--quiet); }   /* --board is 1.6:1 on dark backgrounds; this blue is 6.9:1 on #1C1C1D */
 
 html, body { margin: 0; background: var(--tg-theme-secondary-bg-color, #efeff4); }
 body { font-family: system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; line-height: 1.4;
@@ -112,8 +120,8 @@ mark { background: none; color: inherit; font-weight: 600; }
         background: var(--tg-theme-section-bg-color, #fff); color: var(--tg-theme-text-color, #000); cursor: pointer;
         border: 1.5px solid var(--tg-theme-section-separator-color, #c8c7cc); transition: transform 100ms linear; }
 .chip:active { transform: scale(.98); }
-.chip--on { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff);
-            border-color: var(--tg-theme-button-color, #2481cc); font-weight: 600; }
+.chip--on { background: color-mix(in srgb, var(--tg-theme-button-color, #2481cc) 85%, #000); color: var(--tg-theme-button-text-color, #fff);
+            border-color: transparent; font-weight: 600; }   /* darkened so white text is ≥ 4.5:1 */
 .chip:focus-visible { outline: 2px solid var(--tg-theme-button-color, #2481cc); outline-offset: 2px; }
 .check { display: flex; align-items: center; gap: 12px; min-height: 48px; margin: 16px; font-size: var(--fs-17);
          color: var(--tg-theme-text-color, #000); }
@@ -141,4 +149,4 @@ mark { background: none; color: inherit; font-weight: 600; }
 
 /* ---- Reference, settings ---- */
 .quiet-count { font-size: var(--fs-15); color: var(--quiet); }
-.danger-button { color: var(--tg-theme-destructive-text-color, #e53935) !important; }
+.danger-button { color: color-mix(in srgb, var(--tg-theme-destructive-text-color, #e53935) 78%, var(--tg-theme-text-color, #000)) !important; }

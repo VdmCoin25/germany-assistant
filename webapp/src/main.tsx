@@ -80,9 +80,9 @@ function App() {
   const outside = !demo && !tg?.initData;
   return (
     <AppRoot appearance={scheme}>
-      <div className="app" data-scheme={scheme}>
+      <main className="app" data-scheme={scheme}>
         {demo ? <Demo /> : outside ? <OutsideTelegram t={makeT(pickLang(navigator.language.slice(0, 2)))} bot={BOT} /> : <Live />}
-      </div>
+      </main>
     </AppRoot>
   );
 }
