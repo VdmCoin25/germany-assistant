@@ -1,11 +1,12 @@
 import "@telegram-apps/telegram-ui/dist/styles.css";
 import "./styles.css";
 import { AppRoot } from "@telegram-apps/telegram-ui";
-import { lazy, Suspense, useCallback, useEffect } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { HomeSkeleton, LoadError, OfflineNote, OutsideTelegram } from "./components/States";
 import { useHomeData, useOnline } from "./data";
 import { makeT, type Lang } from "./i18n";
+import { Form } from "./form/Form";
 import { FormCity } from "./screens/FormCity";
 import { Home, type HomeData } from "./screens/Home";
 import { tg, useColorScheme } from "./tg";
@@ -17,7 +18,7 @@ const params = new URLSearchParams(location.search);
 const pickLang = (...c: (string | null | undefined)[]): Lang => (c.find(Boolean) === "ru" ? "ru" : "uk");
 
 // Screens not rebuilt yet open the matching section of the current app (until J4 is done).
-const OLD_APP: Record<string, string> = { form: "/#jobs", offers: "/#jobs", housing: "/#housing", reference: "/" };
+const OLD_APP: Record<string, string> = { offers: "/#jobs", housing: "/#housing", reference: "/" };
 const goOld = (s: string) => { location.href = OLD_APP[s] ?? "/"; };
 
 /** Design review only: ?demo=new|review|offers or ?screen=kit|form render fixed data. */
@@ -42,6 +43,10 @@ function Demo() {
 function Live() {
   const online = useOnline();
   const { res, reload } = useHomeData();
+  const [screen, setScreen] = useState<"home" | "form">("home");
+  const go = useCallback((s: string) => (s === "form" ? setScreen("form") : goOld(s)), []);
+  const toHome = useCallback(() => { setScreen("home"); window.scrollTo(0, 0); }, []);
+  const sent = useCallback(() => { setScreen("home"); reload(); }, [reload]);
   const lang = pickLang(params.get("lang"), res.state === "ok" ? res.data.language : null, tg?.initDataUnsafe.user?.language_code);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   const t = makeT(lang);
@@ -50,7 +55,8 @@ function Live() {
       {!online && <OfflineNote t={t} />}
       {res.state === "loading" && <HomeSkeleton t={t} />}
       {res.state === "error" && <LoadError t={t} status={res.status} retry={reload} />}
-      {res.state === "ok" && <Home t={t} data={res.data} go={goOld} />}
+      {res.state === "ok" && screen === "home" && <Home t={t} data={res.data} go={go} />}
+      {res.state === "ok" && screen === "form" && <Form t={t} existing={res.data.seed} exit={toHome} done={sent} />}
     </>
   );
 }

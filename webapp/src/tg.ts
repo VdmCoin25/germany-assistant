@@ -22,7 +22,7 @@ type WebApp = {
   BackButton: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
   SettingsButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
   HapticFeedback?: { selectionChanged(): void; notificationOccurred(t: "success" | "error" | "warning"): void; impactOccurred(s: string): void };
-  CloudStorage?: { getItem(k: string, cb: (e: unknown, v?: string) => void): void; setItem(k: string, v: string, cb?: (e: unknown) => void): void };
+  CloudStorage?: { getItem(k: string, cb: (e: unknown, v?: string) => void): void; setItem(k: string, v: string, cb?: (e: unknown) => void): void; removeItem?(k: string, cb?: (e: unknown) => void): void };
   setHeaderColor?(c: string): void; setBackgroundColor?(c: string): void; setBottomBarColor?(c: string): void;
 };
 
