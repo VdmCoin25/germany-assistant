@@ -54,6 +54,7 @@
     BackButton: { show: noop, hide: noop, onClick: noop, offClick: noop },
     SettingsButton: { show: noop, hide: noop, onClick: noop, offClick: noop },
     HapticFeedback: { selectionChanged: noop, notificationOccurred: noop, impactOccurred: noop },
-    CloudStorage: { getItem: (k, cb) => cb(null, ""), setItem: (k, v, cb) => cb && cb(null) },
+    CloudStorage: (() => { const store = window.__TG_CLOUD__ || (window.__TG_CLOUD__ = {});
+      return { getItem: (k, cb) => cb(null, store[k] || ""), setItem: (k, v, cb) => { store[k] = v; cb && cb(null); } }; })(),
   } };
 })();

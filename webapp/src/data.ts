@@ -2,10 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import type { HomeData, JobsState } from "./screens/Home";
 
-type Me = { language: string | null; city: string | null };
+type Me = { language: string | null; city: string | null; land: string | null; german_level: string | null };
+export type SeekerFields = { position: string; city: string | null; land: string | null; german_level: string | null;
+  employment: "full" | "part" | "mini" | "any"; shifts_ok: boolean; experience: string; about: string | null };
+/** What the form starts from: the existing profile, otherwise what the user told the bot at /start. */
+export type FormSeed = Partial<{ position: string; city: string; land: string | null; german_level: string | null;
+  employment: SeekerFields["employment"]; shifts_ok: boolean; experience: string; about: string }>;
 type Request = { kind: "offer" | "apply"; status: string };
 type JobsMe = {
-  seeker: { status: "pending" | "approved" | "rejected"; is_active: boolean; position: string; city: string | null } | null;
+  seeker: ({ status: "pending" | "approved" | "rejected"; is_active: boolean } & SeekerFields) | null;
   inbox: Request[];
 };
 
@@ -25,7 +30,7 @@ export function jobsState(j: JobsMe): JobsState {
 export type Load<T> = { state: "loading" } | { state: "error"; status: number; code: string } | { state: "ok"; data: T };
 
 export function useHomeData() {
-  const [res, setRes] = useState<Load<HomeData & { language: string | null }>>({ state: "loading" });
+  const [res, setRes] = useState<Load<HomeData & { language: string | null; seed: FormSeed }>>({ state: "loading" });
   const seq = useRef(0);   // only the latest request may update the screen
   const load = useCallback(async () => {
     const my = ++seq.current;
@@ -40,6 +45,9 @@ export function useHomeData() {
         position: jobs.seeker?.position ?? null,
         updated: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
         jobs: jobsState(jobs),
+        seed: jobs.seeker
+          ? { ...jobs.seeker, city: jobs.seeker.city ?? "", about: jobs.seeker.about ?? "" }
+          : { city: me.city ?? "", land: me.land, german_level: me.german_level },
       } });
     } catch (e) {
       if (my !== seq.current) return;
