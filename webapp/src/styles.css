@@ -150,3 +150,8 @@ mark { background: none; color: inherit; font-weight: 600; }
 /* ---- Reference, settings ---- */
 .quiet-count { font-size: var(--fs-15); color: var(--quiet); }
 .danger-button { color: color-mix(in srgb, var(--tg-theme-destructive-text-color, #e53935) 78%, var(--tg-theme-text-color, #000)) !important; }
+
+/* ---- Work hub: what is happening now ---- */
+.hub-status { padding: 16px 16px 8px; background: var(--tg-theme-section-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+.hub-status h2 { margin: 0; font-size: var(--fs-20); font-weight: 600; letter-spacing: -0.01em; }
+.hub-status p { margin: 6px 0 0; font-size: var(--fs-15); line-height: 1.4; color: var(--quiet); }

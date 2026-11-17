@@ -64,7 +64,7 @@ function Live() {
       {res.state === "error" && <LoadError t={t} status={res.status} retry={reload} />}
       {res.state === "ok" && screen === "home" && <Home t={t} data={res.data} go={go} />}
       {res.state === "ok" && screen === "form" && <Form t={t} existing={res.data.seed} exit={toHome} done={sent} />}
-      {res.state === "ok" && screen === "offers" && <Offers t={t} exit={toHome} editProfile={toForm} />}
+      {res.state === "ok" && screen === "offers" && <Offers t={t} exit={toHome} editProfile={toForm} draftStep={res.data.draftStep} />}
       <Suspense fallback={<HomeSkeleton t={t} />}>
         {res.state === "ok" && screen === "housing" && <HousingScreen t={t} lang={lang} city={res.data.city} level={res.data.seed.german_level ?? null} exit={toHome} />}
         {res.state === "ok" && screen === "reference" && <Reference t={t} lang={lang} exit={toHome} />}

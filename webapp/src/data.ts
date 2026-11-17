@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "./api";
+import { loadDraft } from "./form/draft";
 import type { HomeData, JobsState } from "./screens/Home";
 
 type Me = { language: string | null; city: string | null; land: string | null; german_level: string | null };
@@ -15,8 +16,8 @@ type JobsMe = {
 };
 
 /** Maps API statuses onto the five stops of the job route (docs/redesign/J1-ux.md). */
-export function jobsState(j: JobsMe): JobsState {
-  if (!j.seeker) return { step: "new" };
+export function jobsState(j: JobsMe, draftStep: number | null = null): JobsState {
+  if (!j.seeker) return draftStep ? { step: "draft", at: draftStep } : { step: "new" };
   if (j.seeker.status === "rejected") return { step: "rejected" };
   if (j.seeker.status === "pending") return { step: "review" };
   if (!j.seeker.is_active) return { step: "paused" };          // hidden by the owner: employers cannot see or invite
@@ -30,13 +31,14 @@ export function jobsState(j: JobsMe): JobsState {
 export type Load<T> = { state: "loading" } | { state: "error"; status: number; code: string } | { state: "ok"; data: T };
 
 export function useHomeData() {
-  const [res, setRes] = useState<Load<HomeData & { language: string | null; seed: FormSeed }>>({ state: "loading" });
+  const [res, setRes] = useState<Load<HomeData & { language: string | null; seed: FormSeed; draftStep: number | null }>>({ state: "loading" });
   const seq = useRef(0);   // only the latest request may update the screen
   const load = useCallback(async () => {
     const my = ++seq.current;
     setRes({ state: "loading" });
     try {
-      const [me, jobs] = await Promise.all([api<Me>("/api/me"), api<JobsMe>("/api/jobs/me")]);
+      const [me, jobs, draft] = await Promise.all([api<Me>("/api/me"), api<JobsMe>("/api/jobs/me"), loadDraft()]);
+      const draftStep = draft?.position ? Math.min(Math.max(draft.step, 1), 6) : null;
       if (my !== seq.current) return;
       const now = new Date();
       setRes({ state: "ok", data: {
@@ -45,7 +47,8 @@ export function useHomeData() {
         land: jobs.seeker?.land ?? me.land ?? null,
         position: jobs.seeker?.position ?? null,
         updated: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
-        jobs: jobsState(jobs),
+        jobs: jobsState(jobs, draftStep),
+        draftStep,
         seed: jobs.seeker
           ? { ...jobs.seeker, city: jobs.seeker.city ?? "", about: jobs.seeker.about ?? "" }
           : { city: me.city ?? "", land: me.land, german_level: me.german_level },
