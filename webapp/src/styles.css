@@ -1,0 +1,94 @@
+/* Design tokens. Colours come from Telegram's themeParams (--tg-theme-*, set by telegram-web-app.js);
+   only two brand colours exist, each with one job. Source of truth: docs/DESIGN_SYSTEM.md */
+:root {
+  --board: #133A7C;            /* the station sign: header only */
+  --on-board: #FFFFFF;
+  --on-board-dim: rgba(255,255,255,.78);
+  --signal: #FFD23F;           /* "your action is needed": fill only, with dark text */
+  --on-signal: #1A1A1A;
+  --route: #133A7C;            /* route line on the light theme */
+  /* Telegram's light hint (#8e8e93) is 3.3:1 on white: our small text mixes it towards the text colour (≥ 4.5:1) */
+  --quiet: color-mix(in srgb, var(--tg-theme-hint-color, #8e8e93) 75%, var(--tg-theme-text-color, #000));
+  --accent-text: color-mix(in srgb, var(--tg-theme-accent-text-color, #2481cc) 80%, var(--tg-theme-text-color, #000));
+  --space: 4px;
+  --radius-section: 12px; --radius-field: 10px; --radius-button: 12px;
+  --fs-13: 13px; --fs-15: 15px; --fs-17: 17px; --fs-20: 20px; --fs-24: 24px; --fs-28: 28px;
+}
+[data-scheme="dark"] { --route: #7FA6EE; }   /* --board is 1.6:1 on dark backgrounds; this blue is 6.9:1 on #1C1C1D */
+
+html, body { margin: 0; background: var(--tg-theme-secondary-bg-color, #efeff4); }
+body { font-family: system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif; line-height: 1.4;
+       -webkit-font-smoothing: antialiased; }
+.app { min-height: var(--tg-viewport-stable-height, 100vh); padding-bottom: calc(24px + var(--tg-safe-area-inset-bottom, 0px)); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---- Board (header) ---- */
+.board { position: relative; overflow: hidden; background: var(--board); color: var(--on-board);
+         padding: calc(12px + var(--tg-content-safe-area-inset-top, 0px)) 16px 16px; border-bottom: 3px solid var(--on-board); }
+.board canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.board > :not(canvas) { position: relative; }
+.board--full { min-height: 132px; }
+.board--compact { min-height: 88px; padding-bottom: 12px; }
+.board__row { display: flex; justify-content: space-between; gap: 12px; padding-right: 0; font-size: var(--fs-13); color: var(--on-board-dim); }
+.board__meta { font-variant-numeric: tabular-nums; }
+.board__station { margin: 24px 120px 0 0; font-size: var(--fs-28); line-height: 1.15; font-weight: 600; letter-spacing: -0.01em; }
+.board--compact .board__station { margin-top: 12px; font-size: var(--fs-24); }
+.board__sub { margin: 2px 120px 0 0; font-size: var(--fs-15); color: var(--on-board-dim); }
+
+/* ---- Status labels ---- */
+.status { display: inline-block; font-size: var(--fs-13); font-weight: 600; line-height: 1; padding: 6px 8px; border-radius: 6px; white-space: nowrap; }
+.status--boarding { background: var(--signal); color: var(--on-signal); }
+.status--arrived  { color: var(--accent-text); box-shadow: inset 0 0 0 1.5px currentColor; }
+.status--enroute  { color: var(--quiet); box-shadow: inset 0 0 0 1.5px currentColor; font-weight: 400; }
+
+/* ---- Route ---- */
+.route { padding: 4px 16px 16px; background: var(--tg-theme-section-bg-color, #fff); }
+.route__caption { margin: 0 0 12px; font-size: var(--fs-13); color: var(--quiet); }
+.route__line { list-style: none; display: flex; margin: 0; padding: 0; }
+.route__stop { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.route__stop::before { content: ""; position: absolute; top: 7px; right: 50%; width: 100%; height: 2px;
+                       background: var(--tg-theme-section-separator-color, #c8c7cc); }
+.route__stop:first-child::before { display: none; }
+.route__stop.done::before, .route__stop.now::before { background: var(--route); }
+.route__mark { position: relative; z-index: 1; box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%;
+               border: 2px solid var(--tg-theme-section-separator-color, #c8c7cc); background: var(--tg-theme-section-bg-color, #fff); }
+.route__stop.done .route__mark { background: var(--route); border-color: var(--route); }
+.route__stop.now .route__mark { border: 5px solid var(--route); }
+.route__label { margin-top: 6px; font-size: 11px; line-height: 1.2; color: var(--quiet); hyphens: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.route__stop.now .route__label { color: var(--tg-theme-text-color, #000); font-weight: 600; }
+
+/* platform plates: the step number is the platform */
+.route--platforms .route__stop::before { top: 15px; height: 3px; }
+.route--platforms .route__mark { width: 32px; height: 32px; border-radius: 4px; border-width: 2px; display: grid; place-items: center;
+       font: 600 var(--fs-15)/1 ui-monospace, "SF Mono", "Roboto Mono", monospace; color: var(--quiet); }
+.route--platforms .route__stop.done .route__mark { color: #fff; }
+[data-scheme="dark"] .route--platforms .route__stop.done .route__mark, [data-scheme="dark"] .route--platforms .route__stop.now .route__mark { color: #0B1A33; }
+.route--platforms .route__stop.now .route__mark { border-width: 2px; background: var(--route); color: #fff; }
+.route--platforms .route__label { font-size: 11px; }
+@media (max-width: 370px) { .route--platforms .route__stop:not(.now) .route__label { visibility: hidden; } }
+
+/* ---- Content ---- */
+.quiet { margin: 16px; font-size: var(--fs-13); color: var(--quiet); }
+.lead { margin: 8px 16px 0; font-size: var(--fs-15); color: var(--quiet); }
+.q { margin: 20px 16px 4px; font-size: var(--fs-24); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em;
+     color: var(--tg-theme-text-color, #000); }
+.progress { padding: 12px 16px 0; font-size: var(--fs-13); color: var(--quiet); }
+.progress__bar { height: 4px; margin-top: 8px; border-radius: 2px; background: var(--tg-theme-section-separator-color, #c8c7cc); }
+.progress__bar i { display: block; height: 100%; border-radius: 2px; background: var(--route); }
+.hint { margin: 8px 16px; font-size: var(--fs-13); color: var(--quiet); }
+mark { background: none; color: inherit; font-weight: 600; }
+.is-active { background: var(--tg-theme-secondary-bg-color, #efeff4); }
+.status--expected { color: var(--quiet); font-weight: 400; }
+
+/* ---- In-content button ---- */
+.action { margin: 16px; }
+.action button { transition: opacity 100ms linear, transform 100ms linear; }
+.action button:active:not(:disabled) { opacity: .75; transform: scale(.99); }
+.action button:focus-visible { outline: 2px solid var(--tg-theme-button-color, #2481cc); outline-offset: 2px; }
+.action__missing { margin: 8px 4px 0; font-size: var(--fs-13); color: var(--quiet); }
+@media (prefers-reduced-motion: reduce) { .action button { transition: none; } .action button:active { transform: none; } }
+
+/* ---- Kit page (J3 review only) ---- */
+.kit h3 { margin: 24px 16px 4px; font-size: var(--fs-13); font-weight: 400; color: var(--quiet); }
+.kit .pressed button { opacity: .75; transform: scale(.99); }

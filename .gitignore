@@ -8,3 +8,6 @@ __pycache__/
 venv/
 uploads/
 tmp/
+node_modules/
+webapp/dist/
+webapp/*.tsbuildinfo
