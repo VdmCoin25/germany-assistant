@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Germany Assistant — серые вайрфреймы J1</title>
+<style>
+  /* Grey wireframes: structure and wording only. No brand colour, no final type. */
+  :root { --bg:#f2f2f2; --sec:#fff; --ink:#1a1a1a; --hint:#707070; --line:#d6d6d6; --mark:#bdbdbd; --strong:#4a4a4a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.4 system-ui, -apple-system, Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  .screen { display:none; min-height:100vh; padding-bottom:96px; }
+  .screen:target, .screen.default { display:block; }
+  body:has(.screen:target) .default:not(:target) { display:none; }
+  a { color:inherit; }
+  /* system chrome stand-ins */
+  .tgbar { height:44px; display:flex; align-items:center; gap:8px; padding:0 12px; font-size:15px; color:var(--hint); border-bottom:1px dashed var(--line); }
+  .tgbar .back { text-decoration:none; color:var(--strong); }
+  .tgbar .set { margin-left:auto; text-decoration:none; color:var(--strong); }
+  .bottom { position:fixed; left:0; right:0; bottom:0; padding:8px 16px 16px; background:var(--bg); border-top:1px dashed var(--line); }
+  .bottom a { display:block; text-align:center; padding:14px; background:var(--strong); color:#fff; text-decoration:none; border-radius:12px; font-weight:600; }
+  .bottom a.off { background:var(--mark); }
+  .bottom .two { display:flex; gap:8px; } .bottom .two a { flex:1; } .bottom .two a.sec { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .bottom small { display:block; text-align:center; color:var(--hint); font-size:13px; margin-top:6px; }
+  .note { font-size:12px; color:#9a9a9a; text-align:center; margin:2px 0 0; }
+  /* board header */
+  .board { margin:0; padding:14px 16px 16px; background:#dcdcdc; border-bottom:1px solid var(--mark); }
+  .board .row { display:flex; justify-content:space-between; font-size:13px; color:var(--strong); }
+  .board h1 { margin:6px 0 0; font-size:28px; line-height:1.15; }
+  .board .sub { margin:2px 0 0; font-size:15px; color:var(--strong); }
+  /* sections & cells */
+  .hdr { margin:24px 16px 6px; font-size:13px; color:var(--hint); }
+  .section { background:var(--sec); margin:0 0 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .cell { display:flex; gap:12px; align-items:center; padding:12px 16px; text-decoration:none; color:inherit; border-bottom:1px solid var(--line); min-height:56px; }
+  .cell:last-child { border-bottom:0; }
+  .cell .t { flex:1; } .cell .t b { display:block; font-weight:600; } .cell .t span { display:block; font-size:14px; color:var(--hint); }
+  .cell .after { font-size:14px; color:var(--hint); white-space:nowrap; }
+  .chev::after { content:"›"; color:var(--mark); font-size:22px; }
+  .ico { width:28px; height:28px; border:1.5px solid var(--mark); border-radius:7px; flex:none; }
+  .st { font-size:13px; font-weight:600; padding:2px 6px; border:1px solid var(--strong); border-radius:4px; white-space:nowrap; }
+  .st.act { background:var(--strong); color:#fff; }
+  .st.soft { border-color:var(--mark); color:var(--hint); font-weight:400; }
+  .quiet { margin:16px; font-size:14px; color:var(--hint); }
+  .p { margin:12px 16px; } .p.small { font-size:14px; color:var(--hint); }
+  .h2 { margin:16px 16px 4px; font-size:24px; font-weight:600; }
+  /* route line */
+  .route { display:flex; margin:16px; } .route div { flex:1; text-align:center; font-size:12px; color:var(--hint); position:relative; padding-top:20px; }
+  .route div::before { content:""; position:absolute; top:6px; left:50%; width:12px; height:12px; margin-left:-6px; border-radius:50%; border:2px solid var(--mark); background:var(--bg); z-index:1; }
+  .route div::after { content:""; position:absolute; top:11px; left:-50%; width:100%; height:2px; background:var(--mark); }
+  .route div:first-child::after { display:none; }
+  .route .done::before { background:var(--strong); border-color:var(--strong); } .route .done::after, .route .cur::after { background:var(--strong); }
+  .route .cur { color:var(--ink); font-weight:600; } .route .cur::before { width:18px; height:18px; top:3px; margin-left:-9px; border:4px solid var(--strong); }
+  /* form */
+  .progress { margin:12px 16px 0; font-size:14px; color:var(--hint); } .bar { height:4px; background:var(--line); margin:6px 0 0; } .bar i { display:block; height:4px; background:var(--strong); }
+  .q { margin:20px 16px 4px; font-size:24px; font-weight:600; line-height:1.2; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:16px; }
+  .chips a { padding:12px 16px; border:1.5px solid var(--mark); border-radius:10px; text-decoration:none; min-height:48px; }
+  .chips a.on { border-color:var(--strong); background:var(--strong); color:#fff; font-weight:600; }
+  .field { margin:16px; } .field label { display:block; font-size:14px; color:var(--hint); margin-bottom:4px; }
+  .input { border:1.5px solid var(--mark); border-radius:10px; padding:12px; min-height:48px; background:#fff; }
+  .input.ta { min-height:120px; color:var(--hint); }
+  .sugg { margin:0 16px; border:1px solid var(--line); border-top:0; background:#fff; }
+  .sugg div { padding:12px; border-bottom:1px solid var(--line); } .sugg div:last-child{border-bottom:0}
+  .check { display:flex; gap:10px; align-items:center; margin:16px; min-height:44px; } .check i { width:24px; height:24px; border:1.5px solid var(--strong); border-radius:4px; }
+  /* employer card preview */
+  .card { margin:12px 16px; padding:16px; background:#fff; border:1.5px dashed var(--strong); border-radius:12px; }
+  .card h3 { margin:0; font-size:20px; } .card .m { color:var(--hint); font-size:14px; margin:2px 0 8px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; } .tags span { font-size:14px; padding:4px 8px; background:var(--bg); border-radius:6px; }
+  .hidden { margin:8px 0 0; font-size:14px; color:var(--hint); }
+  .edit { font-size:14px; color:var(--strong); }
+  .search { margin:12px 16px; } .search .input { color:var(--hint); }
+  .banner { margin:12px 16px; padding:10px 12px; border:1px solid var(--strong); border-radius:10px; font-size:14px; }
+  .skel { margin:12px 16px; } .skel i { display:block; height:16px; background:var(--line); border-radius:4px; margin:10px 0; } .skel i.w { width:60%; }
+  .legend { position:fixed; top:4px; right:6px; font-size:10px; color:#aaa; }
+</style>
+</head>
+<body>
+
+<!-- 1. Home, no profile -->
+<section class="screen default" id="home-new">
+  <div class="tgbar">Ukraine Helper DE <a class="set" href="#settings">⋯ Настройки</a></div>
+  <div class="board">
+    <div class="row"><span>Ваши отправления</span><span></span></div>
+    <h1>Deutschland</h1>
+    <p class="sub">Город появится, когда заполните анкету</p>
+  </div>
+  <div class="section">
+    <a class="cell" href="#form-1"><div class="t"><b>Работа</b><span>Заполните анкету — 2 минуты, анонимно</span></div><span class="st act">Посадка</span></a>
+  </div>
+  <p class="p small">Работодатели увидят профессию, город и опыт. Имя и телефон — только если вы согласитесь.</p>
+  <div class="hdr">Справка</div>
+  <div class="section">
+    <a class="cell chev" href="#housing"><span class="ico"></span><div class="t"><b>Жильё</b><span>Термины, документы, калькулятор, письмо</span></div></a>
+    <a class="cell chev" href="#reference"><span class="ico"></span><div class="t"><b>Справочник</b><span>Anmeldung, Jobcenter, страховка</span></div></a>
+  </div>
+  <p class="quiet">Ожидаются: разбор писем, переводчик, AI-помощник</p>
+  <div class="bottom"><a href="#form-1">Заполнить анкету</a><p class="note">нижняя кнопка Telegram</p></div>
+</section>
+
+<!-- 2. Home, profile on review / offers arrived -->
+<section class="screen" id="home-active">
+  <div class="tgbar">Ukraine Helper DE <a class="set" href="#settings">⋯ Настройки</a></div>
+  <div class="board">
+    <div class="row"><span>Ваши отправления</span><span>Обновлено 21:01</span></div>
+    <h1>Berlin Hbf</h1>
+    <p class="sub">Повар / помощник повара</p>
+  </div>
+  <div class="section">
+    <a class="cell chev" href="#offers"><div class="t"><b>Работа</b><span>Прибыло · 2 приглашения ждут ответа</span></div><span class="st">Прибыло</span></a>
+  </div>
+  <div class="route"><div class="done">Анкета</div><div class="done">Проверка</div><div class="cur">Предложения</div><div>Согласие</div><div>Контакт передан</div></div>
+  <div class="hdr">Справка</div>
+  <div class="section">
+    <a class="cell chev" href="#housing"><span class="ico"></span><div class="t"><b>Жильё</b><span>Термины, документы, калькулятор, письмо</span></div></a>
+    <a class="cell chev" href="#reference"><span class="ico"></span><div class="t"><b>Справочник</b><span>Anmeldung, Jobcenter, страховка</span></div></a>
+  </div>
+  <p class="quiet">Ожидаются: разбор писем, переводчик, AI-помощник</p>
+  <div class="bottom"><a href="#offers">Смотреть предложения</a><p class="note">нижняя кнопка Telegram</p></div>
+</section>
+
+<!-- 2b. Home, profile in review, nothing to do -->
+<section class="screen" id="home-review">
+  <div class="tgbar">Ukraine Helper DE <a class="set" href="#settings">⋯ Настройки</a></div>
+  <div class="board">
+    <div class="row"><span>Ваши отправления · дождь</span><span>Обновлено 21:01</span></div>
+    <h1>Berlin Hbf</h1>
+    <p class="sub">Повар / помощник повара</p>
+  </div>
+  <div class="section">
+    <a class="cell chev" href="#job"><div class="t"><b>Работа</b><span>В пути · анкету проверяет администратор</span></div><span class="st">В пути</span></a>
+  </div>
+  <div class="route"><div class="done">Анкета</div><div class="cur">Проверка</div><div>Предложения</div><div>Согласие</div><div>Контакт передан</div></div>
+  <p class="p small">Когда анкету опубликуют, бот напишет вам. Предложения придут сюда и в чат с ботом.</p>
+  <div class="hdr">Справка</div>
+  <div class="section">
+    <a class="cell chev" href="#housing"><span class="ico"></span><div class="t"><b>Жильё</b><span>Термины, документы, калькулятор, письмо</span></div></a>
+    <a class="cell chev" href="#reference"><span class="ico"></span><div class="t"><b>Справочник</b><span>Anmeldung, Jobcenter, страховка</span></div></a>
+  </div>
+  <p class="quiet">Ожидаются: разбор писем, переводчик, AI-помощник</p>
+  <p class="note">нижняя кнопка Telegram скрыта: сейчас делать ничего не нужно</p>
+</section>
+
+<!-- 3. Form step 2 of 6 (city) -->
+<section class="screen" id="form-1">
+  <div class="tgbar"><a class="back" href="#home-new">‹ Назад</a> системная BackButton</div>
+  <div class="progress">Шаг 1 из 6 · анонимная анкета<div class="bar"><i style="width:16%"></i></div></div>
+  <div class="q">Какую работу ищете?</div>
+  <div class="field"><label for="x">Профессия или должность</label><div class="input">Повар / помощник повара</div></div>
+  <p class="p small">Часто ищут:</p>
+  <div class="chips"><a>Склад</a><a>Уборка</a><a class="on">Кухня</a><a>Уход за пожилыми</a><a>Водитель</a></div>
+  <div class="bottom"><a href="#form-2">Дальше</a><small>Черновик сохраняется в Telegram</small></div>
+</section>
+
+<section class="screen" id="form-2">
+  <div class="tgbar"><a class="back" href="#form-1">‹ Назад</a> системная BackButton</div>
+  <div class="progress">Шаг 2 из 6<div class="bar"><i style="width:33%"></i></div></div>
+  <div class="q">Где хотите работать?</div>
+  <div class="field"><label>Город</label><div class="input">Ber</div></div>
+  <div class="sugg"><div><b>Ber</b>lin · Berlin</div><div><b>Ber</b>gisch Gladbach · NRW</div><div><b>Ber</b>nau bei Berlin · Brandenburg</div></div>
+  <p class="p small">Землю подставим по городу. Можно выбрать «Любой город в земле».</p>
+  <div class="bottom"><a class="off" href="#form-2">Дальше</a><small>Выберите город из списка</small></div>
+</section>
+
+<section class="screen" id="form-3">
+  <div class="tgbar"><a class="back" href="#form-2">‹ Назад</a></div>
+  <div class="progress">Шаг 3 из 6<div class="bar"><i style="width:50%"></i></div></div>
+  <div class="q">Какая занятость подходит?</div>
+  <div class="chips"><a class="on">Полная</a><a>Частичная</a><a>Minijob</a><a>Любая</a></div>
+  <div class="check"><i></i> Могу работать сменами</div>
+  <div class="bottom"><a href="#form-preview">Дальше</a></div>
+</section>
+
+<!-- 4. Preview -->
+<section class="screen" id="form-preview">
+  <div class="tgbar"><a class="back" href="#form-3">‹ Назад</a></div>
+  <div class="progress">Проверьте анкету<div class="bar"><i style="width:100%"></i></div></div>
+  <div class="q">Так вас увидит работодатель</div>
+  <div class="card">
+    <h3>Повар / помощник повара</h3>
+    <p class="m">Berlin · полная занятость · смены</p>
+    <div class="tags"><span>Немецкий A2</span><span>Опыт 4 года</span></div>
+    <p>Работала в ресторане в Киеве, горячий цех.</p>
+    <p class="hidden">Не видно: имя, телефон, Telegram, фото</p>
+  </div>
+  <div class="section">
+    <a class="cell chev" href="#form-1"><div class="t"><b>Работа</b><span>Повар / помощник повара</span></div><span class="edit">Изменить</span></a>
+    <a class="cell chev" href="#form-2"><div class="t"><b>Город</b><span>Berlin</span></div><span class="edit">Изменить</span></a>
+    <a class="cell chev" href="#form-3"><div class="t"><b>Занятость</b><span>Полная, смены</span></div><span class="edit">Изменить</span></a>
+  </div>
+  <p class="p small">Анкету проверит администратор. Предложения придут сюда и в чат с ботом.</p>
+  <div class="bottom"><a href="#form-sent">Отправить на проверку</a></div>
+</section>
+
+<section class="screen" id="form-sent">
+  <div class="tgbar">Ukraine Helper DE</div>
+  <div class="q">Анкета отправлена</div>
+  <div class="route"><div class="done">Анкета</div><div class="cur">Проверка</div><div>Предложения</div><div>Согласие</div><div>Контакт передан</div></div>
+  <p class="p">Администратор проверит анкету. Когда её опубликуют, бот напишет вам. Предложения от работодателей придут сюда и в чат.</p>
+  <p class="p small">Срок проверки не обещаем: каждую анкету смотрит человек.</p>
+  <div class="bottom"><a href="#home-review">На главную</a></div>
+</section>
+
+<!-- 5. Offers list + card -->
+<section class="screen" id="offers">
+  <div class="tgbar"><a class="back" href="#home-active">‹ Назад</a></div>
+  <div class="h2">Предложения</div>
+  <div class="route"><div class="done">Анкета</div><div class="done">Проверка</div><div class="cur">Предложения</div><div>Согласие</div><div>Контакт передан</div></div>
+  <div class="hdr">Ждут ответа · 2</div>
+  <div class="section">
+    <a class="cell chev" href="#offer"><div class="t"><b>Повар, Minijob</b><span>Muster Gastro GmbH · Berlin · 15 €/ч</span></div><span class="st act">Посадка</span></a>
+    <a class="cell chev" href="#offer"><div class="t"><b>Помощник на кухню</b><span>Café Nord · Berlin · полная</span></div><span class="st act">Посадка</span></a>
+  </div>
+  <div class="hdr">Отвеченные</div>
+  <div class="section">
+    <a class="cell"><div class="t"><b>Мойщик посуды</b><span>Hotel Spree · Berlin</span></div><span class="after">Не интересно</span></a>
+  </div>
+  <div class="hdr">Анкета</div>
+  <div class="section">
+    <a class="cell chev" href="#form-preview"><div class="t"><b>Моя анкета</b><span>Опубликована · видна работодателям</span></div></a>
+  </div>
+  <div class="bottom"><a href="#offer">Открыть первое предложение</a></div>
+</section>
+
+<section class="screen" id="offer">
+  <div class="tgbar"><a class="back" href="#offers">‹ Назад</a></div>
+  <div class="h2">Повар, Minijob</div>
+  <p class="p small">Muster Gastro GmbH · проверенный работодатель</p>
+  <div class="section">
+    <div class="cell"><div class="t"><span>Город</span><b>Berlin</b></div></div>
+    <div class="cell"><div class="t"><span>График</span><b>Minijob, выходные</b></div></div>
+    <div class="cell"><div class="t"><span>Оплата</span><b>15 €/ч</b></div></div>
+    <div class="cell"><div class="t"><span>Немецкий</span><b>Не нужен</b></div></div>
+  </div>
+  <div class="hdr">Сообщение работодателя</div>
+  <p class="p">«Добрый день! Приглашаем на пробный день в четверг.»</p>
+  <div class="banner">Никогда не платите за трудоустройство и не отправляйте документы до подписания договора.</div>
+  <div class="bottom"><div class="two"><a class="sec" href="#offers">Не интересно</a><a href="#consent">Согласиться на контакт</a></div><p class="note">две нижние кнопки Telegram: Secondary + Bottom</p></div>
+</section>
+
+<!-- 6. Consent -->
+<section class="screen" id="consent">
+  <div class="tgbar"><a class="back" href="#offer">‹ Назад</a></div>
+  <div class="q">Передать ваш контакт?</div>
+  <div class="hdr">Muster Gastro GmbH получит</div>
+  <div class="section">
+    <div class="cell"><div class="t"><b>Ваш Telegram</b><span>ссылку на профиль; имя видно в профиле</span></div></div>
+    <div class="cell"><div class="t"><b>Профессию и город</b><span>Повар / помощник повара, Berlin</span></div></div>
+  </div>
+  <div class="hdr">Вы получите</div>
+  <div class="section">
+    <div class="cell"><div class="t"><b>Контакт работодателя</b><span>компания, адрес, контактное лицо, телефон или e-mail</span></div></div>
+  </div>
+  <p class="p small">Бот пришлёт контакты обеим сторонам. Отменить передачу после согласия нельзя.</p>
+  <div class="bottom"><a href="#home-active">Согласиться и передать</a></div>
+</section>
+
+<!-- housing, reference, settings -->
+<section class="screen" id="housing">
+  <div class="tgbar"><a class="back" href="#home-new">‹ Назад</a></div>
+  <div class="h2">Жильё</div>
+  <div class="section">
+    <a class="cell chev"><div class="t"><b>Термины</b><span>Kaltmiete, Nebenkosten, Kaution…</span></div></a>
+    <a class="cell chev"><div class="t"><b>Документы для аренды</b><span>Что попросит арендодатель</span></div></a>
+    <a class="cell chev"><div class="t"><b>Калькулятор</b><span>Сколько выйдет в месяц и на старте</span></div></a>
+    <a class="cell chev"><div class="t"><b>Письмо арендодателю</b><span>Составим на немецком, на вашем телефоне</span></div></a>
+  </div>
+  <p class="p small">Источники: BGB, Bundesmeldegesetz. Проверено 16.11.2026.</p>
+</section>
+
+<section class="screen" id="reference">
+  <div class="tgbar"><a class="back" href="#home-new">‹ Назад</a></div>
+  <div class="h2">Справочник</div>
+  <div class="search"><div class="input">Поиск: Anmeldung, Kindergeld, Jobcenter…</div></div>
+  <div class="section">
+    <a class="cell chev"><div class="t"><b>Anmeldung</b><span>Регистрация по месту жительства</span></div></a>
+    <a class="cell chev"><div class="t"><b>Пребывание и §24</b><span>Временная защита</span></div></a>
+    <a class="cell chev"><div class="t"><b>Jobcenter и Bürgergeld</b><span>Пособие и помощь с работой</span></div></a>
+  </div>
+  <p class="p small">Только официальные сайты, у каждой ссылки — дата проверки.</p>
+</section>
+
+<section class="screen" id="settings">
+  <div class="tgbar"><a class="back" href="#home-new">‹ Назад</a> открывается через SettingsButton</div>
+  <div class="h2">Настройки</div>
+  <div class="section">
+    <a class="cell chev"><div class="t"><b>Язык</b><span>Русский</span></div></a>
+    <a class="cell chev"><div class="t"><b>Город и земля</b><span>Berlin</span></div></a>
+    <a class="cell chev"><div class="t"><b>Уведомления от бота</b><span>Включены</span></div></a>
+  </div>
+  <div class="hdr">Мои данные</div>
+  <div class="section">
+    <a class="cell chev"><div class="t"><b>Что мы храним</b><span>И что не храним</span></div></a>
+    <a class="cell"><div class="t"><b style="text-decoration:underline">Удалить все мои данные</b><span>Анкета и история удалятся без возврата</span></div></a>
+  </div>
+</section>
+
+<!-- states -->
+<section class="screen" id="state-loading">
+  <div class="tgbar">Ukraine Helper DE</div>
+  <div class="board"><div class="row"><span>Ваши отправления</span></div><h1 style="background:var(--mark);width:55%;height:30px"></h1></div>
+  <div class="skel"><i></i><i class="w"></i></div><div class="skel"><i></i><i class="w"></i><i></i></div>
+  <p class="note">скелетон по форме табло, без спиннера</p>
+</section>
+
+<section class="screen" id="state-error">
+  <div class="tgbar">Ukraine Helper DE</div>
+  <div class="banner">Нет интернета. Анкета сохранена на телефоне, отправим, когда связь вернётся.</div>
+  <div class="q">Не получилось загрузить</div>
+  <p class="p">Проверьте интернет и попробуйте ещё раз.</p>
+  <div class="bottom"><a href="#home-new">Повторить</a></div>
+</section>
+
+<section class="screen" id="offers-empty">
+  <div class="tgbar"><a class="back" href="#home-review">‹ Назад</a></div>
+  <div class="h2">Предложения</div>
+  <div class="route"><div class="done">Анкета</div><div class="done">Проверка</div><div class="cur">Предложения</div><div>Согласие</div><div>Контакт передан</div></div>
+  <p class="p">Пока предложений нет. Анкета опубликована: когда работодатель вас пригласит, бот напишет в чат.</p>
+  <div class="bottom"><a href="#form-preview">Посмотреть свою анкету</a></div>
+</section>
+
+</body>
+</html>

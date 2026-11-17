@@ -10,6 +10,7 @@ You implement exactly one task from the approved plan for the current phase of t
 Before coding:
 - Re-read `CLAUDE.md` and the plan section for this task (for example `docs/JOBS_RADAR_PLAN.md`).
 - Read the existing files you will touch and follow their patterns (aiogram routers in `app/bot` and `app/admin`, models in `app/database`, settings in `app/config.py`).
+- Mini App redesign (`webapp/`, plan `docs/redesign/`): Vite + React + TypeScript on TelegramUI. Colours only from Telegram `themeParams` plus the two brand tokens in `docs/DESIGN_SYSTEM.md`; texts only in the app's `uk`/`ru` locale files with identical keys; mocked `Telegram.WebApp` and `initData` in development, never the real bot token.
 
 While coding:
 - Do only what the task says. No extra features, no refactors outside the task's files.

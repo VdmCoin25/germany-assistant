@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     # Telegram
     bot_token: str
-    bot_name: str = "Germany Assistant"
+    bot_name: str = "Ukraine Helper DE"
     admin_ids: Annotated[list[int], NoDecode] = []
     # Webhook mode: Telegram pushes updates to WEBAPP_URL/tg/webhook. Needed on hosts that
     # sleep when idle (e.g. Render free tier). False = long polling.

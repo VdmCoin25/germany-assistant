@@ -170,3 +170,20 @@ async def test_keepalive_pings_health(monkeypatch):
     task.cancel()
     await runner.cleanup()
     assert len(hits) >= 2
+
+
+async def test_app_v2_served_only_when_built(settings, sm, tmp_path, monkeypatch):
+    import app.webapp.api as api
+
+    monkeypatch.setattr(api, "V2_DIST", tmp_path / "missing")
+    app = create_app(settings, sm)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        assert (await c.get("/app-v2/")).status_code == 404
+        assert (await c.get("/")).status_code == 200           # the old app is untouched
+
+    (tmp_path / "index.html").write_text("<!doctype html><title>v2</title>")
+    monkeypatch.setattr(api, "V2_DIST", tmp_path)
+    app = create_app(settings, sm)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        r = await c.get("/app-v2/")
+        assert r.status_code == 200 and "v2" in r.text

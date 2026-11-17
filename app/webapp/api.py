@@ -24,6 +24,8 @@ from app.database.repositories.sources import SourceRepository
 from app.database.repositories.users import UserRepository
 
 STATIC = Path(__file__).parent / "static"
+# New Mini App (webapp/, Vite build). Served at /app-v2 only when it has been built; / keeps the old app.
+V2_DIST = Path(__file__).resolve().parents[2] / "webapp" / "dist"
 
 
 def verify_init_data(init_data: str, bot_token: str, ttl: int, now: float | None = None) -> WebAppInitData:
@@ -86,6 +88,8 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
     Auth = Annotated[WebAppInitData, Depends(auth)]
 
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
+    if (V2_DIST / "index.html").exists():
+        app.mount("/app-v2", StaticFiles(directory=V2_DIST, html=True), name="app-v2")
 
     @app.get("/health")
     async def health():
@@ -94,10 +98,6 @@ def create_app(settings: Settings, sessionmaker: async_sessionmaker, bot=None, d
     @app.get("/")
     async def index():
         return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
-
-    @app.get("/binder")
-    async def binder():
-        return FileResponse(STATIC / "binder.html", headers={"Cache-Control": "no-cache"})
 
     @app.get("/api/meta")
     async def meta():

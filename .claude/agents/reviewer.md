@@ -23,7 +23,8 @@ Steps:
    - no personal data of private people stored (member lists, usernames, phone numbers, "about" texts); retention rules from the plan are implemented;
    - admin commands check `ADMIN_IDS`;
    - error handling around external calls (AI provider, Telegram, HTTP sources): timeouts, retries/backoff, rate limits, no silent swallow;
-   - tests exist for the new logic, and AI and Telegram calls are mocked.
+   - tests exist for the new logic, and AI and Telegram calls are mocked;
+   - Mini App screens (`webapp/`): look at the before/after screenshots you are given; check the anti-slop checklist in `docs/redesign/` (no gradients, glows, emoji icons, identical icon cards, invented numbers, pills everywhere), AA contrast in light and dark Telegram themes, 44 px tap targets, visible focus, every state (loading, empty, error, offline, disabled).
 3. Run the checks yourself: `pytest -q`; if a migration was added, `alembic upgrade head` against a local database only. Only read-only or local commands; never `git commit`, `git push`, `git merge`, installs, or anything against remote servers.
 
 Report only gaps that affect correctness, security, privacy or the stated requirements. Style preferences are not findings.
