@@ -236,3 +236,26 @@ async def test_employer_lead_goes_to_admin_with_contact_first(settings, sm):
         await jobs.delete_user(BOSS)
         await s.commit()
         assert await s.scalar(select(func.count()).select_from(EmployerLead)) == 0
+
+
+async def test_report_vacancy_reaches_admins_with_takedown(settings, sm):
+    from aiogram import Bot
+
+    fake = FakeSession()
+    app = create_app(settings, sm, bot=Bot(TOKEN, session=fake))
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        await c.put("/api/jobs/employer", headers=hdr(BOSS), json=EMPLOYER_BODY)
+        await approve_all(sm, settings, "employer")
+        vid = (await c.post("/api/jobs/vacancies", headers=hdr(BOSS), json=VACANCY_BODY)).json()["id"]
+        # not published yet -> cannot be reported
+        assert (await c.post(f"/api/jobs/vacancies/{vid}/report", headers=hdr(SEEKER),
+                             json={"reason": "fee"})).status_code == 404
+        await approve_all(sm, settings, "vacancy")
+        fake.clear()
+        r = await c.post(f"/api/jobs/vacancies/{vid}/report", headers=hdr(SEEKER),
+                         json={"reason": "fee", "text": "Хотят 200 € за оформление"})
+        assert r.status_code == 200
+        sent = [m for m in fake.calls if isinstance(m, SendMessage) and m.chat_id == ADMIN_ID]
+        assert "200 €" in sent[0].text and f"rep:close:{vid}" in str(sent[0].reply_markup)
+        assert (await c.post(f"/api/jobs/vacancies/{vid}/report", headers=hdr(SEEKER),
+                             json={"reason": "spam"})).status_code == 422

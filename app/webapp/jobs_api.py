@@ -121,6 +121,12 @@ class ApplyIn(MessageIn):
     vacancy_id: int
 
 
+class ReportIn(BaseModel):
+    reason: Literal["fee", "documents", "fake", "other"]
+    text: str | None = Field(default=None, max_length=300)
+    _c = field_validator("text")(lambda cls, v: _clean(v))
+
+
 class ActiveIn(BaseModel):
     active: bool
 
@@ -219,6 +225,25 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
     async def vacancies(uid: Uid, land: str | None = None):
         async with sm() as s:
             return [vacancy_out(v, e) for v, e in await JobsRepository(s).list_vacancies(land)]
+
+    @r.post("/vacancies/{vacancy_id}/report")
+    async def report_vacancy(vacancy_id: int, body: ReportIn, uid: WUid):
+        """A user flags a published vacancy. Nothing is stored except the per-hour submission log;
+        admins get the vacancy, the reason and a link to the reporter, and decide."""
+        async with sm() as s:
+            await blocked(s, uid)
+            jobs = JobsRepository(s)
+            v = await s.get(Vacancy, vacancy_id)
+            if v is None or v.status != "approved":
+                raise HTTPException(404, "not_found")
+            try:
+                await jobs.check_submission_limit(uid, settings.submission_limit_per_hour)
+            except JobsError as ex:
+                fail(ex)
+            await jobs.log_submission(uid, "report")
+            await s.commit()
+            await notifier.report(s, v, uid, body.reason, body.text)
+            return {"ok": True}
 
     @r.put("/seeker")
     async def put_seeker(body: SeekerIn, uid: WUid):

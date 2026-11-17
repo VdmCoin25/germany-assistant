@@ -346,6 +346,18 @@
   .pick button:active { transform: translateY(1px); }
   .pick button[aria-checked="true"] { background: var(--signal); border-color: var(--signal); box-shadow: var(--lip); }
 
+  /* ---- Ad check and reports ---- */
+  .checklist { list-style: none; margin: 8px 16px 0; padding: 0; counter-reset: q; }
+  .checklist li { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .checklist li p { margin: 0; font-size: 15px; }
+  .checklist .seg { margin-top: 8px; max-width: 220px; }
+  .verdict { margin: 16px 16px 0; padding: 12px 16px; border-radius: var(--radius-card); border-left: 4px solid var(--rim); background: var(--plate); }
+  .verdict p { margin: 0; font-weight: 600; }
+  .verdict.bad { border-left-color: var(--danger); } .verdict.warn { border-left-color: var(--signal); } .verdict.ok { border-left-color: var(--success); }
+  .quiet-link { all: unset; display: inline-block; margin-top: 12px; padding: 8px 0; font-size: 13px; color: var(--pencil);
+                text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .report { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--rule); }
+
   /* ---- Employer lead ---- */
   .lead-contact { border-left: 4px solid var(--signal); }
   .field > .lbl { display: block; }
@@ -984,8 +996,9 @@ function renderInfo() {
     ${CH.length ? `<h2 class="sec">${esc(L().changesHead)}</h2><ol class="changes">${CH.map(c =>
       `<li><button type="button" data-topic="${esc(c.topic)}"><time datetime="${esc(c.date)}">${esc(fmtDate(c.date))}</time><span>${esc(c[lang] || c.uk)}</span></button></li>`).join("")}</ol>` : ""}
     <div class="topics">${Object.entries(META.topics).map(([k, t]) =>
-      `<details id="topic-${k}"><summary>${esc(t[lang] || t.uk)}</summary>${answer(k)}${linkList(k, (META.guides || {})[k]?.source.url)}</details>`).join("")}</div>`;
+      `<details id="topic-${k}"><summary>${esc(t[lang] || t.uk)}</summary>${answer(k)}${k === "safety" && tg?.initData ? `<p style="margin:4px 16px 8px"><button type="button" class="btn line" data-check>${esc(JL().check.title)}</button></p>` : ""}${linkList(k, (META.guides || {})[k]?.source.url)}</details>`).join("")}</div>`;
   bindLinks($("page-info"));
+  $("page-info").querySelectorAll("[data-check]").forEach(b => b.onclick = () => { JOBS.sub = "check"; renderJobs(); show("jobs"); window.scrollTo(0, 0); });
   $("page-info").querySelectorAll("[data-topic]").forEach(b => b.onclick = () => {
     const d = $("topic-" + b.dataset.topic); if (!d) return;
     d.open = true; d.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -1042,6 +1055,23 @@ const J = {
       company: "Фірма (можна вказати пізніше)", details: "Що ще важливо: графік, оплата, житло", send: "Надіслати заявку",
       sent: "Заявку надіслано. Адміністратор зв’яжеться з вами.", mine: "Ваші заявки", people: (n) => `Людей: ${n}`,
       st: { pending: "На перевірці", approved: "Прийнято, ми зв’яжемося", rejected: "Не прийнято" } },
+    check: { link: "Перевірити оголошення з чату", title: "Перевірити оголошення",
+      intro: "Про вакансію чи квартиру, яку ви знайшли в чаті або на сайті.", yes: "Так", no: "Ні",
+      qs: ["Просять заплатити наперед: завдаток, ключі, «оформлення», «за місце»?",
+           "Просять фото паспорта, дані банку чи пароль ще до договору?",
+           "Просять відкрити рахунок або пройти відеоідентифікацію?",
+           "Спілкування лише в месенджері, без дзвінка, зустрічі чи перегляду?",
+           "Занадто добре: дуже низька оренда або дуже висока оплата за просту роботу?",
+           "Фірму чи власника не знайти в інтернеті, немає Impressum?"],
+      bad: "Схоже на шахрайство. Не платіть і не надсилайте документи.",
+      warn: "Є тривожні ознаки. Перевірте фірму чи власника, перш ніж щось надсилати.",
+      ok: "Явних ознак шахрайства немає. Все одно не платіть до перегляду й договору.",
+      paidTitle: "Якщо вже заплатили",
+      paid: ["Одразу зверніться в банк.", "Збережіть скріншоти листування.", "Подайте заяву в поліцію, це можна зробити онлайн."],
+      src: "За порадами Verbraucherzentrale та EVZ, перевірено 17.11.2026." },
+    report: { link: "Поскаржитися", title: "Що не так з вакансією?",
+      reasons: { fee: "Просять гроші", documents: "Просять документи чи дані банку", fake: "Схоже на фейк", other: "Інше" },
+      note: "Коментар (необов’язково)", send: "Надіслати скаргу", sent: "Дякуємо. Адміністратор перевірить вакансію.", cancel: "Скасувати" },
     employerLink: "Ви роботодавець? Залиште заявку",
     formTitle: "Анкета", formHint: "Не пишіть телефон чи адресу. Бот сам передасть контакти, коли ви погодитесь на запрошення.",
     wiz: { progress: (n) => `Крок ${n} з 6`, anon: "Ім’я, телефон і фото роботодавець не побачить.", q1: "Яку роботу шукаєте?", q2: "Де хочете працювати?", q3: "Яка зайнятість підходить?",
@@ -1110,6 +1140,23 @@ const J = {
       company: "Фирма (можно указать позже)", details: "Что ещё важно: график, оплата, жильё", send: "Отправить заявку",
       sent: "Заявка отправлена. Администратор свяжется с вами.", mine: "Ваши заявки", people: (n) => `Людей: ${n}`,
       st: { pending: "На проверке", approved: "Принята, мы свяжемся", rejected: "Не принята" } },
+    check: { link: "Проверить объявление из чата", title: "Проверить объявление",
+      intro: "О вакансии или квартире, которую вы нашли в чате или на сайте.", yes: "Да", no: "Нет",
+      qs: ["Просят заплатить заранее: залог, ключи, «оформление», «за место»?",
+           "Просят фото паспорта, данные банка или пароль ещё до договора?",
+           "Просят открыть счёт или пройти видеоидентификацию?",
+           "Общение только в мессенджере, без звонка, встречи или просмотра?",
+           "Слишком хорошо: очень низкая аренда или очень высокая оплата за простую работу?",
+           "Фирму или владельца не найти в интернете, нет Impressum?"],
+      bad: "Похоже на мошенничество. Не платите и не отправляйте документы.",
+      warn: "Есть тревожные признаки. Проверьте фирму или владельца, прежде чем что-то отправлять.",
+      ok: "Явных признаков мошенничества нет. Всё равно не платите до просмотра и договора.",
+      paidTitle: "Если уже заплатили",
+      paid: ["Сразу обратитесь в банк.", "Сохраните скриншоты переписки.", "Подайте заявление в полицию, это можно сделать онлайн."],
+      src: "По советам Verbraucherzentrale и EVZ, проверено 17.11.2026." },
+    report: { link: "Пожаловаться", title: "Что не так с вакансией?",
+      reasons: { fee: "Просят деньги", documents: "Просят документы или данные банка", fake: "Похоже на фейк", other: "Другое" },
+      note: "Комментарий (необязательно)", send: "Отправить жалобу", sent: "Спасибо. Администратор проверит вакансию.", cancel: "Отмена" },
     employerLink: "Вы работодатель? Оставьте заявку",
     formTitle: "Анкета", formHint: "Не пишите телефон и адрес. Бот сам передаст контакты, когда вы согласитесь на приглашение.",
     wiz: { progress: (n) => `Шаг ${n} из 6`, anon: "Имя, телефон и фото работодатель не увидит.", q1: "Какую работу ищете?", q2: "Где хотите работать?", q3: "Какая занятость подходит?",
@@ -1214,6 +1261,7 @@ function renderJobs() {
   if (sub === "form") return jSeekerForm(body);
   if (sub === "inbox") return jInbox(body);
   if (sub === "lead") return jLead(body);
+  if (sub === "check") return jCheck(body);
   if (JOBS.view === "employer") return jEmployer(body);
   jSeekerHome(body);
 }
@@ -1238,6 +1286,12 @@ function jSeekerHome(body) {
           : applying ? `${field("am-" + v.id, T.applyLabel, `<textarea id="am-${v.id}" maxlength="600">${esc(T.applyText)}</textarea>`)}
               <button class="btn big" data-send="${v.id}">${esc(T.sendApply)}</button>`
           : `<button class="btn big" data-apply="${v.id}">${esc(T.apply)}</button>`}
+        ${JOBS.reportFor === v.id ? `<div class="report"><p class="lbl">${esc(T.report.title)}</p>
+            ${chips("rep-" + v.id, Object.keys(T.report.reasons), null, r => T.report.reasons[r])}
+            ${field("rt-" + v.id, T.report.note, `<textarea id="rt-${v.id}" maxlength="300"></textarea>`)}
+            <div class="row-btns"><button class="btn" data-repsend="${v.id}">${esc(T.report.send)}</button>
+            <button class="btn line" data-repcancel>${esc(T.report.cancel)}</button></div></div>`
+          : `<button type="button" class="quiet-link" data-report="${v.id}">${esc(T.report.link)}</button>`}
       </div>` : ""}
     </article>`;
   }).join("");
@@ -1254,10 +1308,23 @@ function jSeekerHome(body) {
     <div class="filter"><select id="jland" aria-label="${esc(T.land)}"><option value="">${esc(T.allLands)}</option>${Object.keys(META.lands).map(c =>
       `<option value="${c}" ${c === JOBS.land ? "selected" : ""}>${esc(META.lands[c])}</option>`).join("")}</select></div>
     ${vacs || `<div class="card"><p>${esc(T.noVac)}</p></div>`}
+    <button class="emp-link" id="to-check">${esc(T.check.link)}</button>
     <button class="emp-link" id="to-emp">${esc(T.employerLink)}</button>`;
   body.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { JOBS.sub = b.dataset.go; renderJobs(); window.scrollTo(0, 0); });
   body.querySelector("#jland").onchange = (e) => { JOBS.land = e.target.value; loadJobs(); };
   body.querySelector("#to-emp").onclick = () => openLead("jobs");
+  body.querySelector("#to-check").onclick = () => { JOBS.sub = "check"; renderJobs(); window.scrollTo(0, 0); };
+  bindPicks(body);
+  body.querySelectorAll("[data-report]").forEach(b => b.onclick = () => { JOBS.reportFor = +b.dataset.report; renderJobs(); });
+  body.querySelectorAll("[data-repcancel]").forEach(b => b.onclick = () => { JOBS.reportFor = null; renderJobs(); });
+  body.querySelectorAll("[data-repsend]").forEach(b => b.onclick = async () => {
+    const id = +b.dataset.repsend, reason = pickVal(body, "rep-" + id);
+    if (!reason) { tg?.HapticFeedback?.notificationOccurred("error"); return; }
+    b.disabled = true;
+    try { await japi(`/api/jobs/vacancies/${id}/report`, { method: "POST", body: JSON.stringify({ reason, text: $("rt-" + id).value.trim() || null }) });
+      JOBS.reportFor = null; toast(T.report.sent); tg?.HapticFeedback?.notificationOccurred("success"); renderJobs(); }
+    catch (er) { jerr(er); b.disabled = false; }
+  });
   body.querySelectorAll("[data-vac]").forEach(b => b.onclick = () => {
     const id = +b.dataset.vac; JOBS.openVac = JOBS.openVac === id ? null : id; JOBS.applyFor = null; renderJobs();
   });
@@ -1585,6 +1652,24 @@ function jLead(body) {
       send.disabled = false;
     }
   };
+}
+
+// ---------------- Check an ad from a chat ----------------
+// Six yes/no questions built from Verbraucherzentrale / EVZ warning signs. The first three are hard signs.
+function jCheck(body) {
+  const C = JL().check, a = JOBS.checkAns ||= Array(C.qs.length).fill(null);
+  const done = a.every(x => x !== null), hard = a.slice(0, 3).some(Boolean), soft = a.slice(3).some(Boolean);
+  const verdict = !done ? "" : hard ? ["bad", C.bad] : soft ? ["warn", C.warn] : ["ok", C.ok];
+  body.innerHTML = `<div class="head"><h2>${esc(C.title)}</h2><p>${esc(C.intro)}</p></div>
+    <ol class="checklist">${C.qs.map((q, i) => `<li><p>${esc(q)}</p>
+      <div class="seg seg--inline" role="radiogroup" aria-label="${esc(q)}">${[[1, C.yes], [0, C.no]].map(([v, t]) =>
+        `<button type="button" role="radio" data-q="${i}" data-v="${v}" aria-checked="${a[i] === !!v}" aria-pressed="${a[i] === !!v}">${esc(t)}</button>`).join("")}</div></li>`).join("")}</ol>
+    ${verdict ? `<div class="verdict ${verdict[0]}" role="status"><p>${esc(verdict[1])}</p></div>
+      <h2 class="sec">${esc(C.paidTitle)}</h2><ol class="points">${C.paid.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+    <p class="checked">${esc(C.src)}</p>`;
+  body.querySelectorAll("[data-q]").forEach(b => b.onclick = () => {
+    a[+b.dataset.q] = b.dataset.v === "1"; tg?.HapticFeedback?.selectionChanged(); renderJobs();
+  });
 }
 
 // ---------------- Housing window ----------------
