@@ -71,6 +71,9 @@ export function Home({ t, data, go }: Props) {
           <Cell subtitle={t("reference.sub")} onClick={() => go("reference")}>{t("reference.title")}</Cell>
         </Section>
         <p className="quiet">{t("soon")}</p>
+        <Section>
+          <Cell onClick={() => go("settings")}>{t("home.settings")}</Cell>
+        </Section>
       </List>
     </>
   );

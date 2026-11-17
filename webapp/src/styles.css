@@ -138,3 +138,7 @@ mark { background: none; color: inherit; font-weight: 600; }
 .warn { margin: 16px; padding: 12px; border-radius: var(--radius-field); font-size: var(--fs-15);
         color: var(--tg-theme-text-color, #000); background: var(--tg-theme-section-bg-color, #fff);
         box-shadow: inset 3px 0 0 var(--tg-theme-section-separator-color, #c8c7cc); }
+
+/* ---- Reference, settings ---- */
+.quiet-count { font-size: var(--fs-15); color: var(--quiet); }
+.danger-button { color: var(--tg-theme-destructive-text-color, #e53935) !important; }

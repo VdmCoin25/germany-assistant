@@ -15,6 +15,7 @@ type WebApp = {
   themeParams: Record<string, string>;
   version: string;
   ready(): void; expand(): void; close?(): void;
+  openLink?(url: string): void; showConfirm?(message: string, cb: (ok: boolean) => void): void;
   onEvent(e: string, cb: (arg?: unknown) => void): void;
   offEvent(e: string, cb: (arg?: unknown) => void): void;
   isVersionAtLeast(v: string): boolean;
@@ -88,3 +89,16 @@ export function isLowEnd(): boolean {
 export function prefersStill(): boolean {
   return isLowEnd() || matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+/** Telegram's own "Settings" item in the Mini App menu (Bot API 7.0). */
+export function useSettingsButton(onOpen: (() => void) | null) {
+  useEffect(() => {
+    const b = tg?.SettingsButton;
+    if (!b || !onOpen) return;
+    b.show(); b.onClick(onOpen);
+    return () => { b.offClick(onOpen); b.hide(); };
+  }, [onOpen]);
+}
+
+/** External official sites open in the browser via Telegram, not inside the Mini App. */
+export const openLink = (url: string) => (tg?.openLink ? tg.openLink(url) : window.open(url, "_blank", "noopener"));
