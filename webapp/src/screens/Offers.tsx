@@ -13,14 +13,16 @@ type Offer = {
   company: string | null; vacancy: string | null; created_at: string | null;
   vacancy_info: { city: string | null; land: string | null; employment: string; salary: string | null; german_level: string | null } | null;
 };
-type Seeker = { status: "pending" | "approved" | "rejected"; is_active: boolean; position: string; city: string | null };
+type Seeker = { status: "pending" | "approved" | "rejected"; is_active: boolean; position: string; city: string | null;
+  land: string | null; german_level: string | null; employment: string; shifts_ok: boolean; experience: string; about: string | null };
 type JobsMe = { seeker: Seeker | null; inbox: Offer[] };
 type View = { name: "list" } | { name: "offer"; id: number } | { name: "consent"; id: number } | { name: "done" };
 
-type Props = { t: T; exit: () => void; editProfile: () => void };
+type Props = { t: T; exit: () => void; editProfile: () => void; draftStep?: number | null };
 
 /** Offers addressed to the seeker: list → offer → consent → contact passed. Data from GET /api/jobs/me. */
-export function Offers({ t, exit, editProfile }: Props) {
+export function Offers({ t, exit, editProfile, draftStep = null }: Props) {
+  const hasDraft = !!draftStep;
   const [data, setData] = useState<JobsMe | null>(null);
   const [err, setErr] = useState<ApiError | null>(null);
   const [view, setView] = useState<View>({ name: "list" });
@@ -70,7 +72,11 @@ export function Offers({ t, exit, editProfile }: Props) {
     : view.name === "consent" ? { text: t("btn.agree"), run: () => answer(true) }
     : view.name === "offer" && current?.status === "sent" ? { text: t("btn.accept"), run: () => show({ name: "consent", id: current.id }) }
     : view.name === "list" && waiting.length ? { text: t("btn.openOffer"), run: () => show({ name: "offer", id: waiting[0].id }) }
-    : view.name === "list" && data?.seeker ? { text: t("offers.myProfile"), run: editProfile }
+    : view.name === "list" ? { run: editProfile, text:
+        hasDraft ? t("btn.continueForm")
+        : !data?.seeker ? t("btn.fillProfile")
+        : data.seeker.status === "rejected" ? t("btn.fixProfile")
+        : t("btn.editProfile") }
     : null;
   const mainRef = useRef(main); mainRef.current = main;          // stable handler: no re-subscribe on every render
   const runMain = useCallback(() => mainRef.current?.run(), []);
@@ -96,7 +102,7 @@ export function Offers({ t, exit, editProfile }: Props) {
   if (view.name === "consent" && current) return <Consent t={t} o={current} seeker={data.seeker} note={note} />;
   if (view.name === "offer" && current) return <OfferCard t={t} o={current} note={note} />;
 
-  return <OfferList t={t} data={data} offers={offers} open={(id) => show({ name: "offer", id })} reload={load} />;
+  return <JobHub t={t} data={data} offers={offers} draftStep={draftStep} open={(id) => show({ name: "offer", id })} edit={editProfile} reload={load} />;
 }
 
 const place = (o: Offer) => {
@@ -105,8 +111,12 @@ const place = (o: Offer) => {
 };
 const empKey = (e?: string) => (e ? (`emp.${e}` as Key) : null);
 
-function OfferList({ t, data, offers, open, reload }:
-  { t: T; data: JobsMe; offers: Offer[]; open: (id: number) => void; reload: () => void }) {
+type HubState = "new" | "draft" | "review" | "rejected" | "published" | "paused" | "offers" | "contact";
+const ROUTE_STEP: Record<HubState, number> = { new: 0, draft: 0, rejected: 0, review: 1, published: 2, paused: 2, offers: 3, contact: 4 };
+
+/** "Work" in one screen: what is happening now and what comes next, the profile as employers see it, invitations. */
+function JobHub({ t, data, offers, draftStep, open, edit, reload }:
+  { t: T; data: JobsMe; offers: Offer[]; draftStep: number | null; open: (id: number) => void; edit: () => void; reload: () => void }) {
   const waiting = offers.filter((o) => o.status === "sent");
   const answered = offers.filter((o) => o.status !== "sent");
   const s = data.seeker;
@@ -117,13 +127,26 @@ function OfferList({ t, data, offers, open, reload }:
     try { await api("/api/jobs/seeker/active", { method: "POST", body: JSON.stringify({ active: on }) }); reload(); }
     catch { setActive(!on); } finally { setSaving(false); }
   };
-  const step = !s ? 0 : s.status === "pending" ? 1 : waiting.length ? 3 : answered.some((o) => o.status === "accepted") ? 4 : 2;
+  const state: HubState =
+    !s ? (draftStep ? "draft" : "new")
+    : s.status === "rejected" ? "rejected" : s.status === "pending" ? "review"
+    : waiting.length ? "offers" : answered.some((o) => o.status === "accepted") ? "contact"
+    : !s.is_active ? "paused" : "published";
   const line = (o: Offer) => [o.company, place(o), o.vacancy_info?.salary].filter(Boolean).join(" · ");
+  const where = s ? [s.city, s.land ? LANDS[s.land] : null].filter((x, i, a) => x && a.indexOf(x) === i).join(", ") : "";
+  const emp = s ? (s.employment === "any" ? ("emp.anyLong" as Key) : empKey(s.employment)) : null;
   return (
     <>
-      <h1 className="q">{t("offers.title")}</h1>
+      <h1 className="q">{t("jobs.title")}</h1>
       <List>
-        <Section><Route t={t} current={step} action={waiting.length > 0} size="platforms" /></Section>
+        <Section>
+          <div className="hub-status" role="status">
+            <h2>{t(`hub.h.${state}` as Key)}</h2>
+            <p>{t(`hub.t.${state}` as Key, { n: draftStep ?? 1 })}</p>
+          </div>
+          <Route t={t} current={ROUTE_STEP[state]} action={["new", "draft", "rejected", "offers"].includes(state)} size="platforms" />
+        </Section>
+
         {waiting.length > 0 && (
           <Section header={t("offers.waiting", { n: waiting.length })}>
             {waiting.map((o) => (
@@ -134,6 +157,23 @@ function OfferList({ t, data, offers, open, reload }:
             ))}
           </Section>
         )}
+
+        {s && (
+          <Section header={t("hub.myProfile")}>
+            <Cell multiline onClick={edit} after={<span className="edit">{t("hub.edit")}</span>}
+                  subtitle={[where, emp ? t(emp) : null, s.german_level === "A0" ? t("tag.noGerman") : s.german_level ? t("tag.german", { level: s.german_level }) : null]
+                    .filter(Boolean).join(" · ")}>
+              {s.position}
+            </Cell>
+            {s.status === "approved" && (
+              <Cell Component="label" multiline subtitle={active ? t("offers.visibleOn") : t("offers.visibleOff")}
+                    after={<Switch label={t("offers.visible")} checked={active} disabled={saving} onChange={(e) => toggle(e.target.checked)} />}>
+                {t("offers.visible")}
+              </Cell>
+            )}
+          </Section>
+        )}
+
         {answered.length > 0 && (
           <Section header={t("offers.answered")}>
             {answered.map((o) => (
@@ -146,15 +186,7 @@ function OfferList({ t, data, offers, open, reload }:
             ))}
           </Section>
         )}
-        {!offers.length && <p className="lead">{s?.status === "pending" ? t("offers.emptyReview") : t("offers.empty")}</p>}
-        {s?.status === "approved" && (
-          <Section header={t("offers.profile")} footer={active ? t("offers.visibleOn") : t("offers.visibleOff")}>
-            <Cell Component="label" multiline subtitle={s.position}
-                  after={<Switch label={t("offers.visible")} checked={active} disabled={saving} onChange={(e) => toggle(e.target.checked)} />}>
-              {t("offers.visible")}
-            </Cell>
-          </Section>
-        )}
+        {s && !offers.length && <Section header={t("hub.invites")}><Cell multiline>{t("hub.noInvites")}</Cell></Section>}
       </List>
     </>
   );
