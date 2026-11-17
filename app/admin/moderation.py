@@ -48,6 +48,22 @@ async def on_mod(cb: CallbackQuery, session: AsyncSession, settings: Settings) -
     await show_next(cb.message, session)
 
 
+@router.callback_query(F.data.startswith("rep:close:"))
+async def on_report_close(cb: CallbackQuery, session: AsyncSession) -> None:
+    """Admin takes down a reported vacancy."""
+    from app.database.models import Vacancy
+
+    v = await session.get(Vacancy, int(cb.data.rsplit(":", 1)[1]))
+    if v is None or v.status != "approved":
+        await cb.answer("Уже снята или не найдена.", show_alert=True)
+        return
+    v.status = "closed"
+    await session.commit()
+    await cb.message.edit_reply_markup(reply_markup=None)
+    await cb.message.answer(f"Вакансия #{v.id} снята.")
+    await cb.answer()
+
+
 @router.message(Command("grant_employer"))
 async def cmd_grant(message: Message, command: CommandObject, session: AsyncSession) -> None:
     parts = (command.args or "").split()

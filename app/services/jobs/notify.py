@@ -92,6 +92,18 @@ class Notifier:
         for admin in self.settings.admin_ids:
             await self._send(admin, text, mod_kb(kind, obj.id))
 
+    async def report(self, s: AsyncSession, v: Vacancy, reporter: int, reason: str, text: str | None) -> None:
+        emp = await s.get(Employer, v.employer_id)
+        why = {"fee": "просят деньги", "documents": "просят документы / данные банка",
+               "fake": "похоже на фейк", "other": "другое"}.get(reason, reason)
+        msg = (f"⚠️ <b>Жалоба на вакансию #{v.id}</b>\n{e(v.title)} — {e(emp.company if emp else '?')}\n"
+               f"Причина: {why}\n{e(text or '')}\n\n"
+               f"От: <a href=\"tg://user?id={reporter}\">пользователь</a>.")
+        kb = InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="🚫 Снять вакансию", callback_data=f"rep:close:{v.id}")]])
+        for admin in self.settings.admin_ids:
+            await self._send(admin, msg, kb)
+
     async def moderated(self, s: AsyncSession, kind: str, obj, approved: bool) -> None:
         jobs = JobsRepository(s)
         owner = await jobs.owner_of(kind, obj)
