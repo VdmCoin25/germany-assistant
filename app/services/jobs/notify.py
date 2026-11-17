@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
 from app.data.regions import LANDS
-from app.database.models import ContactRequest, Employer, SeekerProfile, Vacancy
+from app.database.models import ContactRequest, Employer, EmployerLead, SeekerProfile, Vacancy
 from app.database.repositories.jobs import JobsRepository, aware
 from app.database.repositories.users import UserRepository
 from app.i18n import t
@@ -36,6 +36,16 @@ async def render_for_admin(s: AsyncSession, kind: str, obj) -> str:
                 f"Занятость: {EMPLOYMENT_RU.get(o.employment, o.employment)}; смены: {'да' if o.shifts_ok else 'нет'}\n"
                 f"Опыт: {e(o.experience)}\nО себе: {e(o.about or '—')}\n\n"
                 "Проверьте: нет телефонов, e-mail, ссылок, документов и лишних личных данных.")
+    if kind == "lead":
+        o: EmployerLead = obj
+        where = ", ".join(x for x in (o.city, LANDS.get(o.land or "")) if x) or "—"
+        return (f"<b>Заявка работодателя #{o.id}</b>\n"
+                f"Связь: <b>{e(o.contact)}</b>\nTelegram: <a href=\"tg://user?id={o.owner_tg}\">написать</a>\n\n"
+                f"Кто: {e(o.contact_person or '—')}, {e(o.company or 'фирма не указана')}\n"
+                f"Ищут: {e(o.positions)}{f' ({o.headcount} чел.)' if o.headcount else ''}\nГде: {e(where)}\n"
+                f"Подробности: {e(o.details or '—')}\n\n"
+                "Свяжитесь и обсудите детали. «Одобрить» — взяли в работу, работодатель получит сообщение. "
+                "Проверьте: нет платы с работников, условия законны.")
     if kind == "employer":
         o: Employer = obj
         return (f"<b>Работодатель #{o.id}</b>\nФирма: {e(o.company)}\nАдрес: {e(o.address)}\n"
@@ -88,6 +98,9 @@ class Notifier:
         lang = await self._lang(s, owner)
         if kind == "seeker":
             await self._send(owner, t(lang, "job_seeker_approved" if approved else "job_seeker_rejected"))
+        elif kind == "lead":
+            await self._send(owner, t(lang, "job_lead_approved", contact=e(obj.contact)) if approved
+                             else t(lang, "job_lead_rejected"))
         elif kind == "employer":
             if approved:
                 until = aware(obj.access_until).strftime("%d.%m.%Y")

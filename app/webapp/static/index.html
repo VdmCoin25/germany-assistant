@@ -178,14 +178,18 @@
               padding: 16px 16px 16px; border: 0; border-radius: var(--radius); text-align: left; cursor: pointer;
               background: var(--signal); color: var(--on-signal); border-radius: var(--radius-card); box-shadow: var(--lip);
               transition: transform 120ms ease-out; }
-  .mainline:active { transform: translateY(1px); box-shadow: inset 0 -1px 0 rgba(0,0,0,.28); }
-  .mainline .gleis { grid-row: span 4; width: 42px; height: 42px; background: var(--on-signal); color: var(--signal); font-size: 20px; }
+  .mainline .gleis { grid-row: span 3; width: 42px; height: 42px; background: var(--on-signal); color: var(--signal); font-size: 20px; }
   .mainline:focus-visible { outline: 3px solid var(--on-board); outline-offset: 2px; }
   .m-dest { font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
   .m-via { font-size: 15px; }
   .m-count { font-size: 15px; font-weight: 600; }
-  .m-cta { margin-top: 12px; justify-self: start; padding: 7px 14px; border-radius: var(--radius-tag);
-           background: var(--on-signal); color: var(--on-board); font-weight: 600; font-size: 15px; }
+  .m-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; grid-column: 1 / -1; }
+  .m-cta, .m-emp { min-height: 40px; padding: 7px 14px; white-space: nowrap; border: 0; border-radius: var(--radius-tag); font-weight: 600; font-size: 15px;
+                   cursor: pointer; transition: transform 100ms ease-out; }
+  .m-cta { background: var(--on-signal); color: var(--on-board); }
+  .m-emp { background: transparent; color: var(--on-signal); box-shadow: inset 0 0 0 1.5px var(--on-signal); }
+  .m-cta:active, .m-emp:active { transform: translateY(1px); }
+  .mainline button:focus-visible { outline: 2px solid var(--on-signal); outline-offset: 2px; }
 
   /* ---- Links ---- */
   .links { list-style: none; margin: 4px 0 0; padding: 0; }
@@ -334,6 +338,15 @@
   .pick button { background: transparent; border: 1px solid var(--rim); border-radius: var(--radius); }
   .pick button:active { transform: translateY(1px); }
   .pick button[aria-checked="true"] { background: var(--signal); border-color: var(--signal); box-shadow: var(--lip); }
+
+  /* ---- Employer lead ---- */
+  .lead-contact { border-left: 4px solid var(--signal); }
+  .field > .lbl { display: block; }
+  .stepper { display: inline-flex; align-items: center; margin-top: 8px; border: 1px solid var(--rim); border-radius: var(--radius); }
+  .stepper button { width: 48px; height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 22px; cursor: pointer; }
+  .stepper button:active { background: var(--tag-bg); }
+  .stepper output { min-width: 44px; text-align: center; font-weight: 600; font-size: 17px; }
+  .items .item .badge { margin-top: 6px; }
 
   /* ---- Step-by-step profile ---- */
   .wiz-progress { margin: 16px 16px 0; font-size: 13px; color: var(--pencil); }
@@ -824,14 +837,14 @@ function renderHome() {
   const st = jobState();
   const waiting = (JOBS?.me?.inbox || []).filter(c => c.kind === "offer" && c.status === "sent").length;
   $("page-home").innerHTML = `<div class="board-wrap">
-    <button class="mainline" data-k="${main[0]}">
+    <div class="mainline" data-k="${main[0]}">
       <span class="gleis" aria-hidden="true">1</span>
       <span class="m-dest">${esc(main[1])}</span>
       <span class="m-via">${esc(st ? (st === "offers" ? L().jobLine.offers(waiting) : L().jobLine[st]) : main[2])}</span>
       ${st ? `<span class="m-count">${esc(L().step(ROUTE[st][0] + 1, L().steps[ROUTE[st][0]]))}</span>`
            : nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
-      <span class="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</span>
-    </button>
+      <span class="m-actions"><button type="button" class="m-emp" id="m-emp">${esc(JL().lead.btn)}</button><button type="button" class="m-cta" id="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</button></span>
+    </div>
     ${[[1, L().help], [0, L().later]].map(([ok, label]) => `<p class="board-label">${esc(label)}</p>
     <ol class="board ${ok ? "" : "later"}">${rest.filter(r => !!r[3] === !!ok).map(([k, name, via]) => `
     <li data-k="${k}">
@@ -842,10 +855,12 @@ function renderHome() {
       </button>
       <div class="announce">${sheetBody(k)}</div>
     </li>`).join("")}</ol>`).join("")}</div>`;
-  $("page-home").querySelector(".mainline").onclick = () => {
+  const openJobs = () => {
     JOBS.sub = st === "new" || st === "rejected" ? "form" : st === "offers" ? "inbox" : null;
     renderJobs(); show("jobs");
   };
+  $("page-home").querySelector(".mainline").onclick = (ev) => { if (!ev.target.closest(".m-emp")) openJobs(); };
+  $("m-emp").onclick = () => openLead("home");
   renderSign();
   $("page-home").querySelectorAll(".board > li").forEach(li => {
     const btn = li.querySelector(".dep");
@@ -996,7 +1011,17 @@ const J = {
     applyLabel: "Ваше повідомлення роботодавцю (можна залишити як є)",
     applied: "Ви вже відгукнулися", needProfile: "Щоб відгукнутися, спочатку заповніть анкету.",
     sentForReview: "Надіслано. Адміністратор перевірить і передасть.",
-    employerLink: "Ви роботодавець? Розмістіть вакансію",
+    lead: { btn: "Я роботодавець", title: "Шукаєте працівників?",
+      intro: "Залиште заявку. Її бачить лише адміністратор: він перевірить її і зв’яжеться з вами, щоб обговорити деталі.",
+      contactTitle: "Як з вами зв’язатися", contactLabel: "Телефон або Telegram", contactPh: "+49 151… або @username",
+      sharePhone: "Мій номер з Telegram", phoneNotShared: "Номер не отримали. Введіть його вручну.",
+      badContact: "Вкажіть телефон (від 7 цифр), @username або e-mail", person: "Як до вас звертатися",
+      whoTitle: "Кого шукаєте", positions: "Робота або посада", positionsPh: "Наприклад: помічник на склад",
+      common: ["Склад", "Прибирання", "Кухня", "Будівництво", "Догляд", "Водій"], headcount: "Скільки людей потрібно",
+      company: "Фірма (можна вказати пізніше)", details: "Що ще важливо: графік, оплата, житло", send: "Надіслати заявку",
+      sent: "Заявку надіслано. Адміністратор зв’яжеться з вами.", mine: "Ваші заявки", people: (n) => `Людей: ${n}`,
+      st: { pending: "На перевірці", approved: "Прийнято, ми зв’яжемося", rejected: "Не прийнято" } },
+    employerLink: "Ви роботодавець? Залиште заявку",
     formTitle: "Анкета", formHint: "Не пишіть телефон чи адресу. Бот сам передасть контакти, коли ви погодитесь на запрошення.",
     wiz: { progress: (n) => `Крок ${n} з 6`, anon: "Ім’я, телефон і фото роботодавець не побачить.", q1: "Яку роботу шукаєте?", q2: "Де хочете працювати?", q3: "Яка зайнятість підходить?",
       q4: "Як ви знаєте німецьку?", q5: "Який у вас досвід?", q6: "Що ще розповісти про себе?", popular: "Часто шукають:",
@@ -1054,7 +1079,17 @@ const J = {
     applyLabel: "Ваше сообщение работодателю (можно оставить как есть)",
     applied: "Вы уже откликнулись", needProfile: "Чтобы откликнуться, сначала заполните анкету.",
     sentForReview: "Отправлено. Администратор проверит и передаст.",
-    employerLink: "Вы работодатель? Разместите вакансию",
+    lead: { btn: "Я работодатель", title: "Ищете работников?",
+      intro: "Оставьте заявку. Её видит только администратор: он проверит её и свяжется с вами, чтобы обсудить детали.",
+      contactTitle: "Как с вами связаться", contactLabel: "Телефон или Telegram", contactPh: "+49 151… или @username",
+      sharePhone: "Мой номер из Telegram", phoneNotShared: "Номер не получили. Введите его вручную.",
+      badContact: "Укажите телефон (от 7 цифр), @username или e-mail", person: "Как к вам обращаться",
+      whoTitle: "Кого ищете", positions: "Работа или должность", positionsPh: "Например: помощник на склад",
+      common: ["Склад", "Уборка", "Кухня", "Стройка", "Уход", "Водитель"], headcount: "Сколько людей нужно",
+      company: "Фирма (можно указать позже)", details: "Что ещё важно: график, оплата, жильё", send: "Отправить заявку",
+      sent: "Заявка отправлена. Администратор свяжется с вами.", mine: "Ваши заявки", people: (n) => `Людей: ${n}`,
+      st: { pending: "На проверке", approved: "Принята, мы свяжемся", rejected: "Не принята" } },
+    employerLink: "Вы работодатель? Оставьте заявку",
     formTitle: "Анкета", formHint: "Не пишите телефон и адрес. Бот сам передаст контакты, когда вы согласитесь на приглашение.",
     wiz: { progress: (n) => `Шаг ${n} из 6`, anon: "Имя, телефон и фото работодатель не увидит.", q1: "Какую работу ищете?", q2: "Где хотите работать?", q3: "Какая занятость подходит?",
       q4: "Как вы знаете немецкий?", q5: "Какой у вас опыт?", q6: "Что ещё рассказать о себе?", popular: "Часто ищут:",
@@ -1135,6 +1170,7 @@ async function loadJobs() {
 
 function jobsBack() {
   if (wizBack()) return true;
+  if (JOBS.sub === "lead" && JOBS.leadFrom === "home") { JOBS.sub = null; JOBS.leadFrom = null; return false; }   // back to the board
   if (JOBS.sub) { JOBS.sub = null; renderJobs(); window.scrollTo(0, 0); return true; }
   if (JOBS.view === "employer" && JOBS.me?.seeker) { JOBS.view = "seeker"; renderJobs(); return true; }
   return false;
@@ -1156,6 +1192,7 @@ function renderJobs() {
   const body = $("jbody");
   if (sub === "form") return jSeekerForm(body);
   if (sub === "inbox") return jInbox(body);
+  if (sub === "lead") return jLead(body);
   if (JOBS.view === "employer") return jEmployer(body);
   jSeekerHome(body);
 }
@@ -1199,7 +1236,7 @@ function jSeekerHome(body) {
     <button class="emp-link" id="to-emp">${esc(T.employerLink)}</button>`;
   body.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { JOBS.sub = b.dataset.go; renderJobs(); window.scrollTo(0, 0); });
   body.querySelector("#jland").onchange = (e) => { JOBS.land = e.target.value; loadJobs(); };
-  body.querySelector("#to-emp").onclick = () => { JOBS.view = "employer"; renderJobs(); window.scrollTo(0, 0); };
+  body.querySelector("#to-emp").onclick = () => openLead("jobs");
   body.querySelectorAll("[data-vac]").forEach(b => b.onclick = () => {
     const id = +b.dataset.vac; JOBS.openVac = JOBS.openVac === id ? null : id; JOBS.applyFor = null; renderJobs();
   });
@@ -1430,6 +1467,102 @@ function jEmployer(body) {
       contact_person: v("e-person"), contact: v("e-contact"), website: v("e-web") };
     try { await japi("/api/jobs/employer", { method: "PUT", body: JSON.stringify(data) }); toast(T.sentForReview); loadJobs(); }
     catch (er) { jerr(er); }
+  };
+}
+
+// ---------------- Employer lead: "I'm an employer" ----------------
+// A short hiring request. Only an admin sees it; they call back on the contact to agree the details.
+// The contact comes first and can be filled in one tap: the Telegram @username or the phone number from Telegram.
+const LEAD_CONTACT = /^(\+?[\d\s()\-/.]{6,24}|@?[A-Za-z][A-Za-z0-9_]{4,31}|[^@\s]+@[^@\s]+\.[^@\s]+)$/;
+const leadContactOk = (v) => { v = v.trim(); return LEAD_CONTACT.test(v) && (!/^\+?[\d\s()\-/.]+$/.test(v) || (v.match(/\d/g) || []).length >= 7); };
+
+function openLead(from) {
+  const e = JOBS.me?.employer;
+  if (e && e.status !== "rejected") { JOBS.view = "employer"; JOBS.sub = null; }   // registered employers keep their cabinet
+  else { JOBS.sub = "lead"; JOBS.leadFrom = from; }
+  renderJobs(); show("jobs"); window.scrollTo(0, 0);
+}
+
+function jLead(body) {
+  const T = JL(), LT = T.lead, u = tg?.initDataUnsafe?.user || {};
+  const d = JOBS.leadDraft ||= { contact: "", person: u.first_name || "", positions: "", headcount: 1,
+    land: ME?.land || null, city: "", company: "", details: "" };
+  const mine = (JOBS.me?.leads || []).map(x => `<div class="item"><h3>${esc(x.positions)}</h3>
+      <p class="meta">${esc([x.headcount ? LT.people(x.headcount) : "", x.city, x.created ? fmtDate(x.created) : ""].filter(Boolean).join(", "))}</p>
+      <span class="badge ${x.status === "approved" ? "ok" : x.status === "rejected" ? "no" : ""}">${esc(LT.st[x.status] || x.status)}</span></div>`).join("");
+  body.innerHTML = `<div class="head"><h2>${esc(LT.title)}</h2><p>${esc(LT.intro)}</p></div>
+    ${mine ? `<h2 class="sec">${esc(LT.mine)}</h2><div class="items">${mine}</div>` : ""}
+    <form id="lf" novalidate>
+      <h2 class="sec">${esc(LT.contactTitle)}</h2>
+      <div class="form lead-contact">
+        <div class="field"><label for="l-contact">${esc(LT.contactLabel)}</label>
+          <input id="l-contact" maxlength="160" autocomplete="tel" inputmode="text" placeholder="${esc(LT.contactPh)}" value="${esc(d.contact)}"></div>
+        <div class="pick">${u.username ? `<button type="button" id="l-user">@${esc(u.username)}</button>` : ""}
+          ${tg?.requestContact ? `<button type="button" id="l-phone">${esc(LT.sharePhone)}</button>` : ""}</div>
+        ${field("l-person", LT.person, `<input id="l-person" maxlength="120" autocomplete="name" value="${esc(d.person)}">`)}
+      </div>
+      <h2 class="sec">${esc(LT.whoTitle)}</h2>
+      <div class="form">
+        ${field("l-pos", LT.positions, `<input id="l-pos" maxlength="200" placeholder="${esc(LT.positionsPh)}" value="${esc(d.positions)}">`)}
+        <div class="pick">${LT.common.map(c => `<button type="button" data-lfill="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+        <div class="field"><span class="lbl" id="l-hc-l">${esc(LT.headcount)}</span>
+          <div class="stepper" role="group" aria-labelledby="l-hc-l"><button type="button" data-hc="-1" aria-label="−1">−</button>
+          <output id="l-hc" aria-live="polite">${d.headcount}</output><button type="button" data-hc="1" aria-label="+1">+</button></div></div>
+        ${field("l-land", T.land, `<select id="l-land">${opts(Object.keys(META.lands), d.land, v => META.lands[v], true)}</select>`)}
+        ${field("l-city", T.city, `<input id="l-city" maxlength="80" value="${esc(d.city)}">`)}
+        ${field("l-company", LT.company, `<input id="l-company" maxlength="160" autocomplete="organization" value="${esc(d.company)}">`)}
+        ${field("l-details", LT.details, `<textarea id="l-details" maxlength="1000">${esc(d.details)}</textarea>`)}
+      </div>
+      <div class="wiz-nav"><button class="btn wide big" type="submit" id="l-send">${esc(LT.send)}</button></div>
+    </form>`;
+  const showErr = (id, msg) => {
+    const el = $(id), f = el.closest(".field"); f.querySelector(".err")?.remove();
+    el.setAttribute("aria-invalid", msg ? "true" : "false");
+    if (!msg) return true;
+    const p = document.createElement("p"); p.className = "err"; p.id = id + "-err"; p.textContent = msg;
+    f.appendChild(p); el.setAttribute("aria-describedby", p.id); return false;
+  };
+  const setContact = (v) => { d.contact = v; $("l-contact").value = v; showErr("l-contact", ""); tg?.HapticFeedback?.selectionChanged(); };
+  const bind = (id, key) => { const el = $(id); el.oninput = el.onchange = () => { d[key] = el.value || (key === "land" ? null : ""); }; };
+  [["l-contact", "contact"], ["l-person", "person"], ["l-pos", "positions"], ["l-land", "land"], ["l-city", "city"],
+   ["l-company", "company"], ["l-details", "details"]].forEach(([id, k]) => bind(id, k));
+  $("l-contact").addEventListener("blur", () => { if (d.contact.trim()) showErr("l-contact", leadContactOk(d.contact) ? "" : LT.badContact); });
+  const ub = $("l-user"); if (ub) ub.onclick = () => setContact("@" + u.username);
+  const pb = $("l-phone"); if (pb) pb.onclick = () => {
+    try {
+      tg.requestContact((shared, res) => {
+        const phone = res?.responseUnsafe?.contact?.phone_number;
+        if (shared && phone) setContact(phone.startsWith("+") ? phone : "+" + phone);
+        else { toast(LT.phoneNotShared); $("l-contact").focus(); }
+      });
+    } catch { toast(LT.phoneNotShared); }
+  };
+  body.querySelectorAll("[data-lfill]").forEach(b => b.onclick = () => {
+    const v = b.dataset.lfill, cur = d.positions.trim();
+    d.positions = !cur ? v : cur.split(/,\s*/).includes(v) ? cur : `${cur}, ${v}`;
+    $("l-pos").value = d.positions; showErr("l-pos", ""); tg?.HapticFeedback?.selectionChanged();
+  });
+  body.querySelectorAll("[data-hc]").forEach(b => b.onclick = () => {
+    d.headcount = Math.min(999, Math.max(1, d.headcount + +b.dataset.hc)); $("l-hc").textContent = d.headcount;
+    tg?.HapticFeedback?.selectionChanged();
+  });
+  $("lf").onsubmit = async (ev) => {
+    ev.preventDefault();
+    const okC = showErr("l-contact", !d.contact.trim() ? L().required : leadContactOk(d.contact) ? "" : LT.badContact);
+    const okP = showErr("l-pos", d.positions.trim().length >= 2 ? "" : L().required);
+    if (!okC || !okP) { (okC ? $("l-pos") : $("l-contact")).focus(); tg?.HapticFeedback?.notificationOccurred("error"); return; }
+    const send = $("l-send"); send.disabled = true;
+    const n = (v) => v.trim() || null;
+    const data = { contact: d.contact.trim(), contact_person: n(d.person), company: n(d.company), positions: d.positions.trim(),
+      headcount: d.headcount, land: d.land, city: n(d.city), details: n(d.details) };
+    try {
+      await japi("/api/jobs/leads", { method: "POST", body: JSON.stringify(data) });
+      JOBS.leadDraft = null; toast(LT.sent); tg?.HapticFeedback?.notificationOccurred("success");
+      await loadJobs(); window.scrollTo(0, 0);
+    } catch (er) {
+      if (er?.code === "invalid") showErr("l-contact", LT.badContact); else jerr(er);
+      send.disabled = false;
+    }
   };
 }
 

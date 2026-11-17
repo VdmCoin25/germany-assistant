@@ -100,6 +100,27 @@ class Employer(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class EmployerLead(Base):
+    """A short request from an employer who wants to hire people. An admin reviews it and calls back
+    on `contact` to agree the details; nothing from it is published."""
+
+    __tablename__ = "employer_leads"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_tg: Mapped[int] = mapped_column(BigInteger, index=True)
+    contact: Mapped[str] = mapped_column(String(160))          # phone, @username or e-mail — how we reach them
+    contact_person: Mapped[str | None] = mapped_column(String(120))
+    company: Mapped[str | None] = mapped_column(String(160))
+    positions: Mapped[str] = mapped_column(String(200))        # who they are looking for
+    headcount: Mapped[int | None] = mapped_column(Integer)
+    land: Mapped[str | None] = mapped_column(String(8))
+    city: Mapped[str | None] = mapped_column(String(80))
+    details: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)  # pending|approved|rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class Vacancy(Base):
     __tablename__ = "vacancies"
 
