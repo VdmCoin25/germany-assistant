@@ -14,7 +14,7 @@ type WebApp = {
   colorScheme: "light" | "dark";
   themeParams: Record<string, string>;
   version: string;
-  ready(): void; expand(): void;
+  ready(): void; expand(): void; close?(): void;
   onEvent(e: string, cb: (arg?: unknown) => void): void;
   offEvent(e: string, cb: (arg?: unknown) => void): void;
   isVersionAtLeast(v: string): boolean;

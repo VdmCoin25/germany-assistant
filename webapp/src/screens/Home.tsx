@@ -8,8 +8,10 @@ import { useBottomButton } from "../tg";
 
 export type JobsState =
   | { step: "new" }
+  | { step: "rejected" }
   | { step: "review" }
   | { step: "published" }
+  | { step: "paused" }
   | { step: "offers"; waiting: number }
   | { step: "contact" };
 
@@ -19,7 +21,9 @@ export type HomeData = { city: string | null; position: string | null; updated: 
 export function routeOf(j: JobsState) {
   switch (j.step) {
     case "new": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: false, lamp: "signal" } };
+    case "rejected": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: false, lamp: "signal" } };
     case "review": return { idx: 1, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
+    case "paused": return { idx: 2, status: "enroute", action: false, scene: { rain: false, train: false, lamp: "dim" } };
     case "published": return { idx: 2, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
     case "offers": return { idx: 3, status: "boarding", action: true, scene: { rain: false, train: true, lamp: "signal" } };
     case "contact": return { idx: 4, status: "arrived", action: false, scene: { rain: false, train: true, lamp: "dim" } };
@@ -32,16 +36,19 @@ export function Home({ t, data, go }: Props) {
   const r = routeOf(data.jobs) as { idx: number; status: "boarding" | "enroute" | "arrived"; action: boolean; scene: Scene };
   const jobsLine =
     data.jobs.step === "new" ? t("jobs.new")
+    : data.jobs.step === "rejected" ? t("jobs.rejected")
     : data.jobs.step === "review" ? t("jobs.review")
     : data.jobs.step === "published" ? t("jobs.published")
+    : data.jobs.step === "paused" ? t("jobs.paused")
     : data.jobs.step === "offers" ? t.n("jobs.offers", data.jobs.waiting)
     : t("route.contact");
   const statusText = t(`status.${r.status}` as const);
 
   const primary = data.jobs.step === "new" ? t("btn.fillProfile")
+    : data.jobs.step === "rejected" ? t("btn.fixProfile")
     : data.jobs.step === "offers" || data.jobs.step === "contact" ? t("btn.seeOffers")
-    : data.jobs.step === "published" ? t("btn.myProfile") : null;
-  const onPrimary = useCallback(() => go(data.jobs.step === "new" ? "form" : "offers"), [go, data.jobs.step]);
+    : data.jobs.step === "published" || data.jobs.step === "paused" ? t("btn.myProfile") : null;
+  const onPrimary = useCallback(() => go(["new", "rejected"].includes(data.jobs.step) ? "form" : "offers"), [go, data.jobs.step]);
   useBottomButton(primary, onPrimary);
 
   return (
