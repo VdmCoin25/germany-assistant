@@ -6,13 +6,16 @@ services:
     runtime: python
     region: frankfurt
     plan: free                # sleeps when idle; webhook mode wakes it on each Telegram message
-    buildCommand: pip install -r requirements.txt
+    # Python deps, then the new Mini App (webapp/ -> webapp/dist, served at /app-v2). The old app at / needs no build.
+    buildCommand: pip install -r requirements.txt && cd webapp && npm ci && npm run build
     startCommand: alembic upgrade head && python -m app.main
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: NODE_VERSION
+        value: "22"
       - key: BOT_TOKEN
         sync: false            # entered in the Render dashboard, never committed
       - key: ADMIN_IDS
