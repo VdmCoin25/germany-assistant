@@ -10,17 +10,18 @@ import { Form } from "./form/Form";
 import { FormCity } from "./screens/FormCity";
 import { Home, type HomeData } from "./screens/Home";
 import { Offers } from "./screens/Offers";
-import { tg, useColorScheme } from "./tg";
+import { tg, useColorScheme, useSettingsButton } from "./tg";
 
+// Secondary sections load on first open: the home screen and the job route stay in the first download.
+const HousingScreen = lazy(() => import("./screens/Housing").then((m) => ({ default: m.HousingScreen })));
+const Reference = lazy(() => import("./screens/Reference").then((m) => ({ default: m.Reference })));
+const Settings = lazy(() => import("./screens/Settings").then((m) => ({ default: m.Settings })));
 const Kit = lazy(() => import("./screens/Kit").then((m) => ({ default: m.Kit })));   // review page, not in the main bundle
 
 const BOT = "ukraineingermany_bot";
 const params = new URLSearchParams(location.search);
 const pickLang = (...c: (string | null | undefined)[]): Lang => (c.find(Boolean) === "ru" ? "ru" : "uk");
 
-// Screens not rebuilt yet open the matching section of the current app (until J4 is done).
-const OLD_APP: Record<string, string> = { housing: "/#housing", reference: "/" };
-const goOld = (s: string) => { location.href = OLD_APP[s] ?? "/"; };
 
 /** Design review only: ?demo=new|review|offers or ?screen=kit|form render fixed data. */
 function Demo() {
@@ -44,12 +45,16 @@ function Demo() {
 function Live() {
   const online = useOnline();
   const { res, reload } = useHomeData();
-  const [screen, setScreen] = useState<"home" | "form" | "offers">("home");
-  const go = useCallback((s: string) => (s === "form" || s === "offers" ? setScreen(s) : goOld(s)), []);
+  type Screen = "home" | "form" | "offers" | "housing" | "reference" | "settings";
+  const [screen, setScreen] = useState<Screen>("home");
+  const go = useCallback((s: string) => { setScreen(s as Screen); window.scrollTo(0, 0); }, []);
+  const openSettings = useCallback(() => go("settings"), [go]);
+  useSettingsButton(screen === "home" ? openSettings : null);   // not mid-form: opening Settings there would drop the answers
   const toHome = useCallback(() => { setScreen("home"); reload(); window.scrollTo(0, 0); }, [reload]);
   const toForm = useCallback(() => { setScreen("form"); window.scrollTo(0, 0); }, []);
   const sent = useCallback(() => { setScreen("home"); reload(); }, [reload]);
-  const lang = pickLang(params.get("lang"), res.state === "ok" ? res.data.language : null, tg?.initDataUnsafe.user?.language_code);
+  const [langSet, setLangSet] = useState<string | null>(null);   // changed in Settings, before the next reload
+  const lang = pickLang(params.get("lang"), langSet, res.state === "ok" ? res.data.language : null, tg?.initDataUnsafe.user?.language_code);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   const t = makeT(lang);
   return (
@@ -60,6 +65,11 @@ function Live() {
       {res.state === "ok" && screen === "home" && <Home t={t} data={res.data} go={go} />}
       {res.state === "ok" && screen === "form" && <Form t={t} existing={res.data.seed} exit={toHome} done={sent} />}
       {res.state === "ok" && screen === "offers" && <Offers t={t} exit={toHome} editProfile={toForm} />}
+      <Suspense fallback={<HomeSkeleton t={t} />}>
+        {res.state === "ok" && screen === "housing" && <HousingScreen t={t} lang={lang} city={res.data.city} level={res.data.seed.german_level ?? null} exit={toHome} />}
+        {res.state === "ok" && screen === "reference" && <Reference t={t} lang={lang} exit={toHome} />}
+        {res.state === "ok" && screen === "settings" && <Settings t={t} exit={toHome} onLanguage={setLangSet} />}
+      </Suspense>
     </>
   );
 }
