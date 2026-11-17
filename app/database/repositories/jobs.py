@@ -5,10 +5,10 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import ContactRequest, Employer, SeekerProfile, SubmissionLog, Vacancy
+from app.database.models import ContactRequest, Employer, EmployerLead, SeekerProfile, SubmissionLog, Vacancy
 
 EMPLOYMENT = ("full", "part", "mini", "any")
-KINDS = ("seeker", "employer", "vacancy", "contact")
+KINDS = ("lead", "seeker", "employer", "vacancy", "contact")
 
 
 def now() -> datetime:
@@ -224,8 +224,19 @@ class JobsRepository:
         await self.s.flush()
         return c
 
+    # ---------- employer leads ----------
+    async def create_lead(self, tg: int, **data) -> EmployerLead:
+        lead = EmployerLead(owner_tg=tg, **data)
+        self.s.add(lead)
+        await self.s.flush()
+        return lead
+
+    async def leads(self, tg: int, limit: int = 5) -> list[EmployerLead]:
+        return list(await self.s.scalars(select(EmployerLead).where(EmployerLead.owner_tg == tg)
+                                         .order_by(EmployerLead.created_at.desc(), EmployerLead.id.desc()).limit(limit)))
+
     # ---------- moderation ----------
-    _MODEL = {"seeker": SeekerProfile, "employer": Employer, "vacancy": Vacancy, "contact": ContactRequest}
+    _MODEL = {"lead": EmployerLead, "seeker": SeekerProfile, "employer": Employer, "vacancy": Vacancy, "contact": ContactRequest}
 
     async def pending(self) -> list[tuple[str, object]]:
         out: list[tuple[str, object]] = []
@@ -257,7 +268,7 @@ class JobsRepository:
 
     async def owner_of(self, kind: str, obj) -> int:
         """Telegram id of whoever created the item (to notify them)."""
-        if kind in ("seeker", "employer"):
+        if kind in ("seeker", "employer", "lead"):
             return obj.owner_tg
         if kind == "vacancy":
             return (await self.s.get(Employer, obj.employer_id)).owner_tg
@@ -273,6 +284,7 @@ class JobsRepository:
     # ---------- GDPR ----------
     async def delete_user(self, tg: int) -> None:
         await self.s.execute(delete(SubmissionLog).where(SubmissionLog.owner_tg == tg))
+        await self.s.execute(delete(EmployerLead).where(EmployerLead.owner_tg == tg))
         p, e = await self.seeker(tg), await self.employer(tg)
         if p:
             await self.s.execute(delete(ContactRequest).where(ContactRequest.seeker_id == p.id))
@@ -293,4 +305,6 @@ class JobsRepository:
         if e:
             out["employer"] = cols(e)
             out["vacancies"] = [cols(v) for v in await self.employer_vacancies(e.id)]
+        if leads := await self.leads(tg, limit=1000):
+            out["employer_leads"] = [cols(x) for x in leads]
         return out

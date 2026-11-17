@@ -1,4 +1,5 @@
 """Job exchange API for the Mini App. Same Telegram initData auth as the profile API."""
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -9,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.bot.middlewares.throttling import RateLimiter
 from app.config import Settings
 from app.data.regions import GERMAN_LEVELS, LANDS
-from app.database.models import ContactRequest, Employer, SeekerProfile, Vacancy
+from app.database.models import ContactRequest, Employer, EmployerLead, SeekerProfile, Vacancy
 from app.database.repositories.jobs import JobsError, JobsRepository, aware
 from app.services.jobs.notify import Notifier
 
@@ -54,6 +55,43 @@ class EmployerIn(BaseModel):
 
     _c = field_validator("company", "address", "register_no", "contact_person", "contact", "website")(
         lambda cls, v: _clean(v))
+
+
+_PHONE = re.compile(r"^\+?[\d\s()\-/.]{6,24}$")
+_USER = re.compile(r"^@?([A-Za-z][A-Za-z0-9_]{4,31})$")
+_MAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _contact(v: str) -> str:
+    """A way to reach the employer: phone, Telegram @username or e-mail. Usernames get a leading @."""
+    v = " ".join(v.split())
+    if _PHONE.match(v) and sum(ch.isdigit() for ch in v) >= 7:
+        return v
+    if m := _USER.match(v):
+        return "@" + m.group(1)
+    if _MAIL.match(v):
+        return v
+    raise ValueError("contact must be a phone number, @username or e-mail")
+
+
+class LeadIn(BaseModel):
+    contact: str = Field(min_length=5, max_length=160)
+    contact_person: str | None = Field(default=None, max_length=120)
+    company: str | None = Field(default=None, max_length=160)
+    positions: str = Field(min_length=2, max_length=200)
+    headcount: int | None = Field(default=None, ge=1, le=999)
+    land: str | None = None
+    city: str | None = Field(default=None, max_length=80)
+    details: str | None = Field(default=None, max_length=1000)
+
+    _c = field_validator("contact_person", "company", "positions", "city", "details")(lambda cls, v: _clean(v))
+    _k = field_validator("contact")(lambda cls, v: _contact(v))
+    _l = field_validator("land")(lambda cls, v: _land(v))
+
+
+def lead_out(x: EmployerLead) -> dict:
+    return {"id": x.id, "positions": x.positions, "headcount": x.headcount, "city": x.city, "land": x.land,
+            "contact": x.contact, "status": x.status, "created": _d(x.created_at)}
 
 
 class VacancyIn(BaseModel):
@@ -173,6 +211,7 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
                         "seeker": seeker_public(sk) if sk else None}
 
             return {"seeker": seeker_own(p) if p else None, "employer": emp,
+                    "leads": [lead_out(x) for x in await jobs.leads(uid)],
                     "inbox": [await describe(c) for c in await jobs.inbox(uid)],
                     "outbox": [await describe(c) for c in await jobs.outbox(uid)]}
 
@@ -220,6 +259,21 @@ def build_jobs_router(settings: Settings, sm: async_sessionmaker, bot, verify) -
             await s.commit()
             await notifier.to_admins(s, "employer", e)
             return {"status": e.status}
+
+    @r.post("/leads")
+    async def post_lead(body: LeadIn, uid: WUid):
+        async with sm() as s:
+            await blocked(s, uid)
+            jobs = JobsRepository(s)
+            try:
+                await jobs.check_submission_limit(uid, settings.submission_limit_per_hour)
+            except JobsError as ex:
+                fail(ex)
+            await jobs.log_submission(uid, "lead")
+            lead = await jobs.create_lead(uid, **body.model_dump())
+            await s.commit()
+            await notifier.to_admins(s, "lead", lead)
+            return lead_out(lead)
 
     @r.get("/seekers")
     async def seekers(uid: Uid, land: str | None = None):

@@ -189,3 +189,50 @@ async def test_profile_submission_limit_two_per_hour(settings, sm):
                 row.created_at = now() - timedelta(minutes=61)
             await s.commit()
         assert (await c.put("/api/jobs/seeker", headers=hdr(SEEKER), json=SEEKER_BODY)).status_code == 200
+
+
+LEAD_BODY = {"contact": "+49 151 2345 6789", "contact_person": "Anna", "company": "Muster Bau GmbH",
+             "positions": "Helfer auf der Baustelle", "headcount": 3, "land": "BY", "city": "München",
+             "details": "Ab Dezember, Vollzeit"}
+
+
+async def test_employer_lead_goes_to_admin_with_contact_first(settings, sm):
+    from aiogram import Bot
+
+    from app.database.models import EmployerLead
+
+    fake = FakeSession()
+    app = create_app(settings, sm, bot=Bot(TOKEN, session=fake))
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        r = await c.post("/api/jobs/leads", headers=hdr(BOSS), json=LEAD_BODY)
+        assert r.status_code == 200 and r.json()["status"] == "pending"
+        to_admin = [m.text for m in fake.calls if isinstance(m, SendMessage) and m.chat_id == ADMIN_ID]
+        assert to_admin and "+49 151 2345 6789" in to_admin[0].split("\n")[3]       # the line right after the title
+        assert f"tg://user?id={BOSS}" in to_admin[0]
+        me = (await c.get("/api/jobs/me", headers=hdr(BOSS))).json()
+        assert me["leads"][0]["positions"] == LEAD_BODY["positions"]
+
+        # a bare username gets its @, junk is refused
+        r = await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": "muster_bau"})
+        assert r.json()["contact"] == "@muster_bau"
+        for bad in ("123", "hello world", "+49 12"):
+            assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": bad})).status_code == 422
+        assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "land": "XX"})).status_code == 422
+
+    # admin takes it into work -> the employer is told we will call them on their contact
+    async with sm() as s:
+        jobs = JobsRepository(s)
+        kind, lead = next((k, o) for k, o in await jobs.pending() if k == "lead")
+        await jobs.moderate(kind, lead.id, True, pilot_days=30, vacancy_days=30)
+        await s.commit()
+        from app.services.jobs.notify import Notifier
+        fake.clear()
+        await Notifier(Bot(TOKEN, session=fake), settings).moderated(s, kind, lead, True)
+        sent = [m for m in fake.calls if isinstance(m, SendMessage)]
+        assert sent[0].chat_id == BOSS and "+49 151 2345 6789" in sent[0].text
+
+        # GDPR: leads are exported and deleted with the user
+        assert "employer_leads" in await jobs.export_user(BOSS)
+        await jobs.delete_user(BOSS)
+        await s.commit()
+        assert await s.scalar(select(func.count()).select_from(EmployerLead)) == 0
