@@ -41,7 +41,8 @@ export function useHomeData() {
       const now = new Date();
       setRes({ state: "ok", data: {
         language: me.language,
-        city: me.city ?? jobs.seeker?.city ?? null,
+        city: jobs.seeker?.city ?? me.city ?? null,
+        land: jobs.seeker?.land ?? me.land ?? null,
         position: jobs.seeker?.position ?? null,
         updated: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
         jobs: jobsState(jobs),

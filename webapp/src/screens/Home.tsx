@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Board, type Scene } from "../components/Board";
 import { Route } from "../components/Route";
 import type { T } from "../i18n";
+import { CITIES, LANDS } from "../form/cities";
 import { useBottomButton } from "../tg";
 
 export type JobsState =
@@ -15,18 +16,30 @@ export type JobsState =
   | { step: "offers"; waiting: number }
   | { step: "contact" };
 
-export type HomeData = { city: string | null; position: string | null; updated: string | null; jobs: JobsState };
+export type HomeData = { city: string | null; land?: string | null; position: string | null; updated: string | null; jobs: JobsState };
+
+/** The board shows a real place: a known German city (canonical spelling), else the Land, else nothing.
+ *  Free text typed at /start ("Ччч", "berlin ") never ends up on the sign. */
+export function placeName(city: string | null, land?: string | null): string | null {
+  const c = city?.trim().toLowerCase();
+  const known = c ? CITIES.find(([name]) => name.toLowerCase() === c) : undefined;
+  if (known) return known[0];
+  // smaller places typed in the form: German place names are written in Latin letters
+  const typed = city?.trim() ?? "";
+  if (/^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß .()\-]{2,}$/.test(typed)) return typed;
+  return land && LANDS[land] ? LANDS[land] : null;
+}
 
 /** Derives every part of the board from the user's job route, so nothing on it is decoration. */
 export function routeOf(j: JobsState) {
   switch (j.step) {
-    case "new": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: false, lamp: "signal" } };
-    case "rejected": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: false, lamp: "signal" } };
-    case "review": return { idx: 1, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
-    case "paused": return { idx: 2, status: "enroute", action: false, scene: { rain: false, train: false, lamp: "dim" } };
-    case "published": return { idx: 2, status: "enroute", action: false, scene: { rain: true, train: false, lamp: "dim" } };
-    case "offers": return { idx: 3, status: "boarding", action: true, scene: { rain: false, train: true, lamp: "signal" } };
-    case "contact": return { idx: 4, status: "arrived", action: false, scene: { rain: false, train: true, lamp: "dim" } };
+    case "new": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: "passing", lamp: "signal" } };
+    case "rejected": return { idx: 0, status: "boarding", action: true, scene: { rain: false, train: "passing", lamp: "signal" } };
+    case "review": return { idx: 1, status: "enroute", action: false, scene: { rain: true, train: "passing", lamp: "dim" } };
+    case "paused": return { idx: 2, status: "enroute", action: false, scene: { rain: false, train: "passing", lamp: "dim" } };
+    case "published": return { idx: 2, status: "enroute", action: false, scene: { rain: true, train: "passing", lamp: "dim" } };
+    case "offers": return { idx: 3, status: "boarding", action: true, scene: { rain: false, train: "standing", lamp: "signal" } };
+    case "contact": return { idx: 4, status: "arrived", action: false, scene: { rain: false, train: "standing", lamp: "dim" } };
   }
 }
 
@@ -57,7 +70,7 @@ export function Home({ t, data, go }: Props) {
         scene={r.scene}
         caption={t("board.yours")}
         meta={data.updated ? t("board.updated", { time: data.updated }) : undefined}
-        station={data.city ? t("board.station", { city: data.city }) : t("board.noCity")}
+        station={placeName(data.city, data.land) ?? t("board.noCity")}
         sub={data.position ?? t("board.noCityHint")}
       />
       <List>

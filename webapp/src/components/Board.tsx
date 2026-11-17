@@ -3,10 +3,11 @@ import { prefersStill } from "../tg";
 
 /** What the header scene shows. Every element is driven by the user's data:
  *  rain  — waiting (profile in review, or published without offers);
- *  train — an offer has arrived and waits for an answer (stands at the platform);
+ *  train — "standing": an offer has arrived and waits for an answer (pulls in and stands at the platform);
+ *          "passing": nothing for you yet, trains pass by in the distance now and then;
  *  lamp  — "signal" when the user has something to do, "dim" otherwise;
  *  bench — the user's station (their city). */
-export type Scene = { rain: boolean; train: boolean; lamp: "signal" | "dim" };
+export type Scene = { rain: boolean; train: "standing" | "passing"; lamp: "signal" | "dim" };
 
 type Props = {
   scene: Scene;
@@ -33,6 +34,7 @@ export function Board({ scene, caption, meta, station, sub, size = "full" }: Pro
     let w = 0, h = 0, raf = 0, last = 0;
     let drops: { x: number; y: number; l: number; v: number; a: number }[] = [];
     const train = { start: performance.now(), arrived: still };   // pulls in once, over ~1.2 s, then stands
+    const far = { x: 0, on: false, next: performance.now() + 2500 };  // distant passing train
     const light = scene.lamp === "signal" ? SIGNAL : DIM;
 
     const resize = () => {
@@ -68,7 +70,7 @@ export function Board({ scene, caption, meta, station, sub, size = "full" }: Pro
       ctx.fillRect(x0 + 3, seat + 3, 2, 10); ctx.fillRect(x1 - 5, seat + 3, 2, 10);
     };
     const drawTrain = () => {
-      if (!scene.train) return;
+      if (scene.train === "passing") return drawFar();
       const len = Math.min(w * .5, 220), y = h - 30, carH = 16;
       let k = 1;
       if (!train.arrived) { k = Math.min(1, (performance.now() - train.start) / 1200); if (k === 1) train.arrived = true; }
@@ -78,6 +80,22 @@ export function Board({ scene, caption, meta, station, sub, size = "full" }: Pro
       ctx.fillStyle = `rgba(${SIGNAL},.95)`;
       for (let i = 8; i < len - 6; i += 12) { if (i % 72 > 62) continue; ctx.fillRect(x + i, y + 3, 7, 5); }
       ctx.fillStyle = INK; for (let i = 72; i < len; i += 72) ctx.fillRect(x + i - 1, y, 2, carH);
+    };
+    // A small regional train crossing the horizon; never on weak devices or with reduced motion.
+    const drawFar = () => {
+      if (still) return;
+      const now = performance.now(), len = Math.min(w * .55, 230), y = h - 44, carH = 7;
+      if (!far.on && now > far.next) { far.on = true; far.x = -len - 20; }
+      if (!far.on) return;
+      ctx.save(); ctx.globalAlpha = .6;
+      ctx.fillStyle = "#DDE4F0"; ctx.fillRect(far.x, y, len, carH);
+      ctx.beginPath(); ctx.moveTo(far.x + len, y); ctx.quadraticCurveTo(far.x + len + 12, y + 1, far.x + len + 14, y + carH);
+      ctx.lineTo(far.x + len, y + carH); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = `rgba(${SIGNAL},.9)`;
+      for (let i = 5; i < len - 4; i += 8) { if (i % 58 > 50) continue; ctx.fillRect(far.x + i, y + 2, 4, 2.5); }
+      ctx.restore();
+      far.x += 3.2;
+      if (far.x > w + 20) { far.on = false; far.next = now + 9000 + Math.random() * 12000; }
     };
     const rain = () => {
       if (!scene.rain) return;
@@ -93,13 +111,13 @@ export function Board({ scene, caption, meta, station, sub, size = "full" }: Pro
     resize(); draw();
     const onResize = () => { resize(); draw(); };
     addEventListener("resize", onResize);
-    const animate = !still && (scene.rain || scene.train);
+    const animate = !still;
     if (animate) {
       const frame = (ts: number) => {
         raf = requestAnimationFrame(frame);
         if (document.hidden || ts - last < 33) return;
         last = ts; draw();
-        if (!scene.rain && train.arrived) cancelAnimationFrame(raf);   // the train has stopped: nothing moves any more
+        if (!scene.rain && scene.train === "standing" && train.arrived) cancelAnimationFrame(raf);   // the train has stopped: nothing moves any more
       };
       raf = requestAnimationFrame(frame);
     }
