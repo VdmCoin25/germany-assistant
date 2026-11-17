@@ -657,6 +657,7 @@ const I18N = {
     sections: [
       ["jobs", "Робота", "Вакансії в Німеччині і ваша анкета", 1],
       ["documents", "Документи", "Розбір німецьких листів", 0],
+      ["dates", "Мої терміни", "Бот нагадає про термін у Jobcenter, лист чи Kita", 1],
       ["housing", "Житло", "Терміни, документи, калькулятор, лист", 1],
       ["translator", "Перекладач", "Німецька, українська, російська", 0],
       ["ai", "Питання й відповіді", "Про життя в Німеччині, з офіційними джерелами", 0],
@@ -711,6 +712,7 @@ const I18N = {
     sections: [
       ["jobs", "Работа", "Вакансии в Германии и ваша анкета", 1],
       ["documents", "Документы", "Разбор немецких писем", 0],
+      ["dates", "Мои сроки", "Бот напомнит о термине в Jobcenter, письме или Kita", 1],
       ["housing", "Жильё", "Термины, документы, калькулятор, письмо", 1],
       ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
       ["ai", "Вопросы и ответы", "О жизни в Германии, с официальными источниками", 0],
@@ -883,10 +885,10 @@ function renderHome() {
            : nVac ? `<span class="m-count">${esc(L().openVac(nVac))}</span>` : ""}
       <span class="m-actions"><button type="button" class="m-emp" id="m-emp">${esc(JL().lead.btn)}</button><button type="button" class="m-cta" id="m-cta">${esc(st ? L().jobCta[st] : L().findJob)}</button></span>
     </div>
-    ${tg?.initData && DATES ? nextDateLine() : ""}
+    ${tg?.initData && DATES?.length ? nextDateLine() : ""}
     <p class="board-label">${esc(L().help)}</p>
     ${[1].map((ok) => `
-    <ol class="board">${rest.filter(r => !!r[3] === !!ok).map(([k, name, via], j) => `
+    <ol class="board">${rest.filter(r => !!r[3] === !!ok && (r[0] !== "dates" || tg?.initData)).map(([k, name, via], j) => `
     <li data-k="${k}">
       <button class="dep" aria-expanded="false">
         <span class="gleis" aria-hidden="true">${j + 2}</span>
@@ -909,6 +911,7 @@ function renderHome() {
     btn.onclick = () => {
       if (li.dataset.k === "info") return show("info");
       if (li.dataset.k === "housing") return show("housing");
+      if (li.dataset.k === "dates") return show("dates");
       const open = !li.classList.contains("open");
       $("page-home").querySelectorAll(".board > li.open").forEach(o => {
         o.classList.remove("open"); o.querySelector(".dep").setAttribute("aria-expanded", "false"); });
