@@ -10,3 +10,4 @@ uploads/
 tmp/
 node_modules/
 webapp/dist/
+webapp/*.tsbuildinfo

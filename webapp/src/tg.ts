@@ -50,7 +50,7 @@ export function useBottomButton(text: string | null, onClick: () => void, opts: 
     b.setParams({ text, is_active: active, is_visible: true });
     if (loading) b.showProgress?.(false); else b.hideProgress?.();
     b.onClick(onClick);
-    return () => b.offClick(onClick);
+    return () => { b.offClick(onClick); b.hide(); };
   }, [text, onClick, active, loading]);
 }
 
@@ -71,7 +71,7 @@ export function useBackButton(onBack: (() => void) | null) {
     if (!b) return;
     if (!onBack) { b.hide(); return; }
     b.show(); b.onClick(onBack);
-    return () => b.offClick(onBack);
+    return () => { b.offClick(onBack); b.hide(); };
   }, [onBack]);
 }
 

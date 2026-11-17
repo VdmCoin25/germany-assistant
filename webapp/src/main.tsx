@@ -37,5 +37,6 @@ function App() {
   );
 }
 
+document.documentElement.lang = lang;
 tg?.ready(); tg?.expand();
 createRoot(document.getElementById("root")!).render(<App />);
