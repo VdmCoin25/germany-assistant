@@ -1,4 +1,5 @@
-import { Cell, Input, List, Section, Select, Textarea } from "@telegram-apps/telegram-ui";
+import { Cell, List, Section, Textarea } from "@telegram-apps/telegram-ui";
+import { Input, Select } from "../components/Fields";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { api, ApiError } from "../api";
 import { Route } from "../components/Route";
@@ -108,7 +109,7 @@ export function Form({ t, existing, exit, done }: Props) {
           <i style={{ width: `${(s / TOTAL) * 100}%` }} /></div></div>
       {restored && s === d.step && <p className="hint">{t("draft.restored")}</p>}
       {s === 1 && <>
-        <h2 className="q">{t("form.q1")}</h2>
+        <h1 className="q">{t("form.q1")}</h1>
         <List><Section>
           <Input header={t("form.position")} placeholder={t("form.positionPh")} value={d.position} maxLength={MAX.position}
                  onChange={(e) => set({ position: e.target.value })} />
@@ -120,14 +121,14 @@ export function Form({ t, existing, exit, done }: Props) {
       </>}
       {s === 2 && <StepCity t={t} d={d} set={set} />}
       {s === 3 && <>
-        <h2 className="q">{t("form.q3")}</h2>
+        <h1 className="q">{t("form.q3")}</h1>
         <Chips label={t("form.q3")} value={d.employment} onChange={(v) => set({ employment: v })}
                options={EMPLOYMENT.map((v) => ({ value: v, text: t(`emp.${v}` as Key) }))} />
         <label className="check"><input type="checkbox" checked={d.shifts_ok}
                onChange={(e) => { haptic.select(); set({ shifts_ok: e.target.checked }); }} /> {t("form.shifts")}</label>
       </>}
       {s === 4 && <>
-        <h2 className="q">{t("form.q4")}</h2>
+        <h1 className="q">{t("form.q4")}</h1>
         <Chips label={t("form.q4")} value={d.german_level} onChange={(v) => set({ german_level: v })}
                options={LEVELS.map((v) => ({ value: v, text: v === "A0" ? t("level.A0") : v }))} />
         <p className="hint">{t("form.levelHint")}</p>
@@ -146,7 +147,7 @@ function TextStep({ t, q, ph, hint, max, value, onChange }:
   const id = useId();
   return (
     <>
-      <h2 className="q" id={id}>{t(q)}</h2>
+      <h1 className="q" id={id}>{t(q)}</h1>
       <List><Section footer={`${t(hint)} · ${t("form.counter", { n: value.length, max })}`}>
         <Textarea aria-labelledby={id} placeholder={t(ph)} value={value} maxLength={max} rows={5}
                   onChange={(e) => onChange(e.target.value)} />
@@ -182,7 +183,7 @@ function StepCity({ t, d, set }: { t: T; d: Draft; set: (p: Partial<Draft>) => v
   const knownLand = landOf(d.city);
   return (
     <>
-      <h2 className="q">{t("form.where")}</h2>
+      <h1 className="q">{t("form.where")}</h1>
       <List>
         <Section footer={d.land && knownLand ? t("form.landAuto") : undefined}>
           <Input header={t("form.city")} placeholder={t("form.cityPh")} value={q} autoComplete="off" maxLength={MAX.city}
@@ -224,7 +225,7 @@ function Preview({ t, d, error, edit }: { t: T; d: Draft; error: string | null; 
   ];
   return (
     <>
-      <h2 className="q">{t("preview.title")}</h2>
+      <h1 className="q">{t("preview.title")}</h1>
       <article className="preview" aria-label={t("preview.title")}>
         <h3>{d.position}</h3>
         <p className="preview__meta">{[where, t(`emp.${d.employment}` as Key)].filter(Boolean).join(" · ")}</p>
@@ -250,7 +251,7 @@ function Preview({ t, d, error, edit }: { t: T; d: Draft; error: string | null; 
 function Sent({ t }: { t: T }) {
   return (
     <>
-      <h2 className="q">{t("sent.title")}</h2>
+      <h1 className="q">{t("sent.title")}</h1>
       <List><Section>
         <Route t={t} current={1} action={false} size="platforms" />
       </Section></List>

@@ -1,4 +1,5 @@
-import { Button, Cell, Input, List, Section, Select, Switch } from "@telegram-apps/telegram-ui";
+import { Button, Cell, List, Section } from "@telegram-apps/telegram-ui";
+import { Input, Select, Switch } from "../components/Fields";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type ApiError } from "../api";
 import { HomeSkeleton, LoadError } from "../components/States";
@@ -62,7 +63,7 @@ export function Settings({ t, exit, onLanguage }: { t: T; exit: () => void; onLa
   );
   return (
     <>
-      <h2 className="q">{t("set.title")}</h2>
+      <h1 className="q">{t("set.title")}</h1>
       {note && <p className="offline" role="status">{note}</p>}
       <List>
         <Section>
@@ -73,7 +74,7 @@ export function Settings({ t, exit, onLanguage }: { t: T; exit: () => void; onLa
           {sel("german_level", "set.level", LEVELS, (v) => (v === "A0" ? t("level.A0") : v))}
           {sel("goal", "set.goal", GOALS, (v) => t(`goal.${v}` as Key))}
           {sel("residence_status", "set.status", STATUSES, (v) => t(`st.${v}` as Key))}
-          <Cell Component="label" multiline after={<Switch checked={me.broadcast_consent} onChange={(e) => save({ broadcast_consent: e.target.checked })} />}>
+          <Cell Component="label" multiline after={<Switch label={t("set.broadcast")} checked={me.broadcast_consent} onChange={(e) => save({ broadcast_consent: e.target.checked })} />}>
             {t("set.broadcast")}
           </Cell>
         </Section>

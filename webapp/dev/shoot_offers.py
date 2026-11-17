@@ -12,9 +12,12 @@ from tests.test_units import make_init_data  # noqa: E402
 BASE = "http://127.0.0.1:8101/app-v2/"
 MOCK = (pathlib.Path(__file__).parent / "mock-telegram.js").read_text()
 OUT = pathlib.Path(sys.argv[1])
+import os
+W, H = (360, 740) if os.environ.get("NARROW") else (390, 844)
 
 
-async def page(b, uid, scheme, lang, w=390, h=844):
+async def page(b, uid, scheme, lang, w=None, h=None):
+    w, h = w or W, h or H
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2)
     await ctx.route("https://telegram.org/**", lambda r: r.abort())
     await ctx.add_init_script(f"window.__TG_INIT_DATA__ = {json.dumps(make_init_data(uid, '42:TEST-TOKEN'))};"
@@ -38,7 +41,7 @@ async def main():
         # read-only views for every theme/language (no answer is sent)
         for scheme in ("light", "dark"):
             for lang in ("uk", "ru"):
-                sfx = f"__390_{scheme}_{lang}"
+                sfx = f"__{W}_{scheme}_{lang}"
                 ctx, pg = await page(b, 2001, scheme, lang)
                 await pg.locator("#tg-main").click()
                 await snap(pg, f"offers-list{sfx}")
@@ -53,7 +56,7 @@ async def main():
         ctx, pg = await page(b, 2001, "light", "ru")
         for _ in range(4):   # home -> list -> offer -> consent -> agree
             await pg.locator("#tg-main").click(); await pg.wait_for_timeout(400)
-        await pg.wait_for_timeout(800); await snap(pg, "offer-done__390_light_ru")
+        await pg.wait_for_timeout(800); await snap(pg, f"offer-done__{W}_light_ru")
         await ctx.close()
         await b.close()
 

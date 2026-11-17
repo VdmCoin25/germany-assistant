@@ -1,0 +1,326 @@
+{
+ "home-new:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(3) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-review:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-offers:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-contact:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "form-1:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    "h6"
+   ]
+  }
+ ],
+ "form-2:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-809f1f8a3f64154d"
+   ]
+  }
+ ],
+ "form-3:light": [],
+ "offers-list:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "label > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "offer-card:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-46dd90b57ffed25f.tgui-8f63cd31b2513281"
+   ]
+  }
+ ],
+ "offer-consent:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    "section:nth-child(1) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "housing:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "housing-calc:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-809f1f8a3f64154d.tgui-9f9a52f695b85cc9.tgui-8f63cd31b2513281"
+   ]
+  }
+ ],
+ "housing-letter:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-809f1f8a3f64154d.tgui-9f9a52f695b85cc9"
+   ]
+  }
+ ],
+ "reference:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "settings:light": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-9f9a52f695b85cc9",
+    ".tgui-67471b69da3e3062"
+   ]
+  }
+ ],
+ "home-new:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(3) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-review:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-offers:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "home-contact:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "form-1:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    "h6"
+   ]
+  }
+ ],
+ "form-2:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-809f1f8a3f64154d"
+   ]
+  }
+ ],
+ "form-3:dark": [],
+ "offers-list:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "label > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "offer-card:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-46dd90b57ffed25f.tgui-8f63cd31b2513281"
+   ]
+  }
+ ],
+ "offer-consent:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    "section:nth-child(1) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f",
+    "section:nth-child(2) > .tgui-db9be63c4fecf79b > .tgui-4b78bed6e925088e > .tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "housing:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-30064fce0d501f17.tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "housing-calc:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-809f1f8a3f64154d.tgui-9f9a52f695b85cc9.tgui-8f63cd31b2513281"
+   ]
+  }
+ ],
+ "housing-letter:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-809f1f8a3f64154d.tgui-9f9a52f695b85cc9"
+   ]
+  }
+ ],
+ "reference:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".tgui-b5d680db78c4cc2e.tgui-b8dfba0b5c3d054c.tgui-6c49dadccf648a5b:nth-child(1) > .tgui-8735a62be5a8b8a7 > .tgui-a894f59f4c5ad72f"
+   ]
+  }
+ ],
+ "settings:dark": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 2,
+   "targets": [
+    ".tgui-92da7016c7125c02.tgui-8ca550c2fc85eff5.tgui-7584398855f80ae6:nth-child(1) > .tgui-9f9a52f695b85cc9",
+    ".tgui-67471b69da3e3062"
+   ]
+  }
+ ]
+}

@@ -1,4 +1,5 @@
-import { Cell, Input, List, Section } from "@telegram-apps/telegram-ui";
+import { Cell, List, Section } from "@telegram-apps/telegram-ui";
+import { Input } from "../components/Fields";
 import { useCallback, useId, useMemo, useState, type KeyboardEvent } from "react";
 import type { T } from "../i18n";
 import { haptic, useBackButton, useBottomButton } from "../tg";
@@ -40,7 +41,7 @@ export function FormCity({ t, step, total, initial = "", back, next }: Props) {
     <>
       <div className="progress num">{t("form.progress", { n: step, total })}
         <div className="progress__bar"><i style={{ width: `${(step / total) * 100}%` }} /></div></div>
-      <h2 className="q">{t("form.where")}</h2>
+      <h1 className="q">{t("form.where")}</h1>
       <List>
         <Section footer={picked ? t("form.landAuto") : t("form.pickCity")}>
           <Input

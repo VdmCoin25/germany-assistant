@@ -1,4 +1,5 @@
-import { Cell, Input, List, Section } from "@telegram-apps/telegram-ui";
+import { Cell, List, Section } from "@telegram-apps/telegram-ui";
+import { Input } from "../components/Fields";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type ApiError } from "../api";
 import { HomeSkeleton, LoadError } from "../components/States";
@@ -45,11 +46,11 @@ export function Reference({ t, lang, exit }: { t: T; lang: Lang; exit: () => voi
   );
 
   if (open) return (
-    <><h2 className="q">{data.meta.topics[open]?.[lang] ?? open}</h2>
+    <><h1 className="q">{data.meta.topics[open]?.[lang] ?? open}</h1>
       <List><Section footer={t("ref.note")}>{data.sources.filter((s) => s.topic === open).map(link)}</Section></List></>
   );
   return (
-    <><h2 className="q">{t("ref.title")}</h2>
+    <><h1 className="q">{t("ref.title")}</h1>
       <List>
         <Section>
           <Input aria-label={t("ref.title")} placeholder={t("ref.search")} value={q} type="search" onChange={(e) => setQ(e.target.value)} />

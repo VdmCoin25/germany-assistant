@@ -1,4 +1,5 @@
-import { Cell, List, Placeholder, Section, Switch } from "@telegram-apps/telegram-ui";
+import { Cell, List, Placeholder, Section } from "@telegram-apps/telegram-ui";
+import { Switch } from "../components/Fields";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type ApiError } from "../api";
 import { Route } from "../components/Route";
@@ -79,7 +80,7 @@ export function Offers({ t, exit, editProfile }: Props) {
 
   if (view.name === "done") return (
     <>
-      <h2 className="q">{t("done.title")}</h2>
+      <h1 className="q">{t("done.title")}</h1>
       <List><Section><Route t={t} current={4} action={false} size="platforms" /></Section></List>
       <p className="lead">{t("done.text")}</p>
       <p className="hint">{t("offer.scam")}</p>
@@ -120,7 +121,7 @@ function OfferList({ t, data, offers, open, reload }:
   const line = (o: Offer) => [o.company, place(o), o.vacancy_info?.salary].filter(Boolean).join(" · ");
   return (
     <>
-      <h2 className="q">{t("offers.title")}</h2>
+      <h1 className="q">{t("offers.title")}</h1>
       <List>
         <Section><Route t={t} current={step} action={waiting.length > 0} size="platforms" /></Section>
         {waiting.length > 0 && (
@@ -149,7 +150,7 @@ function OfferList({ t, data, offers, open, reload }:
         {s?.status === "approved" && (
           <Section header={t("offers.profile")} footer={active ? t("offers.visibleOn") : t("offers.visibleOff")}>
             <Cell Component="label" multiline subtitle={s.position}
-                  after={<Switch checked={active} disabled={saving} onChange={(e) => toggle(e.target.checked)} />}>
+                  after={<Switch label={t("offers.visible")} checked={active} disabled={saving} onChange={(e) => toggle(e.target.checked)} />}>
               {t("offers.visible")}
             </Cell>
           </Section>
@@ -163,7 +164,7 @@ function OfferCard({ t, o, note }: { t: T; o: Offer; note: string | null }) {
   const i = o.vacancy_info, emp = empKey(i?.employment);
   return (
     <>
-      <h2 className="q">{o.vacancy ?? t("offers.noVacancy")}</h2>
+      <h1 className="q">{o.vacancy ?? t("offers.noVacancy")}</h1>
       {o.company && <p className="lead">{t("offer.from", { company: o.company })}</p>}
       {note && <p className="form-error" role="alert">{note}</p>}
       <List>
@@ -189,7 +190,7 @@ function Consent({ t, o, seeker, note }: { t: T; o: Offer; seeker: Seeker | null
   const company = o.company ?? "";
   return (
     <>
-      <h2 className="q">{t("consent.q")}</h2>
+      <h1 className="q">{t("consent.q")}</h1>
       {note && <p className="form-error" role="alert">{note}</p>}
       <List>
         <Section header={t("consent.theyGet", { company })}>
