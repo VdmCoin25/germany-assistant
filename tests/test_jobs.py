@@ -215,9 +215,6 @@ async def test_employer_lead_goes_to_admin_with_contact_first(settings, sm):
         # a bare username gets its @, junk is refused
         r = await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": "muster_bau"})
         assert r.json()["contact"] == "@muster_bau"
-        short = {"contact": "@muster_bau", "contact_person": "Anna", "company": "Muster Bau GmbH", "city": "München"}
-        assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json=short)).status_code == 200
-        assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**short, "company": ""})).status_code == 422
         for bad in ("123", "hello world", "+49 12"):
             assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": bad})).status_code == 422
         assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "land": "XX"})).status_code == 422
@@ -262,3 +259,12 @@ async def test_report_vacancy_reaches_admins_with_takedown(settings, sm):
         assert "200 €" in sent[0].text and f"rep:close:{vid}" in str(sent[0].reply_markup)
         assert (await c.post(f"/api/jobs/vacancies/{vid}/report", headers=hdr(SEEKER),
                              json={"reason": "spam"})).status_code == 422
+
+
+async def test_short_company_form(settings, sm):
+    app = create_app(settings, sm)
+    short = {"contact": "@muster_bau", "contact_person": "Anna", "company": "Muster Bau GmbH", "city": "München"}
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        assert (await c.post("/api/jobs/leads", headers=hdr(3999), json={**short, "company": ""})).status_code == 422
+        r = await c.post("/api/jobs/leads", headers=hdr(3999), json={**short, "website": "www.muster.example"})
+        assert r.status_code == 200 and r.json()["company"] == "Muster Bau GmbH" and r.json()["positions"] is None
