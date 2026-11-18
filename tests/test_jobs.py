@@ -215,6 +215,9 @@ async def test_employer_lead_goes_to_admin_with_contact_first(settings, sm):
         # a bare username gets its @, junk is refused
         r = await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": "muster_bau"})
         assert r.json()["contact"] == "@muster_bau"
+        short = {"contact": "@muster_bau", "contact_person": "Anna", "company": "Muster Bau GmbH", "city": "München"}
+        assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json=short)).status_code == 200
+        assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**short, "company": ""})).status_code == 422
         for bad in ("123", "hello world", "+49 12"):
             assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "contact": bad})).status_code == 422
         assert (await c.post("/api/jobs/leads", headers=hdr(BOSS), json={**LEAD_BODY, "land": "XX"})).status_code == 422

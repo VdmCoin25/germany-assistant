@@ -8,7 +8,7 @@
 <script>
   // Apply the saved palette and mode before the first paint (no flash of the default theme).
   try { var t = JSON.parse(localStorage.getItem("ui_theme_v1") || "{}"), d = document.documentElement;
-        d.dataset.palette = t.palette || "emerald";
+        d.dataset.palette = ["sapphire", "amethyst", "amber", "graphite"].indexOf(t.palette) >= 0 ? t.palette : "amber";
         d.dataset.mode = t.mode === "light" || t.mode === "dark" ? t.mode
           : (window.Telegram && Telegram.WebApp && Telegram.WebApp.colorScheme === "light" ? "light" : "dark"); } catch (e) {}
 </script>
@@ -38,10 +38,6 @@
      One look for Telegram's light and dark themes. Source of truth: docs/DESIGN_SYSTEM.md */
   /* ---- Themes: a colour palette × light or dark. The user picks both in Profile → Appearance. ----
      Each palette defines its own accents and the night sky of the header; the mode decides surfaces and text. */
-  :root, [data-palette="emerald"] {
-    --p-deep: #04201A; --p-tint: #E8F4EE; --p-accent: #3FE0A0; --p-accent-ink: #03281D; --p-accent-l: #0A7A50;
-    --p-sky1: #031A14; --p-sky2: #07382B; --p-sky3: #0E5A44; --p-scene: #02140F;
-  }
   [data-palette="sapphire"] {
     --p-deep: #0B1628; --p-tint: #EAF0FA; --p-accent: #7DB2FF; --p-accent-ink: #06204A; --p-accent-l: #1D57C2;
     --p-sky1: #0A1B3D; --p-sky2: #0F2C5E; --p-sky3: #163E80; --p-scene: #081430;
@@ -50,7 +46,7 @@
     --p-deep: #150F26; --p-tint: #F0ECFA; --p-accent: #BBA4FF; --p-accent-ink: #1E0F4A; --p-accent-l: #5E3DC4;
     --p-sky1: #140B2C; --p-sky2: #241650; --p-sky3: #3A2A78; --p-scene: #0C0720;
   }
-  [data-palette="amber"] {
+  :root, [data-palette="amber"] {
     --p-deep: #1E1608; --p-tint: #F7F1E6; --p-accent: #FFC566; --p-accent-ink: #3A2400; --p-accent-l: #8F5300;
     --p-sky1: #1E1404; --p-sky2: #3A270A; --p-sky3: #5C3F12; --p-scene: #140D02;
   }
@@ -143,6 +139,17 @@
   .page { display: none; }
   .page.on { display: block; animation: page-in 140ms linear both; }
   @keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
+  /* Opening animation (see intro() in the script) */
+  .intro .sign::after { content: ""; position: absolute; inset: 0; background: #000; pointer-events: none;
+                        animation: lamp-on 900ms steps(1, end) both; }
+  .intro .sign .owner, .intro .sign .sub { animation: fade-in 300ms ease-out 700ms both; }
+  .intro #page-home .mainline, .intro #page-home .next-date, .intro #page-home .board-label,
+  .intro #page-home .board > li, .intro #page-home .later-line {
+    animation: rise 360ms cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(650ms + var(--i, 0) * 70ms); }
+  .intro #page-home .board { overflow: hidden; }
+  @keyframes lamp-on { 0% { opacity: .92; } 22% { opacity: .55; } 30% { opacity: .9; } 46% { opacity: .35; } 54% { opacity: .7; } 70% { opacity: .15; } 100% { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .intro #page-home.page.on { animation: none; }
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
   .head { padding: 24px 16px 4px; }
   .head h2 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
@@ -258,11 +265,26 @@
   .points li { margin: 0 0 6px; max-width: 60ch; }
   .checked { margin: 4px 16px 4px; font-size: 13px; color: var(--pencil); }
   .checked a { color: var(--pencil); text-underline-offset: 3px; }
-  .changes { list-style: none; margin: 8px 16px 0; padding: 0; border-left: 2px solid var(--signal); }
-  .changes button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 88px 1fr; gap: 12px; width: 100%;
-                    padding: 8px 0 8px 12px; cursor: pointer; font-size: 15px; }
-  .changes time { color: var(--pencil); font-variant-numeric: tabular-nums; }
-  .changes button:focus-visible { outline: 2px solid var(--signal); }
+  /* News crawl */
+  .ticker { display: flex; align-items: stretch; margin: 16px 0 0; background: var(--board); color: var(--on-board);
+            border-top: 2px solid var(--signal); overflow: hidden; }
+  .tk-tag { flex: none; display: flex; align-items: center; padding: 0 12px; background: var(--signal); color: var(--on-signal);
+            font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .tk-win { flex: 1; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); }
+  .tk-track { display: flex; width: max-content; animation: tk var(--tk-dur, 24s) linear infinite; }
+  .ticker:active .tk-track, .ticker:hover .tk-track, .ticker:focus-within .tk-track { animation-play-state: paused; }
+  .tk-run { display: flex; }
+  .tk-item { all: unset; cursor: pointer; padding: 10px 24px 10px 0; font-size: 15px; white-space: nowrap; }
+  .tk-item::before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 12px 2px 0; background: var(--signal); }
+  .tk-item time { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tk-item:focus-visible { outline: 2px solid var(--on-board); }
+  @keyframes tk { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker { flex-direction: column; } .tk-tag { padding: 6px 12px; } .tk-win { -webkit-mask-image: none; mask-image: none; }
+    .tk-track { animation: none; width: auto; display: block; } .tk-run { display: block; } .tk-run[aria-hidden] { display: none; }
+    .tk-item { display: block; white-space: normal; padding: 8px 12px; }
+  }
   .later-line { margin: 16px 16px 0; font-size: 15px; color: var(--pencil); }
   .next-date { all: unset; box-sizing: border-box; display: block; width: calc(100% - 32px); margin: 8px 16px 0; padding: 10px 12px;
                border-left: 3px solid var(--signal); font-size: 15px; cursor: pointer; }
@@ -336,7 +358,7 @@
   .saved { height: 20px; margin: 8px 0 0; font-size: 13px; color: var(--success); opacity: 0; transform: translateY(4px);
            transition: opacity 200ms var(--ease), transform 200ms var(--ease); }
   .saved.on { opacity: 1; transform: none; }
-  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
   .swatch { display: grid; justify-items: center; gap: 6px; padding: 8px 2px; border: 0; border-radius: var(--radius); background: transparent;
             font-size: 12px; color: var(--pencil); cursor: pointer; transition: background-color 180ms var(--ease); }
   .swatch__chip { width: 34px; height: 34px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
@@ -369,10 +391,6 @@
   /* ---- Employer lead ---- */
   .lead-contact { border-left: 4px solid var(--signal); }
   .field > .lbl { display: block; }
-  .stepper { display: inline-flex; align-items: center; margin-top: 8px; border: 1px solid var(--rim); border-radius: var(--radius); }
-  .stepper button { width: 48px; height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 22px; cursor: pointer; }
-  .stepper button:active { background: var(--tag-bg); }
-  .stepper output { min-width: 44px; text-align: center; font-weight: 600; font-size: 17px; }
   .items .item .badge { margin-top: 6px; }
 
   /* ---- Step-by-step profile ---- */
@@ -494,15 +512,15 @@ const cssVar = (v) => getComputedStyle(document.documentElement).getPropertyValu
 
 // What the header scene shows; set from the user's job route (renderSign), read by the canvas loop.
 // rain: waiting for review or for offers; train "standing": an offer waits for an answer, otherwise trains pass by.
-const SCENE = { rain: true, train: "passing", ink: "#02140F" };
+const SCENE = { rain: true, train: "passing", ink: "#140D02" };
 
 // ---- Appearance: palette × mode, chosen in Profile. Saved on this phone and in Telegram's cloud. ----
-const PALETTES = ["emerald", "sapphire", "amethyst", "amber", "graphite"];
+const PALETTES = ["amber", "sapphire", "amethyst", "graphite"];   // amber is the default (warm station lamp)
 const THEME_KEY = "ui_theme_v1";
 function readTheme() {
   try { const t = JSON.parse(localStorage.getItem(THEME_KEY) || "{}");
-        return { mode: ["auto", "dark", "light"].includes(t.mode) ? t.mode : "auto", palette: PALETTES.includes(t.palette) ? t.palette : "emerald" }; }
-  catch { return { mode: "auto", palette: "emerald" }; }
+        return { mode: ["auto", "dark", "light"].includes(t.mode) ? t.mode : "auto", palette: PALETTES.includes(t.palette) ? t.palette : "amber" }; }
+  catch { return { mode: "auto", palette: "amber" }; }
 }
 let THEME = readTheme();
 function applyTheme(t = THEME, persist = false) {
@@ -523,7 +541,8 @@ applyTheme();
 tg?.onEvent?.("themeChanged", () => { if (THEME.mode === "auto") applyTheme(); });
 try { tg?.CloudStorage?.getItem(THEME_KEY, (e, v) => {   // same look on another phone
   if (e || !v) return;
-  try { const t = JSON.parse(v); if (t.mode !== THEME.mode || t.palette !== THEME.palette) { applyTheme({ mode: t.mode, palette: t.palette }); try { localStorage.setItem(THEME_KEY, v); } catch {} if (typeof renderProfile === "function" && META) renderProfile(); } } catch {}
+  try { const t = JSON.parse(v); if (!PALETTES.includes(t.palette)) t.palette = "amber";
+        if (t.mode !== THEME.mode || t.palette !== THEME.palette) { applyTheme({ mode: t.mode, palette: t.palette }); try { localStorage.setItem(THEME_KEY, v); } catch {} if (typeof renderProfile === "function" && META) renderProfile(); } } catch {}
 }); } catch {}
 
 // Night platform: rain, a warm station lamp with a light cone, low drifting fog.
@@ -676,7 +695,7 @@ const I18N = {
     toChat: "Повернутися в чат", later: "Поки готуємо", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
     profileHead: "Профіль", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
     appearance: "Оформлення", themeMode: "Тема", themeAuto: "Як у Telegram", themeDark: "Темна", themeLight: "Світла", palette: "Колір",
-    palettes: { emerald: "Смарагд", sapphire: "Сапфір", amethyst: "Аметист", amber: "Бурштин", graphite: "Графіт" },
+    palettes: { sapphire: "Сапфір", amethyst: "Аметист", amber: "Бурштин", graphite: "Графіт" },
     aboutYou: "Про вас", savedShort: "Збережено",
     language: "Мова", land: "Федеральна земля", city: "Місто", level: "Рівень німецької", goal: "З чим потрібна допомога",
     status: "Статус перебування", broadcast: "Надсилати мені оголошення бота",
@@ -731,7 +750,7 @@ const I18N = {
     toChat: "Вернуться в чат", later: "Пока готовим", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
     profileHead: "Профиль", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
     appearance: "Оформление", themeMode: "Тема", themeAuto: "Как в Telegram", themeDark: "Тёмная", themeLight: "Светлая", palette: "Цвет",
-    palettes: { emerald: "Изумруд", sapphire: "Сапфир", amethyst: "Аметист", amber: "Янтарь", graphite: "Графит" },
+    palettes: { sapphire: "Сапфир", amethyst: "Аметист", amber: "Янтарь", graphite: "Графит" },
     aboutYou: "О вас", savedShort: "Сохранено",
     language: "Язык", land: "Федеральная земля", city: "Город", level: "Уровень немецкого", goal: "С чем нужна помощь",
     status: "Статус пребывания", broadcast: "Присылать мне объявления бота",
@@ -864,7 +883,8 @@ function renderSign() {
   const place = placeName(s?.city || ME?.city, s?.land || ME?.land);
   $("owner").textContent = T.yours;
   $("updated").textContent = `${hh}:${mm}`; $("updated").dateTime = `${hh}:${mm}`;
-  $("title").textContent = place || T.noCity;
+  const tt = $("title"), name = place || T.noCity;
+  if (tt._flap) { tt._flap = name; tt.setAttribute("aria-label", name); } else tt.textContent = name;
   $("station-sub").textContent = s?.position || (place ? "" : T.noCityHint);
   SCENE.rain = st === null || st === "review" || st === "published";          // waiting
   SCENE.train = st === "offers" || st === "contact" ? "standing" : "passing";  // an offer has arrived
@@ -904,6 +924,7 @@ function renderHome() {
   };
   $("page-home").querySelector(".mainline").onclick = (ev) => { if (!ev.target.closest(".m-emp")) openJobs(); };
   $("m-emp").onclick = () => openLead("home");
+  if (document.documentElement.classList.contains("intro")) introIndex();
   const nd = $("next-date"); if (nd) nd.onclick = () => show("dates");
   renderSign();
   $("page-home").querySelectorAll(".board > li").forEach(li => {
@@ -1009,6 +1030,21 @@ async function saveProfile(patch) {
   } catch { toast(L().error); renderProfile(); }
 }
 
+// News crawl, like the strip at the bottom of a TV news channel: the changes run right to left in a loop.
+// The track holds the list twice so the loop has no seam; the copy is hidden from screen readers.
+// Tap a headline to open its topic; touching the strip pauses it. Reduced motion → a plain list.
+function ticker(CH) {
+  const item = (c, hidden) => `<button type="button" class="tk-item" data-topic="${esc(c.topic)}"${hidden ? ' tabindex="-1"' : ""}>
+      <time datetime="${esc(c.date)}">${esc(fmtDate(c.date))}</time> ${esc(c[lang] || c.uk)}</button>`;
+  const words = CH.reduce((n, c) => n + (c[lang] || c.uk).length, 0);
+  return `<section class="ticker" aria-label="${esc(L().changesHead)}">
+    <span class="tk-tag">${esc(L().changesHead)}</span>
+    <div class="tk-win"><div class="tk-track" style="--tk-dur:${Math.max(18, Math.round(words / 6))}s">
+      <div class="tk-run">${CH.map(c => item(c, false)).join("")}</div>
+      <div class="tk-run" aria-hidden="true">${CH.map(c => item(c, true)).join("")}</div>
+    </div></div></section>`;
+}
+
 // Reference: what changed (dated, newest first), then topics. A topic opens to a short answer with its
 // check date and source, then the official links. Rules live in app/data/guides.py with their sources.
 function renderInfo() {
@@ -1017,8 +1053,7 @@ function renderInfo() {
     return `<ul class="points">${(g[lang] || g.uk).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
       <p class="checked">${esc(L().answerChecked(fmtDate(g.checked)))}, ${esc(L().source.toLowerCase())}: <a href="${esc(g.source.url)}" data-ext>${esc(g.source.title)}</a></p>`; };
   $("page-info").innerHTML = `<div class="head"><h2>${esc(L().infoHead)}</h2><p>${esc(L().infoNote)}</p></div>
-    ${CH.length ? `<h2 class="sec">${esc(L().changesHead)}</h2><ol class="changes">${CH.map(c =>
-      `<li><button type="button" data-topic="${esc(c.topic)}"><time datetime="${esc(c.date)}">${esc(fmtDate(c.date))}</time><span>${esc(c[lang] || c.uk)}</span></button></li>`).join("")}</ol>` : ""}
+    ${CH.length ? ticker(CH) : ""}
     <div class="topics">${Object.entries(META.topics).map(([k, t]) =>
       `<details id="topic-${k}"><summary>${esc(t[lang] || t.uk)}</summary>${answer(k)}${k === "safety" && tg?.initData ? `<p style="margin:4px 16px 8px"><button type="button" class="btn line" data-check>${esc(JL().check.title)}</button></p>` : ""}${linkList(k, (META.guides || {})[k]?.source.url)}</details>`).join("")}</div>`;
   bindLinks($("page-info"));
@@ -1069,16 +1104,15 @@ const J = {
     applyLabel: "Ваше повідомлення роботодавцю (можна залишити як є)",
     applied: "Ви вже відгукнулися", needProfile: "Щоб відгукнутися, спочатку заповніть анкету.",
     sentForReview: "Надіслано. Адміністратор перевірить і передасть.",
-    lead: { btn: "Я роботодавець", title: "Шукаєте працівників?",
-      intro: "Залиште заявку. Її бачить лише адміністратор: він перевірить її і зв’яжеться з вами, щоб обговорити деталі.",
-      contactTitle: "Як з вами зв’язатися", contactLabel: "Телефон або Telegram", contactPh: "+49 151… або @username",
+    lead: { btn: "Я роботодавець", title: "Анкета компанії",
+      intro: "Її бачить лише адміністратор. Після схвалення ми зв’яжемося з вами.",
+      company: "Назва фірми", person: "Контактна особа", contactLabel: "Телефон або Telegram для зв’язку", contactPh: "+49 151… або @username",
       sharePhone: "Мій номер з Telegram", phoneNotShared: "Номер не отримали. Введіть його вручну.",
-      badContact: "Вкажіть телефон (від 7 цифр), @username або e-mail", person: "Як до вас звертатися",
-      whoTitle: "Кого шукаєте", positions: "Робота або посада", positionsPh: "Наприклад: помічник на склад",
-      common: ["Склад", "Прибирання", "Кухня", "Будівництво", "Догляд", "Водій"], headcount: "Скільки людей потрібно",
-      company: "Фірма (можна вказати пізніше)", details: "Що ще важливо: графік, оплата, житло", send: "Надіслати заявку",
-      sent: "Заявку надіслано. Адміністратор зв’яжеться з вами.", mine: "Ваші заявки", people: (n) => `Людей: ${n}`,
-      st: { pending: "На перевірці", approved: "Прийнято, ми зв’яжемося", rejected: "Не прийнято" } },
+      badContact: "Вкажіть телефон (від 7 цифр), @username або e-mail", website: "Сайт (за бажанням)",
+      send: "Надіслати на перевірку", sent: "Анкету надіслано. Адміністратор перевірить її.",
+      pendingText: "Анкету перевіряє адміністратор. Коли схвалить, бот напише вам у чат.",
+      approvedText: (c) => `Анкету схвалено. Ми зв’яжемося з вами: ${c}.`,
+      rejectedText: "Попередню анкету не схвалили. Перевірте назву фірми й контакт." },
     check: { link: "Перевірити оголошення з чату", title: "Перевірити оголошення",
       intro: "Про вакансію чи квартиру, яку ви знайшли в чаті або на сайті.", yes: "Так", no: "Ні",
       qs: ["Просять заплатити наперед: завдаток, ключі, «оформлення», «за місце»?",
@@ -1096,7 +1130,7 @@ const J = {
     report: { link: "Поскаржитися", title: "Що не так з вакансією?",
       reasons: { fee: "Просять гроші", documents: "Просять документи чи дані банку", fake: "Схоже на фейк", other: "Інше" },
       note: "Коментар (необов’язково)", send: "Надіслати скаргу", sent: "Дякуємо. Адміністратор перевірить вакансію.", cancel: "Скасувати" },
-    employerLink: "Ви роботодавець? Залиште заявку",
+    employerLink: "Ви роботодавець? Заповніть анкету компанії",
     formTitle: "Анкета", formHint: "Не пишіть телефон чи адресу. Бот сам передасть контакти, коли ви погодитесь на запрошення.",
     wiz: { progress: (n) => `Крок ${n} з 6`, anon: "Ім’я, телефон і фото роботодавець не побачить.", q1: "Яку роботу шукаєте?", q2: "Де хочете працювати?", q3: "Яка зайнятість підходить?",
       q4: "Як ви знаєте німецьку?", q5: "Який у вас досвід?", q6: "Що ще розповісти про себе?", popular: "Часто шукають:",
@@ -1154,16 +1188,15 @@ const J = {
     applyLabel: "Ваше сообщение работодателю (можно оставить как есть)",
     applied: "Вы уже откликнулись", needProfile: "Чтобы откликнуться, сначала заполните анкету.",
     sentForReview: "Отправлено. Администратор проверит и передаст.",
-    lead: { btn: "Я работодатель", title: "Ищете работников?",
-      intro: "Оставьте заявку. Её видит только администратор: он проверит её и свяжется с вами, чтобы обсудить детали.",
-      contactTitle: "Как с вами связаться", contactLabel: "Телефон или Telegram", contactPh: "+49 151… или @username",
+    lead: { btn: "Я работодатель", title: "Анкета компании",
+      intro: "Её видит только администратор. После одобрения мы свяжемся с вами.",
+      company: "Название фирмы", person: "Контактное лицо", contactLabel: "Телефон или Telegram для связи", contactPh: "+49 151… или @username",
       sharePhone: "Мой номер из Telegram", phoneNotShared: "Номер не получили. Введите его вручную.",
-      badContact: "Укажите телефон (от 7 цифр), @username или e-mail", person: "Как к вам обращаться",
-      whoTitle: "Кого ищете", positions: "Работа или должность", positionsPh: "Например: помощник на склад",
-      common: ["Склад", "Уборка", "Кухня", "Стройка", "Уход", "Водитель"], headcount: "Сколько людей нужно",
-      company: "Фирма (можно указать позже)", details: "Что ещё важно: график, оплата, жильё", send: "Отправить заявку",
-      sent: "Заявка отправлена. Администратор свяжется с вами.", mine: "Ваши заявки", people: (n) => `Людей: ${n}`,
-      st: { pending: "На проверке", approved: "Принята, мы свяжемся", rejected: "Не принята" } },
+      badContact: "Укажите телефон (от 7 цифр), @username или e-mail", website: "Сайт (по желанию)",
+      send: "Отправить на проверку", sent: "Анкета отправлена. Администратор её проверит.",
+      pendingText: "Анкету проверяет администратор. Когда одобрит, бот напишет вам в чат.",
+      approvedText: (c) => `Анкета одобрена. Мы свяжемся с вами: ${c}.`,
+      rejectedText: "Прошлую анкету не одобрили. Проверьте название фирмы и контакт." },
     check: { link: "Проверить объявление из чата", title: "Проверить объявление",
       intro: "О вакансии или квартире, которую вы нашли в чате или на сайте.", yes: "Да", no: "Нет",
       qs: ["Просят заплатить заранее: залог, ключи, «оформление», «за место»?",
@@ -1181,7 +1214,7 @@ const J = {
     report: { link: "Пожаловаться", title: "Что не так с вакансией?",
       reasons: { fee: "Просят деньги", documents: "Просят документы или данные банка", fake: "Похоже на фейк", other: "Другое" },
       note: "Комментарий (необязательно)", send: "Отправить жалобу", sent: "Спасибо. Администратор проверит вакансию.", cancel: "Отмена" },
-    employerLink: "Вы работодатель? Оставьте заявку",
+    employerLink: "Вы работодатель? Заполните анкету компании",
     formTitle: "Анкета", formHint: "Не пишите телефон и адрес. Бот сам передаст контакты, когда вы согласитесь на приглашение.",
     wiz: { progress: (n) => `Шаг ${n} из 6`, anon: "Имя, телефон и фото работодатель не увидит.", q1: "Какую работу ищете?", q2: "Где хотите работать?", q3: "Какая занятость подходит?",
       q4: "Как вы знаете немецкий?", q5: "Какой у вас опыт?", q6: "Что ещё рассказать о себе?", popular: "Часто ищут:",
@@ -1590,40 +1623,41 @@ const leadContactOk = (v) => { v = v.trim(); return LEAD_CONTACT.test(v) && (!/^
 
 function openLead(from) {
   const e = JOBS.me?.employer;
-  if (e && e.status !== "rejected") { JOBS.view = "employer"; JOBS.sub = null; }   // registered employers keep their cabinet
+  if (e && e.status === "approved" && e.has_access) { JOBS.view = "employer"; JOBS.sub = null; }   // approved employers keep their cabinet
   else { JOBS.sub = "lead"; JOBS.leadFrom = from; }
   renderJobs(); show("jobs"); window.scrollTo(0, 0);
 }
 
 function jLead(body) {
   const T = JL(), LT = T.lead, u = tg?.initDataUnsafe?.user || {};
-  const d = JOBS.leadDraft ||= { contact: "", person: u.first_name || "", positions: "", headcount: 1,
-    land: ME?.land || null, city: "", company: "", details: "" };
-  const mine = (JOBS.me?.leads || []).map(x => `<div class="item"><h3>${esc(x.positions)}</h3>
-      <p class="meta">${esc([x.headcount ? LT.people(x.headcount) : "", x.city, x.created ? fmtDate(x.created) : ""].filter(Boolean).join(", "))}</p>
-      <span class="badge ${x.status === "approved" ? "ok" : x.status === "rejected" ? "no" : ""}">${esc(LT.st[x.status] || x.status)}</span></div>`).join("");
+  const last = (JOBS.me?.leads || [])[0];
+  // One form per company: while it is being checked or after it is approved, only the status is shown.
+  if (last && last.status !== "rejected") {
+    body.innerHTML = `<div class="head"><h2>${esc(LT.title)}</h2></div>
+      <section class="card profile ${last.status === "approved" ? "approved" : "pending"}">
+        <h2>${esc(last.company || "")}</h2>${badge(last.status === "approved" ? "approved" : "pending")}
+        <p>${esc(last.status === "approved" ? LT.approvedText(last.contact) : LT.pendingText)}</p></section>`;
+    return;
+  }
+  const d = JOBS.leadDraft ||= { company: "", person: [u.first_name, u.last_name].filter(Boolean).join(" "), contact: "",
+    land: ME?.land || null, city: ME?.city || "", website: "" };
   body.innerHTML = `<div class="head"><h2>${esc(LT.title)}</h2><p>${esc(LT.intro)}</p></div>
-    ${mine ? `<h2 class="sec">${esc(LT.mine)}</h2><div class="items">${mine}</div>` : ""}
+    ${last ? `<div class="card profile rejected"><p>${esc(LT.rejectedText)}</p></div>` : ""}
     <form id="lf" novalidate>
-      <h2 class="sec">${esc(LT.contactTitle)}</h2>
-      <div class="form lead-contact">
-        <div class="field"><label for="l-contact">${esc(LT.contactLabel)}</label>
-          <input id="l-contact" maxlength="160" autocomplete="tel" inputmode="text" placeholder="${esc(LT.contactPh)}" value="${esc(d.contact)}"></div>
-        <div class="pick">${u.username ? `<button type="button" id="l-user">@${esc(u.username)}</button>` : ""}
-          ${tg?.requestContact ? `<button type="button" id="l-phone">${esc(LT.sharePhone)}</button>` : ""}</div>
+      <div class="form">
+        ${field("l-company", LT.company, `<input id="l-company" maxlength="160" autocomplete="organization" value="${esc(d.company)}">`)}
         ${field("l-person", LT.person, `<input id="l-person" maxlength="120" autocomplete="name" value="${esc(d.person)}">`)}
       </div>
-      <h2 class="sec">${esc(LT.whoTitle)}</h2>
+      <div class="form lead-contact">
+        <div class="field"><label for="l-contact">${esc(LT.contactLabel)}</label>
+          <input id="l-contact" maxlength="160" autocomplete="tel" placeholder="${esc(LT.contactPh)}" value="${esc(d.contact)}"></div>
+        <div class="pick">${u.username ? `<button type="button" id="l-user">@${esc(u.username)}</button>` : ""}
+          ${tg?.requestContact ? `<button type="button" id="l-phone">${esc(LT.sharePhone)}</button>` : ""}</div>
+      </div>
       <div class="form">
-        ${field("l-pos", LT.positions, `<input id="l-pos" maxlength="200" placeholder="${esc(LT.positionsPh)}" value="${esc(d.positions)}">`)}
-        <div class="pick">${LT.common.map(c => `<button type="button" data-lfill="${esc(c)}">${esc(c)}</button>`).join("")}</div>
-        <div class="field"><span class="lbl" id="l-hc-l">${esc(LT.headcount)}</span>
-          <div class="stepper" role="group" aria-labelledby="l-hc-l"><button type="button" data-hc="-1" aria-label="−1">−</button>
-          <output id="l-hc" aria-live="polite">${d.headcount}</output><button type="button" data-hc="1" aria-label="+1">+</button></div></div>
         ${field("l-land", T.land, `<select id="l-land">${opts(Object.keys(META.lands), d.land, v => META.lands[v], true)}</select>`)}
         ${field("l-city", T.city, `<input id="l-city" maxlength="80" value="${esc(d.city)}">`)}
-        ${field("l-company", LT.company, `<input id="l-company" maxlength="160" autocomplete="organization" value="${esc(d.company)}">`)}
-        ${field("l-details", LT.details, `<textarea id="l-details" maxlength="1000">${esc(d.details)}</textarea>`)}
+        ${field("l-web", LT.website, `<input id="l-web" maxlength="200" inputmode="url" autocomplete="url" placeholder="www.…" value="${esc(d.website)}">`)}
       </div>
       <div class="wiz-nav"><button class="btn wide big" type="submit" id="l-send">${esc(LT.send)}</button></div>
     </form>`;
@@ -1635,9 +1669,8 @@ function jLead(body) {
     f.appendChild(p); el.setAttribute("aria-describedby", p.id); return false;
   };
   const setContact = (v) => { d.contact = v; $("l-contact").value = v; showErr("l-contact", ""); tg?.HapticFeedback?.selectionChanged(); };
-  const bind = (id, key) => { const el = $(id); el.oninput = el.onchange = () => { d[key] = el.value || (key === "land" ? null : ""); }; };
-  [["l-contact", "contact"], ["l-person", "person"], ["l-pos", "positions"], ["l-land", "land"], ["l-city", "city"],
-   ["l-company", "company"], ["l-details", "details"]].forEach(([id, k]) => bind(id, k));
+  [["l-company", "company"], ["l-person", "person"], ["l-contact", "contact"], ["l-land", "land"], ["l-city", "city"], ["l-web", "website"]]
+    .forEach(([id, k]) => { const el = $(id); el.oninput = el.onchange = () => { d[k] = el.value || (k === "land" ? null : ""); }; });
   $("l-contact").addEventListener("blur", () => { if (d.contact.trim()) showErr("l-contact", leadContactOk(d.contact) ? "" : LT.badContact); });
   const ub = $("l-user"); if (ub) ub.onclick = () => setContact("@" + u.username);
   const pb = $("l-phone"); if (pb) pb.onclick = () => {
@@ -1649,24 +1682,18 @@ function jLead(body) {
       });
     } catch { toast(LT.phoneNotShared); }
   };
-  body.querySelectorAll("[data-lfill]").forEach(b => b.onclick = () => {
-    const v = b.dataset.lfill, cur = d.positions.trim();
-    d.positions = !cur ? v : cur.split(/,\s*/).includes(v) ? cur : `${cur}, ${v}`;
-    $("l-pos").value = d.positions; showErr("l-pos", ""); tg?.HapticFeedback?.selectionChanged();
-  });
-  body.querySelectorAll("[data-hc]").forEach(b => b.onclick = () => {
-    d.headcount = Math.min(999, Math.max(1, d.headcount + +b.dataset.hc)); $("l-hc").textContent = d.headcount;
-    tg?.HapticFeedback?.selectionChanged();
-  });
   $("lf").onsubmit = async (ev) => {
     ev.preventDefault();
+    const okCo = showErr("l-company", d.company.trim().length >= 2 ? "" : L().required);
+    const okPe = showErr("l-person", d.person.trim().length >= 2 ? "" : L().required);
     const okC = showErr("l-contact", !d.contact.trim() ? L().required : leadContactOk(d.contact) ? "" : LT.badContact);
-    const okP = showErr("l-pos", d.positions.trim().length >= 2 ? "" : L().required);
-    if (!okC || !okP) { (okC ? $("l-pos") : $("l-contact")).focus(); tg?.HapticFeedback?.notificationOccurred("error"); return; }
+    if (!okCo || !okPe || !okC) {
+      $(!okCo ? "l-company" : !okPe ? "l-person" : "l-contact").focus(); tg?.HapticFeedback?.notificationOccurred("error"); return;
+    }
     const send = $("l-send"); send.disabled = true;
     const n = (v) => v.trim() || null;
-    const data = { contact: d.contact.trim(), contact_person: n(d.person), company: n(d.company), positions: d.positions.trim(),
-      headcount: d.headcount, land: d.land, city: n(d.city), details: n(d.details) };
+    const data = { company: d.company.trim(), contact_person: d.person.trim(), contact: d.contact.trim(),
+      land: d.land, city: n(d.city), website: n(d.website) };
     try {
       await japi("/api/jobs/leads", { method: "POST", body: JSON.stringify(data) });
       JOBS.leadDraft = null; toast(LT.sent); tg?.HapticFeedback?.notificationOccurred("success");
@@ -1701,14 +1728,14 @@ const H = {
   uk: {
     title: "Житло", tabs: { terms: "Терміни", docs: "Документи", calc: "Калькулятор", letter: "Лист" },
     checked: (d) => `Перевірено за текстом законів ${d}. Це не юридична консультація.`, safety: "Безпека",
-    calcIntro: "Скільки грошей потрібно на старт. Усі числа — у євро на місяць.",
+    calcIntro: "Скільки потрібно на старт, у євро.",
     kalt: "Kaltmiete", neben: "Nebenkosten разом з опаленням", kMonths: "Кауція (у Kaltmiete, максимум 3)",
     rates: "Платити кауцію трьома частинами (ваше право за § 551 BGB)", makler: "Комісія ріелтора (зазвичай 0)",
     other: "Переїзд, меблі, інше (разово)",
     warm: "Warmmiete щомісяця", kaution: "Кауція всього", atMove: "Потрібно в день заїзду",
     m23: "У 2-й і 3-й місяць", first3: "Разом за перші 3 місяці",
-    calcNote: "Іноді кауцію бере на себе Jobcenter чи Sozialamt, часто як позику. Запитайте до підписання договору.",
-    letterIntro: "Складемо лист орендодавцю німецькою. Дані не надсилаються на сервер: лист збирається на вашому телефоні.",
+    calcNote: "Кауцію інколи дає Jobcenter чи Sozialamt, часто як позику.",
+    letterIntro: "Лист орендодавцю німецькою. Збирається на вашому телефоні, нікуди не надсилається.",
     name: "Ваше ім'я і прізвище (латиницею)", object: "Яка квартира (адреса або назва оголошення)", city: "Де ви зараз живете (місто)",
     since: "З якого часу в Німеччині (наприклад, 2023)", adults: "Дорослих", kids: "Дітей",
     income: "Як оплачуватиметься оренда", inc: { job: "Я працюю", jobcenter: "Jobcenter", sozialamt: "Sozialamt", none: "Не вказувати" },
@@ -1719,14 +1746,14 @@ const H = {
   ru: {
     title: "Жильё", tabs: { terms: "Термины", docs: "Документы", calc: "Калькулятор", letter: "Письмо" },
     checked: (d) => `Проверено по тексту законов ${d}. Это не юридическая консультация.`, safety: "Безопасность",
-    calcIntro: "Сколько денег нужно на старт. Все числа — в евро в месяц.",
+    calcIntro: "Сколько нужно на старт, в евро.",
     kalt: "Kaltmiete", neben: "Nebenkosten вместе с отоплением", kMonths: "Залог (в Kaltmiete, максимум 3)",
     rates: "Платить залог тремя частями (ваше право по § 551 BGB)", makler: "Комиссия риелтора (обычно 0)",
     other: "Переезд, мебель, другое (разово)",
     warm: "Warmmiete в месяц", kaution: "Залог всего", atMove: "Нужно в день въезда",
     m23: "Во 2-й и 3-й месяц", first3: "Всего за первые 3 месяца",
-    calcNote: "Иногда залог берёт на себя Jobcenter или Sozialamt, часто как заём. Спросите до подписания договора.",
-    letterIntro: "Составим письмо арендодателю на немецком. Данные не отправляются на сервер: письмо собирается на вашем телефоне.",
+    calcNote: "Залог иногда даёт Jobcenter или Sozialamt, часто как заём.",
+    letterIntro: "Письмо арендодателю на немецком. Собирается на вашем телефоне, никуда не отправляется.",
     name: "Ваше имя и фамилия (латиницей)", object: "Какая квартира (адрес или название объявления)", city: "Где вы сейчас живёте (город)",
     since: "С какого времени в Германии (например, 2023)", adults: "Взрослых", kids: "Детей",
     income: "Как будет оплачиваться аренда", inc: { job: "Я работаю", jobcenter: "Jobcenter", sozialamt: "Sozialamt", none: "Не указывать" },
@@ -1933,12 +1960,42 @@ function syncHeight() {
 syncHeight();
 tg?.onEvent?.("viewportChanged", (e) => { if (!e || e.isStateStable) syncHeight(); });
 
+// Opening: the station wakes up. The lamp flickers on, the city name clicks into place like a
+// split-flap board, the departures rise one by one. ~1.2 s, once per launch, none with reduced motion.
+function intro() {
+  let seen = false; try { seen = sessionStorage.getItem("intro_v1") === "1"; sessionStorage.setItem("intro_v1", "1"); } catch {}
+  if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const root = document.documentElement;
+  root.classList.add("intro");
+  introIndex();
+  flap($("title"), $("title").textContent, 520);
+  setTimeout(() => root.classList.remove("intro"), 1900);
+}
+function introIndex() {
+  $("page-home").querySelectorAll(".mainline, .next-date, .board-label, .board > li, .later-line")
+    .forEach((el, i) => el.style.setProperty("--i", i));
+}
+function flap(el, text, delay) {
+  if (!el || !text) return;
+  const pool = "ABCDEFGHIKLMNOPRSTUVWZÄÖÜ", steps = 7;
+  let k = 0;
+  el._flap = text; el.setAttribute("aria-label", text);
+  setTimeout(function tick() {
+    const t = el._flap;          // renderSign may change the name while it is flipping
+    el.textContent = [...t].map((c, i) => c === " " || k >= steps + i * 0.6 ? c : pool[(k * 7 + i * 3) % pool.length]).join("");
+    if (++k < steps + t.length * 0.6 + 1) setTimeout(tick, 38);
+    else { el.textContent = t; el._flap = null; el.removeAttribute("aria-label"); }
+  }, delay);
+}
+
 async function init() {
   lang = tg?.initDataUnsafe?.user?.language_code === "ru" ? "ru" : "uk";
   try {
     [META, SOURCES] = await Promise.all([api("/api/meta"), api("/api/sources")]);
     if (tg?.initData) { ME = await api("/api/me"); if (ME.language) lang = ME.language; }
-    renderAll(location.hash === "#housing" ? "housing" : location.hash === "#jobs" ? "jobs" : "home");
+    const start = location.hash === "#housing" ? "housing" : location.hash === "#jobs" ? "jobs" : "home";
+    renderAll(start);
+    if (start === "home") intro();
     loadJobs(); loadHousing(); loadDates();
   } catch {
     failed($("page-home"), init);

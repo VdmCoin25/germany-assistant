@@ -75,22 +75,24 @@ def _contact(v: str) -> str:
 
 
 class LeadIn(BaseModel):
+    """Short company form: company, contact person and contact are required; the rest is optional."""
     contact: str = Field(min_length=5, max_length=160)
-    contact_person: str | None = Field(default=None, max_length=120)
-    company: str | None = Field(default=None, max_length=160)
-    positions: str = Field(min_length=2, max_length=200)
+    contact_person: str = Field(min_length=2, max_length=120)
+    company: str = Field(min_length=2, max_length=160)
+    website: str | None = Field(default=None, max_length=200)
+    positions: str | None = Field(default=None, max_length=200)
     headcount: int | None = Field(default=None, ge=1, le=999)
     land: str | None = None
     city: str | None = Field(default=None, max_length=80)
     details: str | None = Field(default=None, max_length=1000)
 
-    _c = field_validator("contact_person", "company", "positions", "city", "details")(lambda cls, v: _clean(v))
+    _c = field_validator("contact_person", "company", "website", "positions", "city", "details")(lambda cls, v: _clean(v))
     _k = field_validator("contact")(lambda cls, v: _contact(v))
     _l = field_validator("land")(lambda cls, v: _land(v))
 
 
 def lead_out(x: EmployerLead) -> dict:
-    return {"id": x.id, "positions": x.positions, "headcount": x.headcount, "city": x.city, "land": x.land,
+    return {"id": x.id, "company": x.company, "positions": x.positions, "headcount": x.headcount, "city": x.city, "land": x.land,
             "contact": x.contact, "status": x.status, "created": _d(x.created_at)}
 
 
