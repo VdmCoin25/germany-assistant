@@ -116,8 +116,8 @@ class Deadline(Base):
 
 
 class EmployerLead(Base):
-    """A short request from an employer who wants to hire people. An admin reviews it and calls back
-    on `contact` to agree the details; nothing from it is published."""
+    """The short company form behind "I'm an employer": company, contact person, contact, place, website.
+    An admin reviews it and calls back on `contact`; nothing from it is published."""
 
     __tablename__ = "employer_leads"
 
@@ -126,7 +126,8 @@ class EmployerLead(Base):
     contact: Mapped[str] = mapped_column(String(160))          # phone, @username or e-mail — how we reach them
     contact_person: Mapped[str | None] = mapped_column(String(120))
     company: Mapped[str | None] = mapped_column(String(160))
-    positions: Mapped[str] = mapped_column(String(200))        # who they are looking for
+    positions: Mapped[str | None] = mapped_column(String(200))  # optional since the short company form
+    website: Mapped[str | None] = mapped_column(String(200))
     headcount: Mapped[int | None] = mapped_column(Integer)
     land: Mapped[str | None] = mapped_column(String(8))
     city: Mapped[str | None] = mapped_column(String(80))

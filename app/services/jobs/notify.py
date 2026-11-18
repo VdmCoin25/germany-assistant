@@ -39,13 +39,12 @@ async def render_for_admin(s: AsyncSession, kind: str, obj) -> str:
     if kind == "lead":
         o: EmployerLead = obj
         where = ", ".join(x for x in (o.city, LANDS.get(o.land or "")) if x) or "—"
-        return (f"<b>Заявка работодателя #{o.id}</b>\n"
+        extra = "".join(f"\n{k}: {e(v)}" for k, v in (("Сайт", o.website), ("Ищут", o.positions),
+                                                            ("Подробности", o.details)) if v)
+        return (f"<b>Анкета компании #{o.id}</b>\n"
                 f"Связь: <b>{e(o.contact)}</b>\nTelegram: <a href=\"tg://user?id={o.owner_tg}\">написать</a>\n\n"
-                f"Кто: {e(o.contact_person or '—')}, {e(o.company or 'фирма не указана')}\n"
-                f"Ищут: {e(o.positions)}{f' ({o.headcount} чел.)' if o.headcount else ''}\nГде: {e(where)}\n"
-                f"Подробности: {e(o.details or '—')}\n\n"
-                "Свяжитесь и обсудите детали. «Одобрить» — взяли в работу, работодатель получит сообщение. "
-                "Проверьте: нет платы с работников, условия законны.")
+                f"Фирма: {e(o.company or '—')}\nКонтактное лицо: {e(o.contact_person or '—')}\nГде: {e(where)}{extra}\n\n"
+                "Проверьте фирму и свяжитесь. «Одобрить» — работодатель получит сообщение, что мы с ним свяжемся.")
     if kind == "employer":
         o: Employer = obj
         return (f"<b>Работодатель #{o.id}</b>\nФирма: {e(o.company)}\nАдрес: {e(o.address)}\n"
