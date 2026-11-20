@@ -696,6 +696,31 @@ async def test_catchup_warns_at_limit_and_join_sets_baseline(sm, joined, caplog)
         assert await s.scalar(select(func.count(JobSignal.id))) == 0  # nothing was processed
 
 
+async def test_join_hook_sees_committed_row_on_separate_connections(tmp_path):
+    """The on_joined hook reconciles in a new session: the joined row must already be committed."""
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.database.models import Base
+
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'radar.db'}")
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        sm = async_sessionmaker(engine, expire_on_commit=False)
+        chat_id = await add_chat(sm, username="ok_chat")
+        client = FakeMessages([SimpleNamespace(id=77, message="x", date=NOW)])
+        mon = monitor.Monitor(_settings(jobs_radar_enabled=True), client, sm, bot=None)
+        mon.joiner.join_fn = JoinFake(result=-1005555555555).join
+        mon.joiner.clock, mon.joiner.rand = Clock(), lambda a, b: a
+
+        await mon.joiner.step()
+
+        assert mon.state.get(-1005555555555) == ChatRef(chat_id, "ok_chat")
+        assert (await get_chat(sm, chat_id)).last_message_id == 77
+    finally:
+        await engine.dispose()
+
+
 def test_seconds_until_hour():
     assert monitor.seconds_until_hour(datetime(2026, 11, 16, 8, 0, tzinfo=UTC), 9) == 3600
     assert monitor.seconds_until_hour(datetime(2026, 11, 16, 9, 0, tzinfo=UTC), 9) == 86400

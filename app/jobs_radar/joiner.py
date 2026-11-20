@@ -170,6 +170,8 @@ class Joiner:
         survivor = await repo.mark_joined(chat.id, tg_chat_id)
         keep = survivor or chat
         await self.state.add(tg_chat_id, ChatRef(keep.id, keep.username))
+        # Durable before the hook: on_joined reconciles in a new session, which must see the joined row.
+        await repo.s.commit()
         log.info("joined chat: id=%s tg_chat_id=%s", keep.id, tg_chat_id)
         if self.on_joined:
             try:
