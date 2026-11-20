@@ -38,6 +38,11 @@
      One look for Telegram's light and dark themes. Source of truth: docs/DESIGN_SYSTEM.md */
   /* ---- Themes: a colour palette × light or dark. The user picks both in Profile → Appearance. ----
      Each palette defines its own accents and the night sky of the header; the mode decides surfaces and text. */
+  /* default first: :root and [data-palette] weigh the same, so later blocks must be the other palettes */
+  :root, [data-palette="amber"] {
+    --p-deep: #1E1608; --p-tint: #F7F1E6; --p-accent: #FFC566; --p-accent-ink: #3A2400; --p-accent-l: #8F5300;
+    --p-sky1: #1E1404; --p-sky2: #3A270A; --p-sky3: #5C3F12; --p-scene: #140D02;
+  }
   [data-palette="sapphire"] {
     --p-deep: #0B1628; --p-tint: #EAF0FA; --p-accent: #7DB2FF; --p-accent-ink: #06204A; --p-accent-l: #1D57C2;
     --p-sky1: #0A1B3D; --p-sky2: #0F2C5E; --p-sky3: #163E80; --p-scene: #081430;
@@ -45,10 +50,6 @@
   [data-palette="amethyst"] {
     --p-deep: #150F26; --p-tint: #F0ECFA; --p-accent: #BBA4FF; --p-accent-ink: #1E0F4A; --p-accent-l: #5E3DC4;
     --p-sky1: #140B2C; --p-sky2: #241650; --p-sky3: #3A2A78; --p-scene: #0C0720;
-  }
-  :root, [data-palette="amber"] {
-    --p-deep: #1E1608; --p-tint: #F7F1E6; --p-accent: #FFC566; --p-accent-ink: #3A2400; --p-accent-l: #8F5300;
-    --p-sky1: #1E1404; --p-sky2: #3A270A; --p-sky3: #5C3F12; --p-scene: #140D02;
   }
   [data-palette="graphite"] {
     --p-deep: #111418; --p-tint: #EEF0F3; --p-accent: #D3DAE3; --p-accent-ink: #12171D; --p-accent-l: #374250;
@@ -144,7 +145,7 @@
                         animation: lamp-on 900ms steps(1, end) both; }
   .intro .sign .owner, .intro .sign .sub { animation: fade-in 300ms ease-out 700ms both; }
   .intro #page-home .mainline, .intro #page-home .next-date, .intro #page-home .board-label,
-  .intro #page-home .board > li, .intro #page-home .later-line {
+  .intro #page-home .board > li {
     animation: rise 360ms cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(650ms + var(--i, 0) * 70ms); }
   .intro #page-home .board { overflow: hidden; }
   @keyframes lamp-on { 0% { opacity: .92; } 22% { opacity: .55; } 30% { opacity: .9; } 46% { opacity: .35; } 54% { opacity: .7; } 70% { opacity: .15; } 100% { opacity: 0; } }
@@ -285,7 +286,10 @@
     .tk-track { animation: none; width: auto; display: block; } .tk-run { display: block; } .tk-run[aria-hidden] { display: none; }
     .tk-item { display: block; white-space: normal; padding: 8px 12px; }
   }
-  .later-line { margin: 16px 16px 0; font-size: 15px; color: var(--pencil); }
+  .board.later { background: transparent; border-style: dashed; }
+  .board.later li { padding: 12px 16px; }
+  .soon-name { display: block; font-weight: 600; font-size: 17px; line-height: 1.3; }
+  .board.later .via { display: block; }
   .next-date { all: unset; box-sizing: border-box; display: block; width: calc(100% - 32px); margin: 8px 16px 0; padding: 10px 12px;
                border-left: 3px solid var(--signal); font-size: 15px; cursor: pointer; }
   .next-date:focus-visible { outline: 2px solid var(--signal); }
@@ -675,12 +679,15 @@ const I18N = {
     nav: { home: "Табло", jobs: "Робота", profile: "Профіль", info: "Довідник", privacy: "Дані" },
     sections: [
       ["jobs", "Робота", "Вакансії в Німеччині і ваша анкета", 1],
-      ["documents", "Документи", "Розбір німецьких листів", 0],
       ["dates", "Мої терміни", "Бот нагадає про термін у Jobcenter, лист чи Kita", 1],
-      ["housing", "Житло", "Терміни, документи, калькулятор, лист", 1],
-      ["translator", "Перекладач", "Німецька, українська, російська", 0],
-      ["ai", "Питання й відповіді", "Про життя в Німеччині, з офіційними джерелами", 0],
       ["info", "Довідник", "Anmeldung, Jobcenter, страхування та інше", 1],
+      // in the works: the second field says what will be there
+      ["housing", "Житло", "Квартири, які підходять під оплату від Jobcenter чи Sozialamt, і допомога з документами для оренди", 0],
+      ["lawyers", "Юристи та допомога", "Список юристів і консультацій для українців: перебування, Jobcenter, оренда, робота", 0],
+      ["courses", "Мовні курси", "Список репетиторів німецької та мовних курсів", 0],
+      ["documents", "Документи", "Розбір німецьких листів: фото листа — переклад, строки й наступний крок", 0],
+      ["translator", "Перекладач", "Німецька, українська, російська: текст, фото й голосові", 0],
+      ["ai", "Питання й відповіді", "Відповіді про життя в Німеччині з офіційними джерелами", 0],
     ],
     soon: {
       documents: "Ви зможете надіслати фото чи PDF листа в чат і отримати переклад, пояснення простими словами, строки й наступні кроки. Поки розділ готується, бот не дає вигаданих відповідей.",
@@ -692,7 +699,7 @@ const I18N = {
       status24: "Кінець статусу §24", none: "Поки немає дат.", del: "Видалити", added: "Додано. Бот нагадає в чаті.",
       left: (n) => n <= 0 ? "сьогодні" : n === 1 ? "завтра" : `через ${n} дн.`,
       next: (t, d, w) => `Найближчий термін: ${t}, ${d}, ${w}`, empty: "Мої терміни: бот нагадає про важливі дати" },
-    toChat: "Повернутися в чат", later: "Поки готуємо", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
+    toChat: "Повернутися в чат", later: "Працюємо над випуском", help: "Допомога", findJob: "Шукати роботу", openVac: (n) => `Відкрито вакансій: ${n}`,
     profileHead: "Профіль", profileNote: "Відповіді допомагають давати точніші підказки. Заповнюйте лише те, що хочете.",
     appearance: "Оформлення", themeMode: "Тема", themeAuto: "Як у Telegram", themeDark: "Темна", themeLight: "Світла", palette: "Колір",
     palettes: { sapphire: "Сапфір", amethyst: "Аметист", amber: "Бурштин", graphite: "Графіт" },
@@ -730,12 +737,15 @@ const I18N = {
     nav: { home: "Табло", jobs: "Работа", profile: "Профиль", info: "Справочник", privacy: "Данные" },
     sections: [
       ["jobs", "Работа", "Вакансии в Германии и ваша анкета", 1],
-      ["documents", "Документы", "Разбор немецких писем", 0],
       ["dates", "Мои сроки", "Бот напомнит о термине в Jobcenter, письме или Kita", 1],
-      ["housing", "Жильё", "Термины, документы, калькулятор, письмо", 1],
-      ["translator", "Переводчик", "Немецкий, украинский, русский", 0],
-      ["ai", "Вопросы и ответы", "О жизни в Германии, с официальными источниками", 0],
       ["info", "Справочник", "Anmeldung, Jobcenter, страховка и другое", 1],
+      // in the works: the second field says what will be there
+      ["housing", "Жильё", "Квартиры, которые подходят под оплату от Jobcenter или Sozialamt, и помощь с документами для аренды", 0],
+      ["lawyers", "Юристы и помощь", "Список юристов и консультаций для украинцев: пребывание, Jobcenter, аренда, работа", 0],
+      ["courses", "Языковые курсы", "Список репетиторов немецкого и языковых курсов", 0],
+      ["documents", "Документы", "Разбор немецких писем: фото письма — перевод, сроки и следующий шаг", 0],
+      ["translator", "Переводчик", "Немецкий, украинский, русский: текст, фото и голосовые", 0],
+      ["ai", "Вопросы и ответы", "Ответы о жизни в Германии с официальными источниками", 0],
     ],
     soon: {
       documents: "Вы сможете отправить фото или PDF письма в чат и получить перевод, объяснение простыми словами, сроки и следующие шаги. Пока раздел готовится, бот не даёт выдуманных ответов.",
@@ -747,7 +757,7 @@ const I18N = {
       status24: "Конец статуса §24", none: "Пока нет дат.", del: "Удалить", added: "Добавлено. Бот напомнит в чате.",
       left: (n) => n <= 0 ? "сегодня" : n === 1 ? "завтра" : `через ${n} дн.`,
       next: (t, d, w) => `Ближайший срок: ${t}, ${d}, ${w}`, empty: "Мои сроки: бот напомнит о важных датах" },
-    toChat: "Вернуться в чат", later: "Пока готовим", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
+    toChat: "Вернуться в чат", later: "Работаем над выпуском", help: "Помощь", findJob: "Искать работу", openVac: (n) => `Открыто вакансий: ${n}`,
     profileHead: "Профиль", profileNote: "Ответы помогают давать более точные подсказки. Заполняйте только то, что хотите.",
     appearance: "Оформление", themeMode: "Тема", themeAuto: "Как в Telegram", themeDark: "Тёмная", themeLight: "Светлая", palette: "Цвет",
     palettes: { sapphire: "Сапфир", amethyst: "Аметист", amber: "Янтарь", graphite: "Графит" },
@@ -917,7 +927,9 @@ function renderHome() {
       </button>
       <div class="announce">${sheetBody(k)}</div>
     </li>`).join("")}</ol>`).join("")}
-    <p class="later-line">${esc(L().later)}: ${esc(rest.filter(r => !r[3]).map(r => r[1]).join(", "))}</p></div>`;
+    <p class="board-label">${esc(L().later)}</p>
+    <ul class="board later">${rest.filter(r => !r[3]).map(([k, name, what]) => `
+      <li data-soon="${k}"><span class="soon-name">${esc(name)}</span><span class="via">${esc(what)}</span></li>`).join("")}</ul></div>`;
   const openJobs = () => {
     JOBS.sub = st === "new" || st === "rejected" ? "form" : st === "offers" ? "inbox" : null;
     renderJobs(); show("jobs");
@@ -927,7 +939,7 @@ function renderHome() {
   if (document.documentElement.classList.contains("intro")) introIndex();
   const nd = $("next-date"); if (nd) nd.onclick = () => show("dates");
   renderSign();
-  $("page-home").querySelectorAll(".board > li").forEach(li => {
+  $("page-home").querySelectorAll(".board:not(.later) > li").forEach(li => {
     const btn = li.querySelector(".dep");
     btn.onclick = () => {
       if (li.dataset.k === "info") return show("info");
@@ -1972,7 +1984,7 @@ function intro() {
   setTimeout(() => root.classList.remove("intro"), 1900);
 }
 function introIndex() {
-  $("page-home").querySelectorAll(".mainline, .next-date, .board-label, .board > li, .later-line")
+  $("page-home").querySelectorAll(".mainline, .next-date, .board-label, .board > li")
     .forEach((el, i) => el.style.setProperty("--i", i));
 }
 function flap(el, text, delay) {
