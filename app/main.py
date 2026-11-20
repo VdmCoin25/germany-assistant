@@ -66,6 +66,18 @@ async def setup_bot_ui(bot: Bot, settings: Settings) -> None:
             text=t("uk", "open_app").split(" ", 1)[-1], web_app=WebAppInfo(url=settings.webapp_url)))
 
 
+async def with_retry(call, what: str, attempts: int = 5, delay: float = 3.0):
+    """Telegram sometimes answers 502/timeouts for a minute. A deploy must not die on that."""
+    for i in range(1, attempts + 1):
+        try:
+            return await call()
+        except Exception as e:  # noqa: BLE001
+            if i == attempts:
+                raise
+            log.warning("%s failed (%s), retry %s/%s", what, type(e).__name__, i, attempts - 1)
+            await asyncio.sleep(delay * i)
+
+
 async def keepalive(url: str, interval: int) -> None:
     """Ping our own public URL. Requests go through the host's router, which counts as traffic."""
     import aiohttp
@@ -99,9 +111,12 @@ async def run() -> None:
     session = AiohttpSession(proxy=settings.telegram_proxy) if settings.telegram_proxy else None
     bot = Bot(settings.bot_token, session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = build_dispatcher(settings, sm, make_storage(settings))
-    me = await bot.get_me()
+    me = await with_retry(bot.get_me, "get_me")
     log.info("Bot @%s started", me.username)
-    await setup_bot_ui(bot, settings)
+    try:   # commands and menu button are cosmetic: never block startup on them
+        await with_retry(lambda: setup_bot_ui(bot, settings), "setup_bot_ui", attempts=3)
+    except Exception as e:  # noqa: BLE001
+        log.warning("setup_bot_ui skipped: %s", type(e).__name__)
 
     from app.webapp.api import create_app
 
@@ -110,8 +125,8 @@ async def run() -> None:
     if settings.webhook_mode:
         if not (settings.webapp_url and settings.webhook_secret):
             raise RuntimeError("WEBHOOK_MODE needs WEBAPP_URL (or RENDER_EXTERNAL_URL) and WEBHOOK_SECRET")
-        await bot.set_webhook(f"{settings.webapp_url}/tg/webhook", secret_token=settings.webhook_token,
-                              allowed_updates=allowed, drop_pending_updates=False)
+        await with_retry(lambda: bot.set_webhook(f"{settings.webapp_url}/tg/webhook", secret_token=settings.webhook_token,
+                                                 allowed_updates=allowed, drop_pending_updates=False), "set_webhook")
         log.info("Webhook mode")
         app = create_app(settings, sm, bot=bot, dp=dp, webhook=True)
     else:

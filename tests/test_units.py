@@ -187,3 +187,17 @@ async def test_app_v2_served_only_when_built(settings, sm, tmp_path, monkeypatch
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
         r = await c.get("/app-v2/")
         assert r.status_code == 200 and "v2" in r.text
+
+
+async def test_with_retry_survives_transient_errors():
+    from app.main import with_retry
+
+    calls = {"n": 0}
+
+    async def flaky():
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise RuntimeError("Bad Gateway")
+        return "ok"
+
+    assert await with_retry(flaky, "flaky", attempts=5, delay=0) == "ok" and calls["n"] == 3
